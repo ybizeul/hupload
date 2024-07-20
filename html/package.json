@@ -1,0 +1,36 @@
+{
+  "name": "vite-min-template",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "lint": "eslint src --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@mantine/core": "7.11.2",
+    "@mantine/dropzone": "^7.11.2",
+    "@mantine/hooks": "7.11.2",
+    "@tabler/icons-react": "^3.11.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "@typescript-eslint/eslint-plugin": "^7.13.1",
+    "@typescript-eslint/parser": "^7.13.1",
+    "@vitejs/plugin-react": "^4.3.1",
+    "eslint": "^8.57.0",
+    "eslint-plugin-react-hooks": "^4.6.2",
+    "eslint-plugin-react-refresh": "^0.4.7",
+    "postcss": "^8.4.38",
+    "postcss-preset-mantine": "1.16.0",
+    "postcss-simple-vars": "^7.0.1",
+    "typescript": "^5.5.2",
+    "vite": "^5.3.1"
+  },
+  "packageManager": "yarn@4.3.1"
+}
