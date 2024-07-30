@@ -14,8 +14,10 @@
     "@mantine/dropzone": "^7.11.2",
     "@mantine/hooks": "7.11.2",
     "@tabler/icons-react": "^3.11.0",
+    "axios": "^1.7.2",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^6.25.1"
   },
   "devDependencies": {
     "@types/react": "^18.3.3",
