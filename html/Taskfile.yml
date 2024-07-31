@@ -1,0 +1,4 @@
+version: 3
+tasks:
+  default:
+    cmd: vite build --outDir ../hupload/admin-ui

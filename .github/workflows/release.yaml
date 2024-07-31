@@ -1,0 +1,55 @@
+on:
+  push:
+    tags:
+      - 'v*' 
+jobs:
+  release:
+    name: release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: write
+    steps:
+
+        # Checkout code
+        - uses: actions/checkout@v3
+          with:
+            fetch-depth: 0
+
+        # Fetch tags
+        - run: git fetch --force --tags
+
+        # Set version environment
+        - name: Set VERSION
+          run: |
+            echo "VERSION=`git describe --tags || echo 0.0.0`"  >> $GITHUB_ENV
+
+        # Build web ui
+        - name: Use Node.js 20.x
+          uses: actions/setup-node@v3
+          with:
+              node-version: 20.x
+        - run: yarn install
+          working-directory: ./html
+        - run: vite build --outDir ../hupload/admin-ui
+          working-directory: ./html
+
+        # Build go binary
+        - uses: actions/setup-go@v4
+          with:
+              go-version: stable
+
+        # Publish binary release
+        - uses: goreleaser/goreleaser-action@v4
+          with:
+              distribution: goreleaser
+              version: latest
+              args: release --clean
+          env:
+            GITHUB_TOKEN: ${{ github.token }}
+
+        # Build docker image
+        - uses: ko-build/setup-ko@v0.6
+        - run: GOFLAGS="-ldflags=-X=main.version=$VERSION" ko build -B --platform all --sbom none --tags "$VERSION,latest" ./cmd/ybfeed
+          env:
+            KO_DOCKER_REPO: ghcr.io/ybizeul

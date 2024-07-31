@@ -1,0 +1,4 @@
+version: 3
+tasks:
+  run:
+    cmd: go run *.go
