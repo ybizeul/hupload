@@ -120,3 +120,17 @@ func getItem(w http.ResponseWriter, r *http.Request) {
 func postLogin(w http.ResponseWriter, r *http.Request) {
 	_, _ = w.Write([]byte("OK"))
 }
+
+func getVersion(w http.ResponseWriter, r *http.Request) {
+	v := struct {
+		Version string `json:"version"`
+	}{
+		Version: version,
+	}
+	b, err := json.Marshal(v)
+	if err != nil {
+		slog.Error("getVersion", slog.String("error", err.Error()))
+		w.WriteHeader(http.StatusInternalServerError)
+	}
+	_, _ = w.Write(b)
+}

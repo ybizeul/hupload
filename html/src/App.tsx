@@ -13,6 +13,7 @@ import { IconMenu2 } from "@tabler/icons-react";
 import { H } from "./APIClient";
 import { useEffect, useState } from "react";
 import { LoggedInContext } from "./LoggedInContext";
+import VersionComponent from "./components/VersionComponent";
 
 export default function App() {
 
@@ -60,5 +61,6 @@ export default function App() {
         </LoggedInContext.Provider>
       </BrowserRouter>
     </Container>
+    {loggedIn&&<VersionComponent/>}
   </MantineProvider>)
 }
