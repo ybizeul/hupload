@@ -51,6 +51,7 @@ jobs:
 
         # Build docker image
         - uses: ko-build/setup-ko@v0.6
-        - run: GOFLAGS="-ldflags=-X=main.version=$VERSION" ko build -B --platform all --sbom none --tags "$VERSION,latest" ./cmd/ybfeed
+        - run: GOFLAGS="-ldflags=-X=main.version=$VERSION" ko build -B --platform all --sbom none --tags "$VERSION,latest"
           env:
             KO_DOCKER_REPO: ghcr.io/ybizeul
+          working-directory: ./hupload
