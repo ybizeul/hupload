@@ -16,6 +16,6 @@ export default function VersionComponent() {
     })
 
     return (
-        <Text w="100%" size="xs" c="darkgray" ta="center" style={{ position: 'absolute', bottom: '1em'}}>v{version}</Text>
+        <Text w="100%" size="xs" c="darkgray" ta="center" style={{ position: 'absolute', bottom: '1em'}}>{version}</Text>
     )
 }
