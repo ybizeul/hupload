@@ -12,6 +12,8 @@ import (
 	"time"
 )
 
+const suffix = "_huploadtemp"
+
 // FileBackend is a backend that stores files on the filesystem
 type FileBackend struct {
 	Options map[string]any
@@ -69,7 +71,8 @@ func (b *FileBackend) CreateShare(s string, o string) error {
 }
 
 func (b *FileBackend) CreateItem(s string, i string, r *bufio.Reader) error {
-	f, err := os.Create(path.Join(b.Options["path"].(string), s, i))
+	p := path.Join(b.Options["path"].(string), s, i)
+	f, err := os.Create(p + suffix)
 	if err != nil {
 		return errors.New("cannot create item")
 	}
@@ -77,9 +80,13 @@ func (b *FileBackend) CreateItem(s string, i string, r *bufio.Reader) error {
 
 	_, err = io.Copy(f, r)
 	if err != nil {
+		os.Remove(p + suffix)
 		return errors.New("cannot copy item content")
 	}
-
+	err = os.Rename(p+suffix, p)
+	if err != nil {
+		return errors.New("cannot rename item to final destination")
+	}
 	return nil
 }
 
@@ -118,7 +125,7 @@ func (b *FileBackend) ListShare(s string) ([]Item, error) {
 	}
 	r := []Item{}
 	for _, f := range d {
-		if strings.HasPrefix(f.Name(), ".") {
+		if strings.HasPrefix(f.Name(), ".") || strings.HasSuffix(f.Name(), suffix) {
 			continue
 		}
 		i, err := b.GetItem(s, f.Name())
