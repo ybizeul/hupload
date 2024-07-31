@@ -1,8 +1,8 @@
 import { createContext, useContext } from "react";
 
 interface LoggedInContextValue {
-    loggedIn: boolean | null;
-    setLoggedIn: React.Dispatch<React.SetStateAction<boolean | null>>;
+    loggedIn: string | null;
+    setLoggedIn: React.Dispatch<React.SetStateAction<string | null>>;
   }
 
 export const LoggedInContext = createContext<LoggedInContextValue|undefined>(undefined);

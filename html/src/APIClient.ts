@@ -84,7 +84,7 @@ export class APIClient {
     }
 
     post(path: string, data: unknown = {}) {
-        return new Promise<AxiosResponse|APIServerError>((resolve, reject) => {
+        return new Promise<unknown|APIServerError>((resolve, reject) => {
             this.request({
                 url: this.baseURL + path,
                 method: 'POST',

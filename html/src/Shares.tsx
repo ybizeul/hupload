@@ -6,8 +6,8 @@ import { Share } from "./hupload";
 import ShareComponent from "./components/ShareComponent";
 import { Box, Button, Text } from "@mantine/core";
 
-export default function Shares() {
-
+export default function Shares(props: {owner: string|null}) {
+  const { owner } = props
   const [shares, setShares] = useState<Share[]|undefined>(undefined)
 
   const navigate = useNavigate();
@@ -47,9 +47,18 @@ export default function Shares() {
         shares.length == 0 ?
         <Text ta="center" mt="xl">No shares</Text>
         :
-        shares.map((s) => (
+        <>
+        <Text size="xl" fw="700">You Shares</Text>
+        {shares.map((s) => (
+          s.owner === owner &&
           <ShareComponent key={s.name} share={s} />
-        ))
+        ))}
+        <Text mt="md" size="xl" fw="700">Other Shares</Text>
+        {shares.map((s) => (
+          s.owner === owner ||
+          <ShareComponent key={s.name} share={s} />
+        ))}
+        </>
       }
     </>
   )

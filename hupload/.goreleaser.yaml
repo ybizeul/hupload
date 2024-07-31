@@ -6,8 +6,10 @@ before:
     - go mod tidy
     # you may remove this if you don't need go generate
     - go generate ./...
+    - cp ../LICENSE .
+    - cp ../README.md .
 builds:
-  - main: ./hupload
+  - main: .
     env:
       - CGO_ENABLED=0
       - GOFLAGS="-ldflags=-X=main.version=`git describe --tags || echo 0.0.0`"

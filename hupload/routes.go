@@ -118,7 +118,17 @@ func getItem(w http.ResponseWriter, r *http.Request) {
 }
 
 func postLogin(w http.ResponseWriter, r *http.Request) {
-	_, _ = w.Write([]byte("OK"))
+	u := struct {
+		User string `json:"user"`
+	}{
+		User: apiws.UserForRequest(r),
+	}
+	b, err := json.Marshal(u)
+	if err != nil {
+		slog.Error("postLogin", slog.String("error", err.Error()))
+		w.WriteHeader(http.StatusInternalServerError)
+	}
+	_, _ = w.Write(b)
 }
 
 func getVersion(w http.ResponseWriter, r *http.Request) {
