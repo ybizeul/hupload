@@ -1,3 +1,5 @@
+![Icon](Artwork/icon.svg)
+
 # hupload
 
 Hupload is a minimalist file uploader for your customers.
