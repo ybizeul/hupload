@@ -15,14 +15,17 @@ import { useEffect, useState } from "react";
 import { LoggedInContext } from "./LoggedInContext";
 import VersionComponent from "./components/VersionComponent";
 
+interface LoggedIn {
+  user: string
+}
 export default function App() {
 
-  const [loggedIn, setLoggedIn ] = useState<boolean|null>(false)
+  const [loggedIn, setLoggedIn ] = useState<string|null>(null)
   
   useEffect(() => {
-    H.post('/login').then(() => {
-      console.log("OK")
-      setLoggedIn(true)
+    H.post('/login').then((r) => {
+      const l = r as LoggedIn
+      setLoggedIn(l.user)
     })
     .catch((e) => {
       console.log(e)
@@ -56,7 +59,7 @@ export default function App() {
             <Route path="/" element={<Home />} />
             <Route path=":share" element={<Share />} />
             <Route path="/login" element={<Login />} />
-            <Route path="/shares" element={<Shares />} />
+            <Route path="/shares" element={<Shares owner={loggedIn}/>} />
           </Routes>
         </LoggedInContext.Provider>
       </BrowserRouter>

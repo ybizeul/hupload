@@ -21,7 +21,7 @@ export default function Login() {
                 setError(undefined)
                 navigate("/shares")
                 if (setLoggedIn !== null) {
-                  setLoggedIn(true)
+                  setLoggedIn(username)
                 }
             })
             .catch(e => {
