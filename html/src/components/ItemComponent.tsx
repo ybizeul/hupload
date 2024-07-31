@@ -3,6 +3,7 @@ import { IconCheck } from "@tabler/icons-react";
 import { QueueItem } from "../UploadQueue";
 import { humanFileSize, Item } from "../hupload";
 import { useLoggedInContext } from "../LoggedInContext";
+import classes from './ItemComponent.module.css';
 
 export default function ItemComponent(props: {item?: Item, queueItem?: QueueItem}) {
     const {item, queueItem} = props
@@ -11,7 +12,7 @@ export default function ItemComponent(props: {item?: Item, queueItem?: QueueItem
     const {loggedIn} = useLoggedInContext()
     
     return (
-    <Paper key={key} p="md" shadow="xs" radius="md" mt={10}>
+    <Paper key={key} p="md" shadow="xs" radius="md" mt={10} className={classes.paper}>
         <Group justify="space-between" h={45}>
             {loggedIn&&!queueItem?<Anchor href={'/api/v1/share/'+item?.Path}>{fileName}</Anchor>:<Text>{fileName}</Text>}
             {queueItem?
