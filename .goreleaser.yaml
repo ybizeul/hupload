@@ -3,9 +3,9 @@
 before:
   hooks:
     # You may remove this if you don't use go modules.
-    - go mod tidy
+    - cd ./hupload/; go mod tidy
     # you may remove this if you don't need go generate
-    - go generate ./...
+    - cd ./hupload/; go generate ./...
 builds:
   - main: ./hupload/
     env:
