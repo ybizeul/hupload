@@ -31,7 +31,7 @@ jobs:
               node-version: 20.x
         - run: yarn install
           working-directory: ./html
-        - run: vite build --outDir ../hupload/admin-ui
+        - run: yarn build --outDir ../hupload/admin-ui
           working-directory: ./html
 
         # Build go binary
