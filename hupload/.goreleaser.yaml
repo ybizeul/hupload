@@ -6,6 +6,8 @@ before:
     - go mod tidy
     # you may remove this if you don't need go generate
     - go generate ./...
+    - cp ../LICENSE .
+    - cp ../README.md .
 builds:
   - main: .
     env:
