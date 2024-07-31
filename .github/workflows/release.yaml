@@ -51,5 +51,5 @@ jobs:
 
         # Build docker image
         - uses: ko-build/setup-ko@v0.6
-        - run: GOFLAGS="-ldflags=-X=main.version=$VERSION" ko build -B --bare --platform all --sbom none --tags "$VERSION,latest"
+        - run: GOFLAGS="-ldflags=-X=main.version=$VERSION" ko build --bare --platform all --sbom none --tags "$VERSION,latest"
           working-directory: ./hupload
