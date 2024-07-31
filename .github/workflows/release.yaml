@@ -45,6 +45,7 @@ jobs:
               distribution: goreleaser
               version: latest
               args: release --clean
+              workdir: hupload
           env:
             GITHUB_TOKEN: ${{ github.token }}
 
