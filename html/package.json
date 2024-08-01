@@ -10,9 +10,9 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@mantine/core": "7.11.2",
+    "@mantine/core": "^7.11.2",
     "@mantine/dropzone": "^7.11.2",
-    "@mantine/hooks": "7.11.2",
+    "@mantine/hooks": "^7.11.2",
     "@tabler/icons-react": "^3.11.0",
     "axios": "^1.7.2",
     "react": "^18.3.1",
@@ -28,11 +28,11 @@
     "eslint": "^8.57.0",
     "eslint-plugin-react-hooks": "^4.6.2",
     "eslint-plugin-react-refresh": "^0.4.7",
-    "postcss": "^8.4.38",
+    "postcss": "^8.4.40",
     "postcss-preset-mantine": "^1.17.0",
     "postcss-simple-vars": "^7.0.1",
     "typescript": "^5.5.2",
-    "vite": "^5.3.1",
+    "vite": "^5.3.5",
     "vite-tsconfig-paths": "^4.3.2"
   },
   "packageManager": "yarn@4.3.1"
