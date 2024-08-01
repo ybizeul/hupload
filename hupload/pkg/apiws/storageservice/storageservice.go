@@ -25,13 +25,16 @@ type StorageServiceInterface interface {
 	CreateShare(string, string) error
 
 	// CreateItem creates a new item in a share
-	CreateItem(string, string, *bufio.Reader) error
+	CreateItem(string, string, *bufio.Reader) (*Item, error)
 
 	// ListShares returns the list of shares available
 	ListShares() ([]Share, error)
 
 	// ListShare returns the list of items in a share
 	ListShare(string) ([]Item, error)
+
+	// ListShare returns the list of items in a share
+	DeleteShare(string) error
 
 	// GetItem returns the item identified by share and item
 	GetItem(string, string) (*Item, error)

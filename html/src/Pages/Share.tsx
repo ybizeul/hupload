@@ -20,9 +20,8 @@ export function Share() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    H.get('/share/' +share).then(
+    H.get('/share/' + share).then(
     (res) => {
-      console.log(res)
       setItems(res as Item[])
     })
     .catch((e) => {
@@ -37,11 +36,16 @@ export function Share() {
       <Dropzone
         onDrop={(files) => {
           const U = new UploadQueue(H,"/share/"+share, setQueue)
-          U.addFiles(files)
           const newItems = items.filter((i) => {
             return !files.some((f) => f.name === i.Path.split("/")[1])
           })
           setItems(newItems)
+          U.addFiles(files)
+          .then((r) => {
+            const finishedItems = r as Item[]
+            setQueue([])
+            setItems([...items,...finishedItems])
+          })
         }}
 
         onReject={(files) => console.log('rejected files', files)}

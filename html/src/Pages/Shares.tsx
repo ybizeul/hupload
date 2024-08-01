@@ -29,7 +29,7 @@ export function Shares(props: {owner: string|null}) {
       })
       .catch((e) => {
         console.log(e)
-        navigate('/login')
+        navigate('/')
       })
   },[navigate])
 
@@ -40,7 +40,7 @@ export function Shares(props: {owner: string|null}) {
   return (
     shares &&
       <>
-      <Box ta="center">
+      <Box ta="center" mt="xl" mb="xl">
       <Button onClick={() => createShare()}>Create Share</Button>
       </Box>
       {

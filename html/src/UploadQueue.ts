@@ -29,39 +29,36 @@ export class UploadQueue {
                 finished: false,
             }
         })
-        Object.keys(this.files).map((k) => {
+
+        const promises=Object.keys(this.files).map((k) => {
             const f = this.files[k]
             const formData = new FormData();
             formData.append("file", f.file);
-            // axios.request({
-            //     url: '/api/v1/' + this.path + '/' + f.file.name,
-            //     method: 'POST',
-            //     data: formData,
-            //     headers: {
-            //         'Content-Type': 'multipart/form-data'
-            //     },
-            //     onUploadProgress: (e: AxiosProgressEvent) => {
-            //         console.log(e)
-            //         if (e.total) {
-            //             f.loaded = e.loaded
-            //             f.total = e.total
-            //         }
-            //         this.updateProgress()
-            //     }
-            // })
-            this.API.upload(this.path+'/'+f.file.name, f.file, 
-                (e: AxiosProgressEvent) => {
-                    console.log(e)
-                    if (e.total) {
-                        f.loaded = e.loaded
-                        f.total = e.total
+            
+            return new Promise((resolve, reject) => {
+                this.API.upload(this.path+'/'+f.file.name, f.file, 
+                    (e: AxiosProgressEvent) => {
+                        if (e.total) {
+                            f.loaded = e.loaded
+                            f.total = e.total
+                        }
+                        this.updateProgress()
                     }
+                )
+                .then((r) => {
+                    f.finished = true; 
                     this.updateProgress()
-                }
-            )
-            .then(() => {f.finished = true; this.updateProgress()})
-            .catch((e) => {console.log(e)})
+                    this.progressCallback = undefined
+                    resolve(r)
+                })
+                .catch((e) => {
+                    console.log(e)
+                    reject(e)
+                })
+            })
+
         })
+        return Promise.all(promises)
     }
     addFile(f: File) {
         this.addFiles([f])

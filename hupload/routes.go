@@ -56,12 +56,19 @@ func postItem(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	b := bufio.NewReader(np)
-	err = api.StorageService.CreateItem(r.PathValue("share"), np.FileName(), b)
+	item, err := api.StorageService.CreateItem(r.PathValue("share"), np.FileName(), b)
 	if err != nil {
 		_, _ = w.Write([]byte(err.Error()))
 		return
 	}
-	_, _ = w.Write([]byte("OK"))
+
+	c, err := json.Marshal(item)
+	if err != nil {
+		_, _ = w.Write([]byte(err.Error()))
+		return
+	}
+
+	_, _ = w.Write(c)
 }
 
 func getShares(w http.ResponseWriter, r *http.Request) {
@@ -98,6 +105,16 @@ func getShare(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	_, _ = w.Write(b)
+}
+
+func deleteShare(w http.ResponseWriter, r *http.Request) {
+	err := api.StorageService.DeleteShare(r.PathValue("share"))
+	if err != nil {
+		slog.Error("deleteShare", slog.String("error", err.Error()))
+		w.WriteHeader(http.StatusInternalServerError)
+		_, _ = w.Write([]byte(err.Error()))
+		return
+	}
 }
 
 func getItem(w http.ResponseWriter, r *http.Request) {
