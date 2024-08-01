@@ -1,38 +1,44 @@
 import "@mantine/core/styles.css";
 import '@mantine/dropzone/styles.css';
-import { ActionIcon, Affix, Container, MantineProvider, Menu } from "@mantine/core";
-import { theme } from "./theme";
 
-import Home from "./Home";
-import Share from "./Share";
-import Login from "./Login";
-import Shares from "./Shares";
-
-import { BrowserRouter, Link, Route, Routes } from "react-router-dom";
-import { IconMenu2 } from "@tabler/icons-react";
-import { H } from "./APIClient";
 import { useEffect, useState } from "react";
-import { LoggedInContext } from "./LoggedInContext";
-import VersionComponent from "./components/VersionComponent";
+import { ActionIcon, Affix, Container, MantineProvider, Menu } from "@mantine/core";
+import { BrowserRouter, Link, Route, Routes } from "react-router-dom";
 
+import { H } from "./APIClient";
+import { Share, Login, Shares } from "@/Pages";
+
+import { IconMenu2 } from "@tabler/icons-react";
+import { LoggedInContext } from "@/LoggedInContext";
+import { VersionComponent } from "@/Components";
+
+// Logged in user is passed to the context
 interface LoggedIn {
   user: string
 }
-export default function App() {
 
+export default function App() {
+  // Component state
   const [loggedIn, setLoggedIn ] = useState<string|null>(null)
   
+  // Component Hooks
+
+  // Check with server current logged in state
+  // This is typically executed once when Hupload is loaded
+  // State is updated later on login page or logout button
   useEffect(() => {
     H.post('/login').then((r) => {
       const l = r as LoggedIn
       setLoggedIn(l.user)
     })
     .catch((e) => {
+      setLoggedIn(null)
       console.log(e)
     })
   })
+
   return (
-  <MantineProvider theme={theme} defaultColorScheme='auto'>
+  <MantineProvider defaultColorScheme='auto'>
     <Container mt="md" h="100%">
       <BrowserRouter>
         <LoggedInContext.Provider value={{loggedIn,setLoggedIn}}>
@@ -56,9 +62,8 @@ export default function App() {
           </Affix>
           }
           <Routes>
-            <Route path="/" element={<Home />} />
+            <Route path="/" element={<Login />} />
             <Route path=":share" element={<Share />} />
-            <Route path="/login" element={<Login />} />
             <Route path="/shares" element={<Shares owner={loggedIn}/>} />
           </Routes>
         </LoggedInContext.Provider>

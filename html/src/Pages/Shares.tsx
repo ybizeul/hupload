@@ -1,12 +1,12 @@
 
 import { useCallback, useEffect, useState } from "react";
-import { H } from "./APIClient";
+import { H } from "../APIClient";
 import { useNavigate } from "react-router-dom";
-import { Share } from "./hupload";
-import ShareComponent from "./components/ShareComponent";
+import { Share } from "../hupload";
+import {ShareComponent} from "@/Components";
 import { Box, Button, Text } from "@mantine/core";
 
-export default function Shares(props: {owner: string|null}) {
+export function Shares(props: {owner: string|null}) {
   const { owner } = props
   const [shares, setShares] = useState<Share[]|undefined>(undefined)
 

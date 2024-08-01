@@ -6,7 +6,7 @@ interface VersionInterface {
     version: string
 }
 
-export default function VersionComponent() {
+export function VersionComponent() {
     const [version, setVersion] = useState<string|null>(null)
     useEffect(() => {
         H.get('/version').then((r) => {

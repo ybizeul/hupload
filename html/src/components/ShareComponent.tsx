@@ -3,7 +3,7 @@ import { Share } from "../hupload";
 import { Link } from "react-router-dom";
 import classes from './ShareComponent.module.css';
 
-export default function ShareComponent(props: {share: Share}) {
+export function ShareComponent(props: {share: Share}) {
     const {share} = props
     const key = share.name
     const name = share.name

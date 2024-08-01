@@ -1,12 +1,12 @@
 import { Alert, Button, Container, FocusTrap, Paper, PasswordInput, TextInput } from "@mantine/core";
 import { useState } from "react";
-import { APIServerError, H } from "./APIClient";
+import { APIServerError, H } from "../APIClient";
 
 import { IconExclamationCircle } from "@tabler/icons-react";
 import { useNavigate } from "react-router-dom";
-import { useLoggedInContext } from "./LoggedInContext";
+import { useLoggedInContext } from "../LoggedInContext";
 
-export default function Login() {
+export function Login() {
     const [username, setUsername] = useState<undefined|string>("")
     const [password, setPassword] = useState<undefined|string>("")
     const [error, setError] = useState<APIServerError|undefined>()
@@ -39,7 +39,7 @@ export default function Login() {
               </Alert>}
           <form onSubmit={authenticate}>
           <FocusTrap active={true}>
-            <TextInput label="Username" placeholder="admin" value={username} onChange={(e) => setUsername(e.target.value)} required data-autofocus/>
+            <TextInput label="Username" placeholder="Username" value={username} onChange={(e) => setUsername(e.target.value)} required data-autofocus/>
             <PasswordInput label="Password" placeholder="Your password" value={password} onChange={(e) => setPassword(e.target.value)} required mt="md" />
             <Button type="submit" fullWidth mt="xl" disabled={!(username && password)}>
               Login

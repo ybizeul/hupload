@@ -2,13 +2,13 @@ import { Group, rem, Text } from "@mantine/core";
 import { Dropzone } from "@mantine/dropzone";
 import { IconFileZip, IconUpload, IconX } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
-import { H } from "./APIClient";
-import { UploadQueue, QueueItem } from "./UploadQueue";
+import { H } from "../APIClient";
+import { UploadQueue, QueueItem } from "../UploadQueue";
 import { useLocation, useNavigate } from "react-router-dom";
-import ItemComponent from "./components/ItemComponent";
-import { Item } from "./hupload";
+import {ItemComponent} from "@/Components";
+import { Item } from "../hupload";
 
-export default function Share() {
+export function Share() {
 
   const [items, setItems] = useState<Item[]|undefined>(undefined)
   const [queue, setQueue] = useState<QueueItem[]>([])

@@ -5,7 +5,7 @@ import { humanFileSize, Item } from "../hupload";
 import { useLoggedInContext } from "../LoggedInContext";
 import classes from './ItemComponent.module.css';
 
-export default function ItemComponent(props: {item?: Item, queueItem?: QueueItem}) {
+export function ItemComponent(props: {item?: Item, queueItem?: QueueItem}) {
     const {item, queueItem} = props
     const key = item?item.Path:queueItem?.file.name
     const fileName = item?item.Path.split('/')[1]:queueItem?.file.name

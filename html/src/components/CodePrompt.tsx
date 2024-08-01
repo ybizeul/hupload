@@ -1,10 +1,12 @@
-import { Button, Stack, Text } from "@mantine/core";
-
-import CenteredTextInput from "./CenteredTextInput";
-import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-export default function CodePrompt() {
+import { useState } from "react";
+
+import { Button, Stack, Text } from "@mantine/core";
+
+import { CenteredTextInput} from "@/Components";
+
+export function CodePrompt() {
     const [code, setCode] = useState("")
     const navigate = useNavigate()
     return (
