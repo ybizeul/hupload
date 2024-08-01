@@ -25,10 +25,10 @@ jobs:
             echo "VERSION=`git describe --tags || echo 0.0.0`"  >> $GITHUB_ENV
 
         # Build web ui
-        - name: Use Node.js 20.x
+        - name: Use Node.js 21.x
           uses: actions/setup-node@v3
           with:
-              node-version: 20.x
+              node-version: 21.x
         - run: yarn install
           working-directory: ./html
         - run: yarn build --outDir ../hupload/admin-ui
