@@ -1,6 +1,6 @@
-import { Group, rem, Text } from "@mantine/core";
+import { Box, Button, CopyButton, Group, rem, Text, Tooltip } from "@mantine/core";
 import { Dropzone } from "@mantine/dropzone";
-import { IconFileZip, IconUpload, IconX } from "@tabler/icons-react";
+import { IconFileZip, IconLink, IconUpload, IconX } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
 import { H } from "../APIClient";
 import { UploadQueue, QueueItem } from "../UploadQueue";
@@ -33,6 +33,15 @@ export function Share() {
   return (
     items &&
       <>
+      <Box w="100%" ta="center">
+          <CopyButton value={window.location.protocol + '//' + window.location.host + '/' + share}>
+            {({ copied, copy }) => (
+              <Tooltip withArrow arrowOffset={10} arrowSize={4} label="Copy URL">
+                <Button mb="sm" justify="center" variant="outline" color={copied ? 'teal' : 'gray'} size="xs" onClick={copy}><IconLink style={{ width: '70%', height: '70%' }} stroke={1.5}/>{share}</Button>
+              </Tooltip>
+            )}
+          </CopyButton>
+      </Box>
       <Dropzone
         onDrop={(files) => {
           const U = new UploadQueue(H,"/share/"+share, setQueue)
