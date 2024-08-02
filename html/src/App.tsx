@@ -37,7 +37,7 @@ export default function App() {
 
   return (
   <MantineProvider defaultColorScheme='auto'>
-    <Container flex={1}   pt="md">
+    <Container flex={1}  w="100%" pt="md">
       <BrowserRouter>
         <LoggedInContext.Provider value={{loggedIn,setLoggedIn}}>
         <Routes>
