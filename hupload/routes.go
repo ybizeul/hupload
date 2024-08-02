@@ -131,6 +131,7 @@ func getItem(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Add("Content-Length", fmt.Sprintf("%d", item.ItemInfo.Size))
+	w.Header().Add("Content-Disposition", "attachment")
 	_, _ = io.Copy(w, reader)
 }
 
