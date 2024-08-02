@@ -2,7 +2,7 @@ import { ActionIcon, Anchor, Button, CopyButton, Group, Paper, Popover, Text, To
 import { Share } from "../hupload";
 import { Link } from "react-router-dom";
 import classes from './ShareComponent.module.css';
-import { IconClipboardCopy, IconTrash } from "@tabler/icons-react";
+import { IconLink, IconTrash } from "@tabler/icons-react";
 import { useState } from "react";
 import { H } from "@/APIClient";
 
@@ -34,7 +34,7 @@ export function ShareComponent(props: {share: Share}) {
                     {({ copied, copy }) => (
                         <Tooltip withArrow arrowOffset={10} arrowSize={4} label="Copy URL">
                             <ActionIcon variant="light" color={copied ? 'teal' : 'blue'} onClick={copy} >
-                            <IconClipboardCopy style={{ width: '70%', height: '70%' }} stroke={1.5}/>
+                            <IconLink style={{ width: '70%', height: '70%' }} stroke={1.5}/>
                             </ActionIcon>
                         </Tooltip>
                     )}
