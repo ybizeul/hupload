@@ -2,6 +2,7 @@ import { useEffect, useState } from "react"
 import { H } from "../APIClient"
 import { Text } from "@mantine/core"
 
+
 interface VersionInterface {
     version: string
 }
@@ -16,6 +17,6 @@ export function VersionComponent() {
     })
 
     return (
-        <Text w="100%" size="xs" c="darkgray" ta="center" style={{ position: 'absolute', bottom: '1em'}}>{version}</Text>
+                <Text w="100%" mt="lg" mb="lg" size="xs" c="darkgray" ta="center" >{version}</Text>
     )
 }
