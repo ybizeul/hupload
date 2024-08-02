@@ -48,16 +48,24 @@ export function Shares(props: {owner: string|null}) {
         <Text ta="center" mt="xl">No shares</Text>
         :
         <>
-        <Text size="xl" fw="700">You Shares</Text>
-        {shares.map((s) => (
-          s.owner === owner &&
-          <ShareComponent key={s.name} share={s} />
-        ))}
-        <Text mt="md" size="xl" fw="700">Other Shares</Text>
-        {shares.map((s) => (
-          s.owner === owner ||
-          <ShareComponent key={s.name} share={s} />
-        ))}
+        {shares.some((s) => s.owner === owner) &&
+          <>
+          <Text size="xl" fw="700">Your Shares</Text>
+          {shares.map((s) => (
+            s.owner === owner &&
+            <ShareComponent key={s.name} share={s} />
+          ))}
+          </>
+        }
+        {shares.some((s) => s.owner !== owner) &&
+          <>
+          <Text mt="md" size="xl" fw="700">Other Shares</Text>
+          {shares.map((s) => (
+            s.owner === owner ||
+            <ShareComponent key={s.name} share={s} />
+          ))}
+          </>
+        }
         </>
       }
     </>

@@ -41,7 +41,7 @@ export default function App() {
       <BrowserRouter>
         <LoggedInContext.Provider value={{loggedIn,setLoggedIn}}>
         <Routes>
-            <Route path="/" element={<><Haffix/><Login /></>}/>
+            <Route path="/" element={<Login />}/>
             <Route path="/shares" element={<><Haffix/><Shares owner={loggedIn}/></>} />
             <Route path=":share" element={<><Haffix/><Share /></>} />
           </Routes>
