@@ -8,8 +8,17 @@
       content="minimum-scale=1, initial-scale=1, width=device-width, user-scalable=no"
     />
     <style>
-      body, html, #root {
-        height: 100%;
+      body {
+        min-height: 100vh;
+        margin: 0;
+        display: flex;
+        flex-direction: column;
+        flex: 1 1 0%;
+      }
+      #root {
+        display: flex;
+        flex-direction: column;
+        flex: 1 0 100%;
       }
     </style>
     <title>Hupload</title>

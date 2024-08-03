@@ -1,9 +1,7 @@
 on:
   push:
     branches:
-      - main
-      - latest
-  
+      - main 
 jobs:
   release:
     name: release

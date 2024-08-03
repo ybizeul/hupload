@@ -24,13 +24,13 @@ func startWebServer(api *apiws.APIWS) {
 	// Setup routes
 	api.AddRoute("POST /api/v1/share/{share}/{item}", nil, postItem)
 	api.AddRoute("GET /api/v1/share/{share}", nil, getShare)
-	api.AddRoute("GET /api/v1/share/{share}/{item}", authenticators, getItem)
 
 	// Protected routes
 	api.AddRoute("POST /api/v1/login", authenticators, postLogin)
 	api.AddRoute("POST /api/v1/share", authenticators, postShare)
 	api.AddRoute("DELETE /api/v1/share/{share}", authenticators, deleteShare)
 	api.AddRoute("PUT /api/v1/share/{share}", authenticators, putShare)
+	api.AddRoute("GET /api/v1/share/{share}/{item}", authenticators, getItem)
 	api.AddRoute("GET /api/v1/share", authenticators, getShares)
 	api.AddRoute("GET /api/v1/version", authenticators, getVersion)
 
