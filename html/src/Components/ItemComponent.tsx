@@ -1,4 +1,4 @@
-import { ActionIcon, Anchor, Center, Group, Paper, rem, RingProgress, Text } from "@mantine/core";
+import { ActionIcon, Anchor, Box, Center, Flex, Paper, rem, RingProgress, Text } from "@mantine/core";
 import { IconCheck } from "@tabler/icons-react";
 import { QueueItem } from "../UploadQueue";
 import { humanFileSize, Item } from "../hupload";
@@ -13,8 +13,9 @@ export function ItemComponent(props: {item?: Item, queueItem?: QueueItem}) {
     
     return (
     <Paper key={key} p="md" shadow="xs" radius="md" mt={10} className={classes.paper}>
-        <Group justify="space-between" h={45}>
-            {loggedIn&&!queueItem?<Anchor href={'/api/v1/share/'+item?.Path}>{fileName}</Anchor>:<Text>{fileName}</Text>}
+        <Flex direction="row" align="center" h={45}>
+            {loggedIn&&!queueItem?<Anchor truncate="end" href={'/api/v1/share/'+item?.Path}>{fileName}</Anchor>:<Text truncate="end">{fileName}</Text>}
+            <Box flex={1} ta={"right"}>
             {queueItem?
             <RingProgress
                 size={45}
@@ -30,13 +31,15 @@ export function ItemComponent(props: {item?: Item, queueItem?: QueueItem}) {
                     </ActionIcon>
                 </Center>
                 :
-                <Text c="blue" fw={700} ta="center" size={rem(10)}>
+                <Text c="blue" fw={700} ta="center" >
                     {(100*queueItem.loaded/queueItem.total).toFixed(0) + '%'}
                 </Text>
                 }
             />
             :item&&
-            <Text>{humanFileSize(item.ItemInfo.Size)}</Text>}
-        </Group>
-    </Paper>
+                <Text style={{whiteSpace: "nowrap"}}>{humanFileSize(item.ItemInfo.Size)}</Text>
+            }
+            </Box>
+            </Flex>
+        </Paper>
 )}
