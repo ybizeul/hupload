@@ -39,7 +39,7 @@ func main() {
 	}
 
 	// Create API web service with the embedded UI
-	api, err = apiws.New(uiFS)
+	api, err = apiws.New(uiFS, c.Values)
 	if err != nil {
 		panic(err)
 	}

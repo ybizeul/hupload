@@ -18,6 +18,7 @@ type Config struct {
 
 // Load reads the configuration file and populates the Config struct
 func (c *Config) Load() error {
+	c.Values = map[string]any{"title": "Hupload"}
 	f, err := os.Open(c.Path)
 	if err != nil {
 		if errors.Is(err, os.ErrNotExist) {

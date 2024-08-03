@@ -2,6 +2,7 @@ package apiws
 
 import (
 	"fmt"
+	"html/template"
 	"io/fs"
 	"log/slog"
 	"net/http"
@@ -15,13 +16,15 @@ type APIWS struct {
 	HTTPPort int
 	mux      *http.ServeMux
 
+	TemplateData any
+
 	StorageService storageservice.StorageServiceInterface
 	AuthService    authservice.AuthServiceInterface
 }
 
 // New creates a new API Web Server. staticUI is the file system containing the
 // web root directory.
-func New(staticUI fs.FS) (*APIWS, error) {
+func New(staticUI fs.FS, t any) (*APIWS, error) {
 	d, err := fs.ReadDir(staticUI, ".")
 	if err != nil {
 		return nil, err
@@ -31,9 +34,10 @@ func New(staticUI fs.FS) (*APIWS, error) {
 		return nil, err
 	}
 	return &APIWS{
-		StaticUI: f,
-		HTTPPort: 8080,
-		mux:      http.NewServeMux(),
+		StaticUI:     f,
+		HTTPPort:     8080,
+		TemplateData: t,
+		mux:          http.NewServeMux(),
 	}, nil
 }
 
@@ -65,12 +69,20 @@ func (a *APIWS) AddRoute(pattern string, authenticators []AuthMiddleware, handle
 
 // Start starts the API Web Server.
 func (a *APIWS) Start() {
+
 	a.mux.HandleFunc("GET /{path...}", func(w http.ResponseWriter, r *http.Request) {
 		_, err := fs.Stat(a.StaticUI, r.URL.Path[1:])
 		if err == nil {
 			http.ServeFileFS(w, r, a.StaticUI, r.URL.Path[1:])
 		} else {
-			http.ServeFileFS(w, r, a.StaticUI, "index.html")
+			tmpl, err := template.New("index.html").ParseFS(a.StaticUI, "index.html")
+			if err != nil {
+				slog.Error("unable to parse template", slog.String("error", err.Error()))
+			}
+			err = tmpl.Execute(w, a.TemplateData)
+			if err != nil {
+				slog.Error("unable to execute template", slog.String("error", err.Error()))
+			}
 		}
 	})
 
