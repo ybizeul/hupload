@@ -4,7 +4,7 @@ services:
     ports:
       - "8080:8080"
     volumes:
-      - ./data22:/data
+      - ./data:/data
       - ./hupload/config/config.yml.sample:/config.yml
       - ./hupload/config/users.yml.sample:/users.yml
   
