@@ -1,0 +1,10 @@
+services:
+  hupload:
+    image: ghcr.io/ybizeul/hupload/hupload:latest
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./data22:/data
+      - ./hupload/config/config.yml.sample:/config.yml
+      - ./hupload/config/users.yml.sample:/users.yml
+  
