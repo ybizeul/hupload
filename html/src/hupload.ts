@@ -1,6 +1,8 @@
 export interface Share {
   name: string;
   owner: string;
+  count: number;
+    size: number;
 }
 
 export interface Item {

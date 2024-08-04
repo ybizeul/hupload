@@ -1,5 +1,5 @@
-import { ActionIcon, Anchor, Button, CopyButton, Group, Paper, Popover, Text, Tooltip } from "@mantine/core";
-import { Share } from "../hupload";
+import { ActionIcon, Anchor, Button, CopyButton, Flex, Group, Paper, Popover, Text, Tooltip } from "@mantine/core";
+import { humanFileSize, Share } from "../hupload";
 import { Link } from "react-router-dom";
 import classes from './ShareComponent.module.css';
 import { IconLink, IconTrash } from "@tabler/icons-react";
@@ -16,6 +16,9 @@ export function ShareComponent(props: {share: Share}) {
     // Constants
     const key = share.name
     const name = share.name
+    const count = share.count
+    const size = share.size
+    const countString = count?(count + ' items' + (count > 1 ? 's' : '')):"empty"
 
     // Function
     const deleteShare = () => {
@@ -27,13 +30,16 @@ export function ShareComponent(props: {share: Share}) {
         <>
         {!deleted &&
         <Paper key={key} p="md" shadow="xs" radius="md" mt={10} className={classes.paper}>
-            <Group justify="space-between" h={45}>
-                <Anchor component={Link} to={'/'+name}><Text>{name}</Text></Anchor>
-                <Group>
+            <Flex h={45} align={"center"}>
+                <Group flex="1" gap="0" align="baseline">
+                    <Anchor style={{ whiteSpace: "nowrap"}} flex={"1"} component={Link} to={'/'+name}><Text>{name}</Text></Anchor>
+                    <Text size="xs" c="gray">{countString + (size?(' | ' + humanFileSize(size)):'')}</Text>
+                </Group>
+                <Group justify="flex-end">
                     <CopyButton value={window.location.protocol + '//' + window.location.host + '/' + name}>
                     {({ copied, copy }) => (
                         <Tooltip withArrow arrowOffset={10} arrowSize={4} label="Copy URL">
-                            <ActionIcon variant="light" color={copied ? 'teal' : 'blue'} onClick={copy} >
+                            <ActionIcon ml="sm" variant="light" color={copied ? 'teal' : 'blue'} onClick={copy} >
                             <IconLink style={{ width: '70%', height: '70%' }} stroke={1.5}/>
                             </ActionIcon>
                         </Tooltip>
@@ -53,7 +59,7 @@ export function ShareComponent(props: {share: Share}) {
                         </Popover.Dropdown>
                     </Popover>
                 </Group>
-            </Group>
+            </Flex>
         </Paper>
         }
         </>
