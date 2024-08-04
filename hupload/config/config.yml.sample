@@ -7,3 +7,5 @@ storage:
   type: file
   options:
     path: data
+    max_file_mb: 500
+    max_share_mb: 2000

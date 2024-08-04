@@ -95,36 +95,50 @@ func (b *FileBackend) CreateItem(s string, i string, r *bufio.Reader) (*Item, er
 	}
 	defer f.Close()
 
-	max := b.int64Option("max_bytes_share")
-	if max > 0 {
-		// Check if there is a max bytes associated to share
-		share, err := b.GetShare(s)
-		if err != nil {
-			return nil, errors.New("cannot get share")
-		}
-		maxWrite := max - share.Size
+	share, err := b.GetShare(s)
+
+	src := r
+
+	maxWrite := int64(0)
+
+	maxShare := b.int64Option("max_share_mb") * 1024 * 1024
+	if maxShare > 0 {
+		maxWrite = maxShare - share.Size
 		if maxWrite <= 0 {
 			return nil, errors.New("Max share capacity already reached")
 		}
-		reader := io.LimitReader(r, maxWrite)
-		written, err := io.Copy(f, reader)
-		if err != nil {
-			os.Remove(p + suffix)
-			return nil, errors.New("cannot copy item content")
-		}
+	}
 
-		if written == 0 || written == maxWrite {
-			os.Remove(p + suffix)
-			return nil, errors.New("Max share capacity reached")
-		}
-
-	} else {
-		_, err := io.Copy(f, r)
-		if err != nil {
-			os.Remove(p + suffix)
-			return nil, errors.New("cannot copy item content")
+	maxItem := b.int64Option("max_file_mb") * 1024 * 1024
+	if maxItem > 0 {
+		if maxWrite > maxItem || maxWrite == 0 {
+			maxWrite = maxItem
 		}
 	}
+
+	if maxWrite > 0 {
+		// Check if there is a max bytes associated to share
+		if err != nil {
+			return nil, errors.New("cannot get share")
+		}
+		if maxWrite <= 0 {
+			return nil, errors.New("Max share capacity already reached")
+		}
+
+		src = bufio.NewReader(io.LimitReader(r, maxWrite))
+	}
+
+	written, err := io.Copy(f, src)
+	if err != nil {
+		os.Remove(p + suffix)
+		return nil, errors.New("cannot copy item content")
+	}
+
+	if written == 0 || written == maxWrite {
+		os.Remove(p + suffix)
+		return nil, errors.New("File too big or share is full")
+	}
+
 	err = os.Rename(p+suffix, p)
 	if err != nil {
 		return nil, errors.New("cannot rename item to final destination")
