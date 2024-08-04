@@ -53,7 +53,10 @@ export function Share() {
           .then((r) => {
             const finishedItems = r as Item[]
             setQueue([])
-            setItems([...items,...finishedItems])
+            setItems([...finishedItems,...newItems])
+          })
+          .catch((e) => {
+            console.log(e)
           })
         }}
 
@@ -88,7 +91,7 @@ export function Share() {
       </Dropzone>
       {
         queue.map((q) => (
-          <ItemComponent key={q.file.name} queueItem={q} />
+          <ItemComponent key={'up_' + q.file.name} queueItem={q} />
         ))
       }
       {

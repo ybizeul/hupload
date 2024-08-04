@@ -6,6 +6,8 @@ export interface QueueItem {
     loaded : number
     total : number
     finished : boolean
+    failed: boolean
+    error: string
 }
 
 export class UploadQueue {
@@ -27,6 +29,8 @@ export class UploadQueue {
                 loaded: 0,
                 total: f.size,
                 finished: false,
+                failed: false,
+                error:'',
             }
         })
 
@@ -52,7 +56,11 @@ export class UploadQueue {
                     resolve(r)
                 })
                 .catch((e) => {
-                    console.log(e)
+                    f.finished = true; 
+                    f.failed = true
+                    f.error = e.response?.data
+                    this.updateProgress()
+                    this.progressCallback = undefined
                     reject(e)
                 })
             })

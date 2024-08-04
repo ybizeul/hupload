@@ -58,11 +58,18 @@ func postItem(w http.ResponseWriter, r *http.Request) {
 	b := bufio.NewReader(np)
 	item, err := api.StorageService.CreateItem(r.PathValue("share"), np.FileName(), b)
 	if err != nil {
+		w.WriteHeader(http.StatusNotAcceptable)
 		_, _ = w.Write([]byte(err.Error()))
 		return
 	}
 
 	c, err := json.Marshal(item)
+	if err != nil {
+		_, _ = w.Write([]byte(err.Error()))
+		return
+	}
+
+	err = api.StorageService.UpdateMetadata(r.PathValue("share"))
 	if err != nil {
 		_, _ = w.Write([]byte(err.Error()))
 		return

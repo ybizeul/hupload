@@ -1,9 +1,10 @@
-import { ActionIcon, Anchor, Box, Center, Flex, Paper, rem, RingProgress, Text } from "@mantine/core";
-import { IconCheck } from "@tabler/icons-react";
+import { ActionIcon, Box, Center, Flex, Paper, rem, RingProgress, Text, Tooltip } from "@mantine/core";
+import { IconCheck, IconDownload, IconX } from "@tabler/icons-react";
 import { QueueItem } from "../UploadQueue";
 import { humanFileSize, Item } from "../hupload";
 import { useLoggedInContext } from "../LoggedInContext";
 import classes from './ItemComponent.module.css';
+import { ReactNode } from "react";
 
 export function ItemComponent(props: {item?: Item, queueItem?: QueueItem}) {
     const {item, queueItem} = props
@@ -11,34 +12,61 @@ export function ItemComponent(props: {item?: Item, queueItem?: QueueItem}) {
     const fileName = item?item.Path.split('/')[1]:queueItem?.file.name
     const {loggedIn} = useLoggedInContext()
     
+    const addTooltip = (t: string,element: ReactNode) => {
+        if (t === '') {
+            return (element)
+        } else {
+            return(
+            <Tooltip label={t}>
+                {element}
+            </Tooltip>
+            )
+        }
+    }
     return (
     <Paper key={key} p="md" shadow="xs" radius="md" mt={10} className={classes.paper}>
         <Flex direction="row" align="center" h={45}>
-            {loggedIn&&!queueItem?<Anchor truncate="end" href={'/api/v1/share/'+item?.Path}>{fileName}</Anchor>:<Text truncate="end">{fileName}</Text>}
+            <Text truncate="end">{fileName}</Text>
             <Box flex={1} ta={"right"}>
+            <Flex align={"center"} justify={"right"}>
             {queueItem?
-            <RingProgress
+            addTooltip(queueItem.failed?queueItem.error:"",<RingProgress
                 size={45}
-                thickness={4}
+                thickness={3}
                 sections={[
-                { value: queueItem.finished?100:100*queueItem.loaded/queueItem.total, color: (queueItem.finished)?'teal':'blue'},
+                { value: queueItem.finished?100:100*queueItem.loaded/queueItem.total, color: (queueItem.failed)?'red':(queueItem.finished)?'teal':'blue'},
                 ]}
                 label={
-                (queueItem.finished)?
-                <Center>
-                    <ActionIcon color="teal" variant="light" radius="xl" size="xl">
-                    <IconCheck style={{ width: rem(22), height: rem(22) }} />
+                (queueItem.failed)?
+                (<Center>
+                    <ActionIcon color="red" variant="light" radius="xl" size="xl">
+                        <IconX style={{ width: rem(22), height: rem(22) }} />
                     </ActionIcon>
-                </Center>
+                </Center>)
                 :
-                <Text c="blue" fw={700} ta="center" >
+                ((queueItem.finished)?
+                (<Center>
+                    <ActionIcon color="teal" variant="light" radius="xl" size="xl">
+                        <IconCheck style={{ width: rem(22), height: rem(22) }} />
+                    </ActionIcon>
+                </Center>)
+                :
+                <Text c="blue" fw={700} size="xs" ta="center" >
                     {(100*queueItem.loaded/queueItem.total).toFixed(0) + '%'}
-                </Text>
+                </Text>)
                 }
-            />
+            />)
             :item&&
-                <Text style={{whiteSpace: "nowrap"}}>{humanFileSize(item.ItemInfo.Size)}</Text>
-            }
+            <>
+                <Text size="xs" c="gray" style={{whiteSpace: "nowrap"}}>{humanFileSize(item.ItemInfo.Size)}</Text>
+                {loggedIn&&
+                <ActionIcon ml="sm" component="a" href={'/api/v1/share/'+item?.Path} aria-label="Download" variant="light" color="blue">
+                    <IconDownload style={{ width: '70%', height: '70%' }} stroke={1.5} />
+                </ActionIcon>
+                }
+                </>
+           }
+            </Flex>
             </Box>
             </Flex>
         </Paper>

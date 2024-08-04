@@ -103,7 +103,7 @@ export class APIClient {
         return new Promise<AxiosResponse|APIServerError>((resolve, reject) => {
             const formData = new FormData();
             formData.append("file", file);
-
+            
             this.request({
                 url: this.baseURL + path,
                 method: 'POST',

@@ -18,7 +18,7 @@ export function ShareComponent(props: {share: Share}) {
     const name = share.name
     const count = share.count
     const size = share.size
-    const countString = count?(count + ' items' + (count > 1 ? 's' : '')):"empty"
+    const countString = count?(count + ' item' + (count > 1 ? 's' : '')):"empty"
 
     // Function
     const deleteShare = () => {
