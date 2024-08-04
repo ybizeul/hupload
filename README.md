@@ -9,6 +9,10 @@ or support bundles from your users.
 
 It is a web portal and an API for direct integration into your products.
 
+The overall concept is that share names are random tokens that can be generated
+by **hupload** and are publicly accessible so users don't have to log in to 
+upload content.
+
 ## Screenshots
 
 ### Admin page
@@ -23,6 +27,16 @@ It is a web portal and an API for direct integration into your products.
 |-------------|-------------|
 | CONFIG      | Path to `config.yml`    |
 | HTTP_PORT   | Port to run web service |
+
+## Features
+
+- Quickly create random links and share with users,
+- Easy to use drag and drop interface for uploads,
+- Configurable max share size and max file size,
+- Basic share informations listed (number of items, total size),
+- Multi user (all admins see all shares, but see their own listed separately first),
+- API first, everything can be done through REST calls,
+- Minimalist, clean interface.
 
 ## Configuration
 
@@ -50,7 +64,7 @@ storage:
 Currently, there is only one authentication backend `file` and one storage
 backend `file`
 
-For auehtentication, users are defined in a yaml file :
+For authentication, users are defined in a yaml file :
 
 ```
 - username: user1
