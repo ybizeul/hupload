@@ -1,4 +1,4 @@
-package apiws
+package auth
 
 import (
 	"crypto/rand"

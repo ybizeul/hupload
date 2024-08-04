@@ -7,16 +7,17 @@ import (
 	"log/slog"
 
 	"github.com/ybizeul/hupload/pkg/apiws"
+	"github.com/ybizeul/hupload/pkg/apiws/middleware/auth"
 )
 
 func startWebServer(api *apiws.APIWS) {
 
 	// Define authenticators for protected routes
-	authenticators := []apiws.AuthMiddleware{
-		apiws.BasicAuthMiddleware{
-			AuthService: api.AuthService,
+	authenticators := []auth.AuthMiddleware{
+		auth.BasicAuthMiddleware{
+			Authentication: api.Authentication,
 		},
-		apiws.JWTAuthMiddleware{
+		auth.JWTAuthMiddleware{
 			HMACSecret: os.Getenv("JWT_SECRET"),
 		},
 	}

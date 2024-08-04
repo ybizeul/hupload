@@ -1,4 +1,4 @@
-package storageservice
+package storage
 
 import (
 	"bufio"
@@ -20,9 +20,9 @@ type FileBackend struct {
 	Options map[string]any
 }
 
-// NewFileBackend creates a new FileBackend, m is the configuration as found
+// NewFileStorage creates a new FileBackend, m is the configuration as found
 // in Hupload configuration file.
-func NewFileBackend(m map[string]any) *FileBackend {
+func NewFileStorage(m map[string]any) *FileBackend {
 	r := &FileBackend{
 		Options: m["options"].(map[string]any),
 	}

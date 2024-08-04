@@ -1,4 +1,4 @@
-package authservice
+package authentication
 
 import (
 	"fmt"
@@ -10,7 +10,7 @@ type AuthBackendDefault struct {
 	Password string
 }
 
-func NewAuthBackendDefault() *AuthBackendDefault {
+func NewAuthenticationDefault() *AuthBackendDefault {
 	c := generateCode(7)
 	slog.Info(fmt.Sprintf("Starting with default authentication service. username: admin, password: %s", c))
 	r := &AuthBackendDefault{

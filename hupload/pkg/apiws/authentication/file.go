@@ -1,4 +1,4 @@
-package authservice
+package authentication
 
 import (
 	"os"
@@ -11,7 +11,7 @@ type AuthBackendBasic struct {
 	Options map[string]any
 }
 
-func NewAuthBackendBasic(m map[string]any) *AuthBackendBasic {
+func NewAuthenticationBasic(m map[string]any) *AuthBackendBasic {
 	r := &AuthBackendBasic{
 		Options: m["options"].(map[string]any),
 	}

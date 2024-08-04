@@ -1,4 +1,4 @@
-package apiws
+package logger
 
 import (
 	"log/slog"
@@ -9,7 +9,7 @@ type APIWSLogger struct {
 	handler http.Handler
 }
 
-func newLogger(handlerToWrap http.Handler) *APIWSLogger {
+func NewLogger(handlerToWrap http.Handler) *APIWSLogger {
 	return &APIWSLogger{handlerToWrap}
 }
 

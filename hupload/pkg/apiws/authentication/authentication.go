@@ -1,4 +1,4 @@
-package authservice
+package authentication
 
 type User struct {
 	Username string `yaml:"username"`
@@ -6,6 +6,6 @@ type User struct {
 }
 
 // BackendInterface must be implemented by any backend
-type AuthServiceInterface interface {
+type AuthenticationInterface interface {
 	AuthenticateUser(username, password string) (bool, error)
 }

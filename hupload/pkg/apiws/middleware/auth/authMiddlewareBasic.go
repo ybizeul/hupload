@@ -1,10 +1,10 @@
-package apiws
+package auth
 
 import (
 	"errors"
 	"net/http"
 
-	"github.com/ybizeul/hupload/pkg/apiws/authservice"
+	"github.com/ybizeul/hupload/pkg/apiws/authentication"
 )
 
 // BasicAuthenticator uses a password file to authenticate users, like :
@@ -18,7 +18,7 @@ import (
 //
 // and remove the leading `:` from the hash
 type BasicAuthMiddleware struct {
-	AuthService authservice.AuthServiceInterface
+	Authentication authentication.AuthenticationInterface
 }
 
 func (a BasicAuthMiddleware) Middleware(next http.Handler) http.Handler {
@@ -28,7 +28,7 @@ func (a BasicAuthMiddleware) Middleware(next http.Handler) http.Handler {
 
 		// If authentication has been sent, check credentials
 		if ok {
-			b, err := a.AuthService.AuthenticateUser(qUser, qPasswd)
+			b, err := a.Authentication.AuthenticateUser(qUser, qPasswd)
 			if err != nil {
 				serveNextError(next, w, r, err)
 				return

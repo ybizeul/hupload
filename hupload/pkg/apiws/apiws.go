@@ -7,8 +7,10 @@ import (
 	"log/slog"
 	"net/http"
 
-	"github.com/ybizeul/hupload/pkg/apiws/authservice"
-	"github.com/ybizeul/hupload/pkg/apiws/storageservice"
+	"github.com/ybizeul/hupload/pkg/apiws/authentication"
+	"github.com/ybizeul/hupload/pkg/apiws/middleware/auth"
+	logger "github.com/ybizeul/hupload/pkg/apiws/middleware/log"
+	"github.com/ybizeul/hupload/pkg/apiws/storage"
 )
 
 type APIWS struct {
@@ -18,8 +20,8 @@ type APIWS struct {
 
 	TemplateData any
 
-	StorageService storageservice.StorageServiceInterface
-	AuthService    authservice.AuthServiceInterface
+	StorageService storage.StorageInterface
+	Authentication authentication.AuthenticationInterface
 }
 
 // New creates a new API Web Server. staticUI is the file system containing the
@@ -41,24 +43,24 @@ func New(staticUI fs.FS, t any) (*APIWS, error) {
 	}, nil
 }
 
-func (a *APIWS) SetStorageService(b storageservice.StorageServiceInterface) {
+func (a *APIWS) SetStorage(b storage.StorageInterface) {
 	a.StorageService = b
 }
 
-func (a *APIWS) SetAuthService(b authservice.AuthServiceInterface) {
-	a.AuthService = b
+func (a *APIWS) SetAuthentication(b authentication.AuthenticationInterface) {
+	a.Authentication = b
 }
 
 // AddRoute adds a new route to the API Web Server. pattern is the URL pattern
 // to match. authenticators is a list of Authenticator to use to authenticate
 // the request. handlerFunc is the function to call when the route is matched.
-func (a *APIWS) AddRoute(pattern string, authenticators []AuthMiddleware, handlerFunc func(w http.ResponseWriter, r *http.Request)) {
+func (a *APIWS) AddRoute(pattern string, authenticators []auth.AuthMiddleware, handlerFunc func(w http.ResponseWriter, r *http.Request)) {
 	if authenticators == nil {
 		a.mux.HandleFunc(pattern, handlerFunc)
 	} else {
 		var h http.Handler
 		h = http.HandlerFunc(handlerFunc)
-		c := ConfirmAuthenticator{Realm: "Hupload"}
+		c := auth.ConfirmAuthenticator{Realm: "Hupload"}
 		h = c.Middleware(h)
 		for i := range authenticators {
 			h = authenticators[len(authenticators)-1-i].Middleware(h)
@@ -87,17 +89,8 @@ func (a *APIWS) Start() {
 	})
 
 	slog.Info(fmt.Sprintf("Starting web service on port %d", a.HTTPPort))
-	err := http.ListenAndServe(fmt.Sprintf(":%d", a.HTTPPort), newLogger(a.mux))
+	err := http.ListenAndServe(fmt.Sprintf(":%d", a.HTTPPort), logger.NewLogger(a.mux))
 	if err != nil {
 		slog.Error("unable to start http server", slog.String("error", err.Error()))
 	}
-}
-
-func UserForRequest(r *http.Request) string {
-	user, ok := r.Context().Value(AuthUser).(string)
-	if !ok {
-		slog.Error("putShare", slog.String("error", "no user in context"))
-		return ""
-	}
-	return user
 }

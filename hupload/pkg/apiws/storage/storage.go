@@ -1,4 +1,4 @@
-package storageservice
+package storage
 
 import (
 	"bufio"
@@ -23,7 +23,7 @@ type ItemInfo struct {
 }
 
 // BackendInterface must be implemented by any backend
-type StorageServiceInterface interface {
+type StorageInterface interface {
 	// CreateShare creates a new share
 	CreateShare(string, string) error
 

@@ -6,8 +6,8 @@ import (
 
 	"gopkg.in/yaml.v3"
 
-	"github.com/ybizeul/hupload/pkg/apiws/authservice"
-	"github.com/ybizeul/hupload/pkg/apiws/storageservice"
+	"github.com/ybizeul/hupload/pkg/apiws/authentication"
+	"github.com/ybizeul/hupload/pkg/apiws/storage"
 )
 
 // Config is the internal representation of Hupload configuration file
@@ -34,37 +34,37 @@ func (c *Config) Load() error {
 	return nil
 }
 
-// Backend returns the storage backend struct that will be used to create
-// shared, store and retrieve content.
-func (c *Config) Backend() (storageservice.StorageServiceInterface, error) {
-	b, ok := c.Values["backend"].(map[string]any)
+// Storage returns the storage backend struct that will be used to create
+// shares, store and retrieve content.
+func (c *Config) Storage() (storage.StorageInterface, error) {
+	b, ok := c.Values["storage"].(map[string]any)
 	if !ok {
-		return c.DefaultBackend(), nil
+		return DefaultStorage(), nil
 	}
-	backendType, ok := b["type"].(string)
+	storageType, ok := b["type"].(string)
 	if !ok {
-		return nil, errors.New("invalid backend")
+		return nil, errors.New("invalid storage backend")
 	}
-	switch backendType {
+	switch storageType {
 
 	case "file":
-		return storageservice.NewFileBackend(b), nil
+		return storage.NewFileStorage(b), nil
 	}
 	return nil, errors.New("unknown backend")
 }
 
-func (c *Config) DefaultBackend() storageservice.StorageServiceInterface {
-	return storageservice.NewFileBackend(map[string]any{
+func DefaultStorage() storage.StorageInterface {
+	return storage.NewFileStorage(map[string]any{
 		"options": map[string]any{
 			"path": "data",
 		},
 	})
 }
 
-func (c *Config) AuthBackend() (authservice.AuthServiceInterface, error) {
+func (c *Config) Authentication() (authentication.AuthenticationInterface, error) {
 	b, ok := c.Values["auth"].(map[string]any)
 	if !ok {
-		return authservice.NewAuthBackendDefault(), nil
+		return DefaultAuthentication(), nil
 	}
 	backendType, ok := b["type"].(string)
 	if !ok {
@@ -72,7 +72,11 @@ func (c *Config) AuthBackend() (authservice.AuthServiceInterface, error) {
 	}
 	switch backendType {
 	case "file":
-		return authservice.NewAuthBackendBasic(b), nil
+		return authentication.NewAuthenticationBasic(b), nil
 	}
 	return nil, errors.New("unknown backend")
+}
+
+func DefaultAuthentication() authentication.AuthenticationInterface {
+	return authentication.NewAuthenticationDefault()
 }

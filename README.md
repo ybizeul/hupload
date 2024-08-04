@@ -31,7 +31,7 @@ auth:
   type: file
   options:
     path: config/users.yml
-backend:
+storage:
   type: file
   options:
     path: data

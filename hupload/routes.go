@@ -8,11 +8,11 @@ import (
 	"log/slog"
 	"net/http"
 
-	"github.com/ybizeul/hupload/pkg/apiws"
+	"github.com/ybizeul/hupload/pkg/apiws/middleware/auth"
 )
 
 func postShare(w http.ResponseWriter, r *http.Request) {
-	user := apiws.UserForRequest(r)
+	user := auth.UserForRequest(r)
 	if user == "" {
 		slog.Error("putShare", slog.String("error", "no user in context"))
 		_, _ = w.Write([]byte("no user in context"))
@@ -30,7 +30,7 @@ func postShare(w http.ResponseWriter, r *http.Request) {
 }
 
 func putShare(w http.ResponseWriter, r *http.Request) {
-	user := apiws.UserForRequest(r)
+	user := auth.UserForRequest(r)
 	if user == "" {
 		slog.Error("putShare", slog.String("error", "no user in context"))
 		_, _ = w.Write([]byte("no user in context"))
@@ -146,7 +146,7 @@ func postLogin(w http.ResponseWriter, r *http.Request) {
 	u := struct {
 		User string `json:"user"`
 	}{
-		User: apiws.UserForRequest(r),
+		User: auth.UserForRequest(r),
 	}
 	b, err := json.Marshal(u)
 	if err != nil {

@@ -1,4 +1,4 @@
-package apiws
+package auth
 
 import (
 	"context"
@@ -89,4 +89,13 @@ func (a *ConfirmAuthenticator) Middleware(next http.Handler) http.Handler {
 		}
 
 	})
+}
+
+func UserForRequest(r *http.Request) string {
+	user, ok := r.Context().Value(AuthUser).(string)
+	if !ok {
+		slog.Error("putShare", slog.String("error", "no user in context"))
+		return ""
+	}
+	return user
 }
