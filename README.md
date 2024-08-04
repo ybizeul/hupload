@@ -67,3 +67,24 @@ To generate a hash for `hupload` password string :
 htpasswd -bnBC 10 "" hupload | tr -d ":"
 $2y$10$LIcTF3HKNhV6qh3oi3ysHOnhiXpLOU22N61JzZXoSWQbNOpDhS/g.
 ```
+
+## API
+
+The following endpoints are available under `/api/v1`
+
+**Basic Authentication Required**
+
+| Type     | URL                     | Description                          |
+|----------|-------------------------|--------------------------------------|
+| `GET`    | `/share`                | Get a list of all shares
+| `POST`   | `/share`                | Create a new share with a random name
+| `PUT`    | `/share/{share}`        | Create a new share named `{share}`
+| `DELETE` | `/share/{share}`        | Delete a share and all its content
+| `GET`    | `/share/{share}/{item}` | Get an `{item}` (file) content
+
+**Public Endpoints**
+
+| Type     | URL                     | Description                          |
+|----------|-------------------------|--------------------------------------|
+| `POST`   | `/share/{share}/{item}` | Post a new file `{item}` in `{share}` (multipart form encoded)
+| `GET`    |	`/share/{share}`        | Get a `{share}` content
