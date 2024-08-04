@@ -1,5 +1,5 @@
 ![Icon](readme_images/icon.svg#gh-light-mode-only)
-![Icon](Areadme_images/icon-dark.svg#gh-darkmode-only)
+![Icon](readme_images/icon-dark.svg#gh-darkmode-only)
 
 # hupload
 
