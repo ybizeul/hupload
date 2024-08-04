@@ -75,15 +75,18 @@ func (b *FileBackend) CreateShare(s string, o string) error {
 		Owner:       o,
 		DateCreated: time.Now(),
 	}
+
 	f, err := os.Create(path.Join(b.stringOption("path"), s, ".metadata"))
 	if err != nil {
 		return err
 	}
 	defer f.Close()
+
 	err = json.NewEncoder(f).Encode(m)
 	if err != nil {
 		return err
 	}
+
 	return nil
 }
 

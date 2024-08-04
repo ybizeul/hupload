@@ -23,6 +23,7 @@ func startWebServer(api *apiws.APIWS) {
 	}
 
 	// Setup routes
+	// Guests can access names share and post new files
 	api.AddRoute("POST /api/v1/share/{share}/{item}", nil, postItem)
 	api.AddRoute("GET /api/v1/share/{share}", nil, getShare)
 

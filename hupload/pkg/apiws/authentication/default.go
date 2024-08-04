@@ -6,20 +6,23 @@ import (
 	"math/rand/v2"
 )
 
-type AuthBackendDefault struct {
+// AuthenticationDefault is the default authentication when none has been found
+// in configuration. Username is `admin` and password is a random 7 characters
+type AuthenticationDefault struct {
 	Password string
 }
 
-func NewAuthenticationDefault() *AuthBackendDefault {
+func NewAuthenticationDefault() *AuthenticationDefault {
 	c := generateCode(7)
-	slog.Info(fmt.Sprintf("Starting with default authentication service. username: admin, password: %s", c))
-	r := &AuthBackendDefault{
+	slog.Info(fmt.Sprintf("Starting with default authentication backend. username: admin, password: %s", c))
+	r := &AuthenticationDefault{
 		Password: c,
 	}
 
 	return r
 }
-func (a *AuthBackendDefault) AuthenticateUser(username, password string) (bool, error) {
+
+func (a *AuthenticationDefault) AuthenticateUser(username, password string) (bool, error) {
 	if username == "admin" && password == a.Password {
 		return true, nil
 	}

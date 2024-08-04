@@ -2,7 +2,6 @@ package main
 
 import (
 	"embed"
-	"errors"
 	"log/slog"
 	"os"
 
@@ -29,13 +28,12 @@ func main() {
 	}
 
 	// Load configuration
-	err := c.Load()
+	found, err := c.Load()
+	if !found {
+		slog.Warn("No configuration file found, using default values", slog.String("path", cfgPath))
+	}
 	if err != nil {
-		if errors.Is(err, config.ErrorConfigNoSuchFile) {
-			slog.Warn("No configuration file found, using default values", slog.String("path", cfgPath))
-		} else {
-			panic(err)
-		}
+		panic(err)
 	}
 
 	// Create API web service with the embedded UI

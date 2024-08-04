@@ -20,7 +20,7 @@ type APIWS struct {
 
 	TemplateData any
 
-	StorageService storage.StorageInterface
+	Storage        storage.StorageInterface
 	Authentication authentication.AuthenticationInterface
 }
 
@@ -44,7 +44,7 @@ func New(staticUI fs.FS, t any) (*APIWS, error) {
 }
 
 func (a *APIWS) SetStorage(b storage.StorageInterface) {
-	a.StorageService = b
+	a.Storage = b
 }
 
 func (a *APIWS) SetAuthentication(b authentication.AuthenticationInterface) {

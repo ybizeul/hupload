@@ -5,7 +5,7 @@ type User struct {
 	Password string `yaml:"password"`
 }
 
-// BackendInterface must be implemented by any backend
+// AuthenticationInterface must be implemented by the authentication backend
 type AuthenticationInterface interface {
 	AuthenticateUser(username, password string) (bool, error)
 }

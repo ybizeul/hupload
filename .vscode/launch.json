@@ -10,10 +10,6 @@
             "request": "launch",
             "mode": "auto",
             "program": "${workspaceFolder}/hupload",
-            // "env": {
-            //     "CONFIG": "config/config.yml",
-            //     "JWT_SECRET": "0e113ee5f4b81c386fc37c2341872a6d",
-            // },
         }
     ]
 }
