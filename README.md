@@ -15,10 +15,10 @@ upload content.
 
 ## Screenshots
 
-### Admin page
+**Admin page**
 ![Screenshot 1](readme_images/screenshot_1.png)
 
-### Share page with upload box
+**Share page with upload box**
 ![Screenshot 2](readme_images/screenshot_2.png)
 
 ## Environment variables
@@ -34,6 +34,7 @@ upload content.
 - Easy to use drag and drop interface for uploads,
 - Configurable max share size and max file size,
 - Basic share informations listed (number of items, total size),
+- Automatic dark mode following OS settings,
 - Multi user (all admins see all shares, but see their own listed separately first),
 - API first, everything can be done through REST calls,
 - Minimalist, clean interface.
@@ -80,6 +81,15 @@ To generate a hash for `hupload` password string :
 ```
 htpasswd -bnBC 10 "" hupload | tr -d ":"
 $2y$10$LIcTF3HKNhV6qh3oi3ysHOnhiXpLOU22N61JzZXoSWQbNOpDhS/g.
+```
+
+## Run in a container
+
+You can quickly test **Hupload** in a container, or run it in production :
+
+```
+mkdir data
+docker run -v $(pwd)/data:/data -p 8080:8080 ghcr.io/ybizeul/hupload/hupload
 ```
 
 ## API
