@@ -9,6 +9,14 @@ or support bundles from your users.
 
 It is a web portal and an API for direct integration into your products.
 
+## Screenshots
+
+### Admin page
+![Screenshot 1](readme_images/screenshot_1.png)
+
+### Share page with upload box
+![Screenshot 2](readme_images/screenshot_2.png)
+
 ## Environment variables
 
 | Variable    | Description |
