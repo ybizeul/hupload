@@ -65,8 +65,10 @@ func (b *FileBackend) CreateShare(s string, o string) error {
 		return errors.New("share already exists")
 	}
 
-	err = os.Mkdir(path.Join(b.stringOption("path"), s), 0755)
+	p := path.Join(b.stringOption("path"), s)
+	err = os.Mkdir(p, 0755)
 	if err != nil {
+		slog.Error("cannot create share", slog.String("error", err.Error()), slog.String("path", p))
 		return errors.New("cannot create share")
 	}
 
