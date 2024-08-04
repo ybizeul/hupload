@@ -35,6 +35,8 @@ storage:
   type: file
   options:
     path: data
+    max_file_mb: 512
+    max_share_mb: 2048
 ```
 
 Currently, there is only one authentication backend `file` and one storage
