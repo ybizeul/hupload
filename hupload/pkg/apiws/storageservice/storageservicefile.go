@@ -95,7 +95,7 @@ func (b *FileBackend) CreateItem(s string, i string, r *bufio.Reader) (*Item, er
 	}
 	defer f.Close()
 
-	max := b.int64Option("max_bytes")
+	max := b.int64Option("max_bytes_share")
 	if max > 0 {
 		// Check if there is a max bytes associated to share
 		share, err := b.GetShare(s)
