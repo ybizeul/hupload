@@ -10,16 +10,38 @@ import (
 	"github.com/ybizeul/hupload/pkg/apiws/storage"
 )
 
+type TypeOptions struct {
+	Type    string
+	Options map[string]any
+}
+
+type ConfigValues struct {
+	Title          string
+	Storage        TypeOptions `yaml:"storage"`
+	Authentication TypeOptions `yaml:"auth"`
+}
+
 // Config is the internal representation of Hupload configuration file
 type Config struct {
 	Path   string
-	Values map[string]any
+	Values ConfigValues
 }
 
 // Load reads the configuration file and populates the Config struct
 func (c *Config) Load() (bool, error) {
 	// Set default templating values
-	c.Values = map[string]any{"title": "Hupload"}
+	c.Values = ConfigValues{
+		Title: "Hupload",
+		Storage: TypeOptions{
+			Type: "file",
+			Options: map[string]any{
+				"path": "data",
+			},
+		},
+		Authentication: TypeOptions{
+			Type: "default",
+		},
+	}
 
 	// Open the configuration file
 	f, err := os.Open(c.Path)
@@ -44,58 +66,55 @@ func (c *Config) Load() (bool, error) {
 // shares, store and retrieve content.
 func (c *Config) Storage() (storage.Storage, error) {
 	// Check if the configuration has a storage backend defined
-	b, ok := c.Values["storage"].(map[string]any)
-	if !ok {
-		return DefaultStorage(), nil
-	}
+	s := c.Values.Storage
+	// if !ok {
+	// 	return DefaultStorage(), nil
+	// }
 
 	// Check if storage type is valid
-	storageType, ok := b["type"].(string)
-	if !ok {
-		return nil, errors.New("invalid storage backend")
+	if s.Type == "" {
+		return nil, ErrMissingStorageBackendType
 	}
 
-	switch storageType {
+	switch s.Type {
 	case "file":
-		return storage.NewFileStorage(b), nil
+		return storage.NewFileStorage(s.Options), nil
 	}
 
-	return nil, errors.New("unknown backend")
+	return nil, ErrUnknownStorageBackend
 }
 
-// If no storage configuration is defined, use the default one
-func DefaultStorage() storage.Storage {
-	return storage.NewFileStorage(map[string]any{
-		"options": map[string]any{
-			"path": "data",
-		},
-	})
-}
+// // If no storage configuration is defined, use the default one
+// func DefaultStorage() storage.Storage {
+// 	return storage.NewFileStorage(map[string]any{
+// 		"options": map[string]any{
+// 			"path": "data",
+// 		},
+// 	})
+// }
 
 // Authentication returns the authentication backend struct that will be used
 // to authenticate users.
 func (c *Config) Authentication() (authentication.Authentication, error) {
 	// Check if the configuration has a authentication backend defined
-	b, ok := c.Values["auth"].(map[string]any)
-	if !ok {
-		return DefaultAuthentication(), nil
-	}
+	a := c.Values.Authentication
 
 	// Check if authentication type is valid
-	backendType, ok := b["type"].(string)
-	if !ok {
-		return nil, errors.New("invalid backend")
+	if a.Type == "" {
+		return nil, ErrMissingAuthenticationBackendType
 	}
 
-	switch backendType {
+	switch a.Type {
 	case "file":
-		return authentication.NewAuthenticationFile(b), nil
+		return authentication.NewAuthenticationFile(a.Options)
+	case "default":
+		return authentication.NewAuthenticationDefault(), nil
 	}
 
-	return nil, errors.New("unknown backend")
+	return nil, ErrUnknownAuthenticationBackend
 }
 
-// If no authentication configuration is defined, use the default one
-func DefaultAuthentication() authentication.Authentication {
-	return authentication.NewAuthenticationDefault()
-}
+// // If no authentication configuration is defined, use the default one
+// func DefaultAuthentication() authentication.Authentication {
+// 	return authentication.NewAuthenticationDefault()
+// }

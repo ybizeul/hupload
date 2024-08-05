@@ -1,7 +1,6 @@
 package authentication
 
 import (
-	"errors"
 	"os"
 
 	"golang.org/x/crypto/bcrypt"
@@ -19,24 +18,38 @@ type AuthenticationFile struct {
 	Options map[string]any
 }
 
-func NewAuthenticationFile(m map[string]any) *AuthenticationFile {
-	r := &AuthenticationFile{
-		Options: m["options"].(map[string]any),
+func NewAuthenticationFile(m map[string]any) (*AuthenticationFile, error) {
+	b, err := yaml.Marshal(m)
+	if err != nil {
+		return nil, err
 	}
 
-	return r
+	r := &AuthenticationFile{}
+
+	err = yaml.Unmarshal(b, &r.Options)
+	if err != nil {
+		return nil, err
+	}
+
+	path, ok := r.Options["path"].(string)
+	if !ok {
+		return nil, err
+	}
+	_, err = os.Stat(path)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return nil, ErrAuthenticationMissingUsersFile
+		}
+		return nil, err
+	}
+	return r, nil
 }
 
 func (a *AuthenticationFile) AuthenticateUser(username, password string) (bool, error) {
 	// Prepare struct to load users.yaml
 	users := []User{}
 
-	path, ok := a.Options["path"].(string)
-
-	// Fail is cast to string didn't work
-	if !ok {
-		return false, errors.New("path option is invalid")
-	}
+	path, _ := a.Options["path"].(string)
 
 	// Fail if we can't open the file
 	pf, err := os.Open(path)

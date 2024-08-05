@@ -11,6 +11,8 @@ import (
 	"sort"
 	"strings"
 	"time"
+
+	"gopkg.in/yaml.v2"
 )
 
 const suffix = "_huploadtemp"
@@ -23,9 +25,18 @@ type FileBackend struct {
 // NewFileStorage creates a new FileBackend, m is the configuration as found
 // in Hupload configuration file.
 func NewFileStorage(m map[string]any) *FileBackend {
-	r := &FileBackend{
-		Options: m["options"].(map[string]any),
+	b, err := yaml.Marshal(m)
+	if err != nil {
+		return nil
 	}
+
+	r := &FileBackend{}
+
+	err = yaml.Unmarshal(b, &r.Options)
+	if err != nil {
+		return nil
+	}
+
 	r.initialize()
 
 	return r
