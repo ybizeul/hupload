@@ -10,6 +10,9 @@
             "request": "launch",
             "mode": "auto",
             "program": "${workspaceFolder}/hupload",
+            "env": {
+                "JWT_SECRET": "9e1fada26b20ddc5ce812cafb8d2cada"
+            }
         }
     ]
 }

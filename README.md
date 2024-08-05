@@ -28,6 +28,7 @@ upload content.
 |-------------|-------------|
 | CONFIG      | Path to `config.yml`    |
 | HTTP_PORT   | Port to run web service |
+| JWT_SECRET  | Random string used to sign sessions cookies |
 
 ## Features
 

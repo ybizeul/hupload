@@ -38,10 +38,10 @@ func generateRandomString(length int) string {
 }
 
 func (j JWTAuthMiddleware) Middleware(next http.Handler) http.Handler {
-	if HMACSecret == "" {
-		HMACSecret = generateRandomString(32)
+	if j.HMACSecret == "" {
+		j.HMACSecret = generateRandomString(32)
 	}
-	j.HMACSecret = HMACSecret
+	HMACSecret = j.HMACSecret
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Check that authentication has been previoulsy approved
 		// If request is already authenticated, generate a JWT token
