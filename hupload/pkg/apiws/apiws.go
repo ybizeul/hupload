@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"net/http"
 
+	"github.com/ybizeul/hupload/internal/config"
 	"github.com/ybizeul/hupload/pkg/apiws/authentication"
 	"github.com/ybizeul/hupload/pkg/apiws/middleware/auth"
 	logger "github.com/ybizeul/hupload/pkg/apiws/middleware/log"
@@ -22,7 +23,7 @@ type APIWS struct {
 	mux *http.ServeMux
 
 	// TemplateData is used to customized some templated parts of the web UI.
-	TemplateData any
+	TemplateData config.ConfigValues
 
 	// Storage is the storage backend
 	Storage storage.Storage
@@ -32,7 +33,7 @@ type APIWS struct {
 
 // New creates a new API Web Server. staticUI is the file system containing the
 // web root directory.
-func New(staticUI fs.FS, t any) (*APIWS, error) {
+func New(staticUI fs.FS, t config.ConfigValues) (*APIWS, error) {
 	d, err := fs.ReadDir(staticUI, ".")
 	if err != nil {
 		return nil, err
