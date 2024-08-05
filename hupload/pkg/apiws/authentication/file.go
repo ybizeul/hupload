@@ -47,7 +47,7 @@ func NewAuthenticationFile(m map[string]any) (*AuthenticationFile, error) {
 
 func (a *AuthenticationFile) AuthenticateUser(username, password string) (bool, error) {
 	// Prepare struct to load users.yaml
-	users := []User{}
+	var users []User
 
 	path, _ := a.Options["path"].(string)
 
