@@ -2,7 +2,7 @@ title: Hupload
 auth:
   type: file
   options:
-    path: ../../tests/config/users.yml
+    path: tests/users.yml
 storage:
   type: file
   options:

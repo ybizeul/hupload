@@ -35,7 +35,7 @@ func TestLoadEmptyConfig(t *testing.T) {
 
 func TestLoadGoodConfig(t *testing.T) {
 	c := Config{
-		Path: "../../tests/config/config.yml",
+		Path: "tests/config.yml",
 	}
 	b, err := c.Load()
 
@@ -60,7 +60,7 @@ func TestLoadGoodConfig(t *testing.T) {
 		Authentication: TypeOptions{
 			Type: "file",
 			Options: map[string]any{
-				"path": "../../tests/config/users.yml",
+				"path": "tests/users.yml",
 			},
 		},
 	}
@@ -98,7 +98,7 @@ func TestLoadGoodConfig(t *testing.T) {
 
 func TestLoadBadConfig(t *testing.T) {
 	c := Config{
-		Path: "../../tests/config/config_bad_syntax.txt",
+		Path: "tests/config_bad_syntax.txt",
 	}
 	b, err := c.Load()
 
@@ -114,7 +114,7 @@ func TestLoadBadConfig(t *testing.T) {
 
 func TestMissingUsersFile(t *testing.T) {
 	c := Config{
-		Path: "../../tests/config/config_missing_users_file.yml",
+		Path: "tests/config_missing_users_file.yml",
 	}
 	b, _ := c.Load()
 
