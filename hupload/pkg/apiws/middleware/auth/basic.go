@@ -18,7 +18,7 @@ import (
 //
 // and remove the leading `:` from the hash
 type BasicAuthMiddleware struct {
-	Authentication authentication.AuthenticationInterface
+	Authentication authentication.Authentication
 }
 
 func (a BasicAuthMiddleware) Middleware(next http.Handler) http.Handler {

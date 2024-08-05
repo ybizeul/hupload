@@ -42,7 +42,7 @@ func (c *Config) Load() (bool, error) {
 
 // Storage returns the storage backend struct that will be used to create
 // shares, store and retrieve content.
-func (c *Config) Storage() (storage.StorageInterface, error) {
+func (c *Config) Storage() (storage.Storage, error) {
 	// Check if the configuration has a storage backend defined
 	b, ok := c.Values["storage"].(map[string]any)
 	if !ok {
@@ -64,7 +64,7 @@ func (c *Config) Storage() (storage.StorageInterface, error) {
 }
 
 // If no storage configuration is defined, use the default one
-func DefaultStorage() storage.StorageInterface {
+func DefaultStorage() storage.Storage {
 	return storage.NewFileStorage(map[string]any{
 		"options": map[string]any{
 			"path": "data",
@@ -74,7 +74,7 @@ func DefaultStorage() storage.StorageInterface {
 
 // Authentication returns the authentication backend struct that will be used
 // to authenticate users.
-func (c *Config) Authentication() (authentication.AuthenticationInterface, error) {
+func (c *Config) Authentication() (authentication.Authentication, error) {
 	// Check if the configuration has a authentication backend defined
 	b, ok := c.Values["auth"].(map[string]any)
 	if !ok {
@@ -96,6 +96,6 @@ func (c *Config) Authentication() (authentication.AuthenticationInterface, error
 }
 
 // If no authentication configuration is defined, use the default one
-func DefaultAuthentication() authentication.AuthenticationInterface {
+func DefaultAuthentication() authentication.Authentication {
 	return authentication.NewAuthenticationDefault()
 }

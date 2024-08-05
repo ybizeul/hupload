@@ -23,7 +23,7 @@ type ItemInfo struct {
 }
 
 // BackendInterface must be implemented by any backend
-type StorageInterface interface {
+type Storage interface {
 	// CreateShare creates a new share
 	CreateShare(string, string) error
 

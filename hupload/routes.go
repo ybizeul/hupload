@@ -15,14 +15,14 @@ import (
 func postShare(w http.ResponseWriter, r *http.Request) {
 	user := auth.UserForRequest(r)
 	if user == "" {
-		slog.Error("putShare", slog.String("error", "no user in context"))
+		slog.Error("postShare", slog.String("error", "no user in context"))
 		_, _ = w.Write([]byte("no user in context"))
 		return
 	}
 	code := generateCode()
 	err := api.Storage.CreateShare(code, user)
 	if err != nil {
-		slog.Error("putShare", slog.String("error", err.Error()))
+		slog.Error("postShare", slog.String("error", err.Error()))
 		_, _ = w.Write([]byte(err.Error()))
 		return
 	}

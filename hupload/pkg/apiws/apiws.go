@@ -20,8 +20,8 @@ type APIWS struct {
 
 	TemplateData any
 
-	Storage        storage.StorageInterface
-	Authentication authentication.AuthenticationInterface
+	Storage        storage.Storage
+	Authentication authentication.Authentication
 }
 
 // New creates a new API Web Server. staticUI is the file system containing the
@@ -43,11 +43,11 @@ func New(staticUI fs.FS, t any) (*APIWS, error) {
 	}, nil
 }
 
-func (a *APIWS) SetStorage(b storage.StorageInterface) {
+func (a *APIWS) SetStorage(b storage.Storage) {
 	a.Storage = b
 }
 
-func (a *APIWS) SetAuthentication(b authentication.AuthenticationInterface) {
+func (a *APIWS) SetAuthentication(b authentication.Authentication) {
 	a.Authentication = b
 }
 

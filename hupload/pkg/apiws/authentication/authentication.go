@@ -6,6 +6,6 @@ type User struct {
 }
 
 // AuthenticationInterface must be implemented by the authentication backend
-type AuthenticationInterface interface {
+type Authentication interface {
 	AuthenticateUser(username, password string) (bool, error)
 }

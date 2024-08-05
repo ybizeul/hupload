@@ -93,6 +93,12 @@ mkdir data
 docker run -v $(pwd)/data:/data -p 8080:8080 ghcr.io/ybizeul/hupload/hupload
 ```
 
+Alternatively, you can use the `compose.yml` file provided. Username is `admin`
+and password is `hupload` as defined in `hupload/config/users.yml.sample`
+
+```
+docker compose up
+```
 ## API
 
 The following endpoints are available under `/api/v1`
