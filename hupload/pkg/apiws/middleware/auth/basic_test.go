@@ -31,6 +31,10 @@ func TestBasicAuth(t *testing.T) {
 		if c != AuthStatusSuccess {
 			t.Errorf("Expected AuthStatusSuccess, got %v", c)
 		}
+		u := r.Context().Value(AuthUser)
+		if u != "admin" {
+			t.Errorf("Expected admin, got %v", u)
+		}
 	}
 
 	h1 := m.Middleware(http.HandlerFunc(fn1))
