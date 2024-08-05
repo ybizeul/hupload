@@ -99,6 +99,7 @@ func (a *APIWS) Start() {
 	})
 
 	slog.Info(fmt.Sprintf("Starting web service on port %d", a.HTTPPort))
+
 	err := http.ListenAndServe(fmt.Sprintf(":%d", a.HTTPPort), logger.NewLogger(a.mux))
 	if err != nil {
 		slog.Error("unable to start http server", slog.String("error", err.Error()))
