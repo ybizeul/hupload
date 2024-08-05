@@ -14,13 +14,19 @@ import (
 )
 
 type APIWS struct {
+	// StaticUI is the file system containing the static web directory.
 	StaticUI fs.FS
+	// HTTP port to listen on
 	HTTPPort int
-	mux      *http.ServeMux
+	// mux is the main ServeMux used by the API Web Server.
+	mux *http.ServeMux
 
+	// TemplateData is used to customized some templated parts of the web UI.
 	TemplateData any
 
-	Storage        storage.Storage
+	// Storage is the storage backend
+	Storage storage.Storage
+	// Authentication is the authentication backend
 	Authentication authentication.Authentication
 }
 
@@ -43,10 +49,13 @@ func New(staticUI fs.FS, t any) (*APIWS, error) {
 	}, nil
 }
 
+// SetStorage sets the storage backend that will be used to create shares, store
+// and retrieve content.
 func (a *APIWS) SetStorage(b storage.Storage) {
 	a.Storage = b
 }
 
+// SetAuthentication
 func (a *APIWS) SetAuthentication(b authentication.Authentication) {
 	a.Authentication = b
 }
