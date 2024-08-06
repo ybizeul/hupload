@@ -12,17 +12,11 @@ func TestCodeGenerator(t *testing.T) {
 	groups := 3
 	code := generateCode(4, 3)
 
-	expectedLength := groupSize*groups + (groups - 1)
-
-	if len(code) != expectedLength {
-		t.Errorf("Expected code length to be %d, got %d", expectedLength, len(code))
-	}
-
 	var re_slice []string
 	for i := 0; i < groups; i++ {
 		re_slice = append(re_slice, buildRe(groupSize))
 	}
-	re := strings.Join(re_slice, "-")
+	re := fmt.Sprintf("^%s$", strings.Join(re_slice, "-"))
 
 	m := regexp.MustCompile(re).MatchString(code)
 
