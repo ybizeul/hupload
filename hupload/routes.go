@@ -20,7 +20,7 @@ func postShare(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	code := generateCode(4, 3)
-	err := api.Storage.CreateShare(code, user)
+	err := cfg.Storage.CreateShare(code, user, cfg.Values.DefaultValidityDays)
 	if err != nil {
 		slog.Error("postShare", slog.String("error", err.Error()))
 		_, _ = w.Write([]byte(err.Error()))
@@ -38,7 +38,7 @@ func putShare(w http.ResponseWriter, r *http.Request) {
 		_, _ = w.Write([]byte("no user in context"))
 		return
 	}
-	err := api.Storage.CreateShare(r.PathValue("share"), user)
+	err := cfg.Storage.CreateShare(r.PathValue("share"), user, cfg.Values.DefaultValidityDays)
 	if err != nil {
 		slog.Error("putShare", slog.String("error", err.Error()))
 		_, _ = w.Write([]byte(err.Error()))
@@ -59,7 +59,7 @@ func postItem(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	b := bufio.NewReader(np)
-	item, err := api.Storage.CreateItem(r.PathValue("share"), np.FileName(), b)
+	item, err := cfg.Storage.CreateItem(r.PathValue("share"), np.FileName(), b)
 	if err != nil {
 		w.WriteHeader(http.StatusNotAcceptable)
 		_, _ = w.Write([]byte(err.Error()))
@@ -72,7 +72,7 @@ func postItem(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = api.Storage.UpdateMetadata(r.PathValue("share"))
+	err = cfg.Storage.UpdateMetadata(r.PathValue("share"))
 	if err != nil {
 		_, _ = w.Write([]byte(err.Error()))
 		return
@@ -83,7 +83,8 @@ func postItem(w http.ResponseWriter, r *http.Request) {
 
 // getShares returns the list of shares as json
 func getShares(w http.ResponseWriter, r *http.Request) {
-	shares, err := api.Storage.ListShares()
+	shares, err := cfg.Storage.ListShares()
+
 	if err != nil {
 		slog.Error("getShares", slog.String("error", err.Error()))
 		w.WriteHeader(http.StatusInternalServerError)
@@ -102,7 +103,21 @@ func getShares(w http.ResponseWriter, r *http.Request) {
 
 // getShare returns the share identified by the request parameter
 func getShare(w http.ResponseWriter, r *http.Request) {
-	content, err := api.Storage.ListShare(r.PathValue("share"))
+	share, err := cfg.Storage.GetShare(r.PathValue("share"))
+	if err != nil {
+		slog.Error("getShares", slog.String("error", err.Error()))
+		w.WriteHeader(http.StatusBadRequest)
+		_, _ = w.Write([]byte(err.Error()))
+		return
+	}
+
+	if auth.UserForRequest(r) == "" && !share.IsValid() {
+		w.WriteHeader(http.StatusGone)
+		_, _ = w.Write([]byte("Share expired"))
+		return
+	}
+
+	content, err := cfg.Storage.ListShare(r.PathValue("share"))
 	if err != nil {
 		slog.Error("getShares", slog.String("error", err.Error()))
 		w.WriteHeader(http.StatusBadRequest)
@@ -121,7 +136,7 @@ func getShare(w http.ResponseWriter, r *http.Request) {
 
 // deleteShare deletes the share identified by the request parameter
 func deleteShare(w http.ResponseWriter, r *http.Request) {
-	err := api.Storage.DeleteShare(r.PathValue("share"))
+	err := cfg.Storage.DeleteShare(r.PathValue("share"))
 	if err != nil {
 		slog.Error("deleteShare", slog.String("error", err.Error()))
 		w.WriteHeader(http.StatusInternalServerError)
@@ -132,13 +147,13 @@ func deleteShare(w http.ResponseWriter, r *http.Request) {
 
 // getItem returns the item identified by the request parameter
 func getItem(w http.ResponseWriter, r *http.Request) {
-	item, err := api.Storage.GetItem(r.PathValue("share"), r.PathValue("item"))
+	item, err := cfg.Storage.GetItem(r.PathValue("share"), r.PathValue("item"))
 	if err != nil {
 		slog.Error("getShares", slog.String("error", err.Error()))
 		_, _ = w.Write([]byte(err.Error()))
 		return
 	}
-	reader, err := api.Storage.GetItemData(r.PathValue("share"), r.PathValue("item"))
+	reader, err := cfg.Storage.GetItemData(r.PathValue("share"), r.PathValue("item"))
 	if err != nil {
 		slog.Error("getShares", slog.String("error", err.Error()))
 		_, _ = w.Write([]byte(err.Error()))

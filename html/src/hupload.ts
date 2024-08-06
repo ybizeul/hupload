@@ -2,7 +2,8 @@ export interface Share {
   name: string;
   owner: string;
   count: number;
-    size: number;
+  size: number;
+  isvalid: boolean;
 }
 
 export interface Item {

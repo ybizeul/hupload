@@ -25,7 +25,8 @@ type FileStorageConfig struct {
 
 // FileBackend is a backend that stores files on the filesystem
 type FileBackend struct {
-	Options FileStorageConfig
+	Options             FileStorageConfig
+	DefaultValidityDays int
 }
 
 // NewFileStorage creates a new FileBackend, m is the configuration as found
@@ -60,13 +61,13 @@ func (b *FileBackend) initialize() {
 	}
 }
 
-func (b *FileBackend) CreateShare(s string, o string) error {
-	_, err := os.Stat(path.Join(b.Options.Path, s))
+func (b *FileBackend) CreateShare(name, owner string, validity int) error {
+	_, err := os.Stat(path.Join(b.Options.Path, name))
 	if err == nil {
 		return errors.New("share already exists")
 	}
 
-	p := path.Join(b.Options.Path, s)
+	p := path.Join(b.Options.Path, name)
 	err = os.Mkdir(p, 0755)
 	if err != nil {
 		slog.Error("cannot create share", slog.String("error", err.Error()), slog.String("path", p))
@@ -74,12 +75,13 @@ func (b *FileBackend) CreateShare(s string, o string) error {
 	}
 
 	m := Share{
-		Name:        s,
-		Owner:       o,
+		Name:        name,
+		Owner:       owner,
 		DateCreated: time.Now(),
+		Validity:    validity,
 	}
 
-	f, err := os.Create(path.Join(b.Options.Path, s, ".metadata"))
+	f, err := os.Create(path.Join(b.Options.Path, name, ".metadata"))
 	if err != nil {
 		return err
 	}
@@ -164,11 +166,13 @@ func (b *FileBackend) GetShare(s string) (*Share, error) {
 	}
 	defer fm.Close()
 
-	m := Share{}
+	var m Share
 	err = json.NewDecoder(fm).Decode(&m)
 	if err != nil {
 		return nil, err
 	}
+	m.Valid = m.IsValid()
+
 	return &m, nil
 }
 
@@ -177,7 +181,7 @@ func (b *FileBackend) ListShares() ([]Share, error) {
 	if err != nil {
 		return nil, err
 	}
-	r := []Share{}
+	var r []Share
 
 	// Shares loop
 	for _, f := range d {

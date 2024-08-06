@@ -1,4 +1,4 @@
-import { Box, Button, CopyButton, Group, rem, Text, Tooltip } from "@mantine/core";
+import { Box, Button, Center, CopyButton, Group, rem, Text, Tooltip } from "@mantine/core";
 import { Dropzone } from "@mantine/dropzone";
 import { IconFileZip, IconLink, IconUpload, IconX } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
@@ -12,6 +12,8 @@ export function Share() {
 
   const [items, setItems] = useState<Item[]|undefined>(undefined)
   const [queue, setQueue] = useState<QueueItem[]>([])
+  const [expired,setExpired] = useState(false)
+
   const location = useLocation()
 
   const s=location.pathname.split("/")
@@ -26,11 +28,18 @@ export function Share() {
     })
     .catch((e) => {
       console.log(e)
+      if (e.response.status === 410) {
+        setExpired(true)
+        return
+      }
       navigate('/')
     })
   },[share, navigate])
 
   return (
+    expired && 
+      <Center><Text size="xl" ta="center">Sorry, this share has expired</Text></Center>
+    ||
     items &&
       <>
       <Box w="100%" ta="center">
