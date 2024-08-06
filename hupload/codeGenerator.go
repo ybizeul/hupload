@@ -2,14 +2,15 @@ package main
 
 import "math/rand/v2"
 
-func generateCode() string {
-	code := ""
+func generateCode(groupSize int, groupsCount int) string {
+	var code string
 
 	c := "zrtypqsdfghjkmwxcvnb"
 	v := "aeiouy"
 
-	for i := 0; i < 12; i++ {
-		if i%4 == 0 && i != 0 {
+	totalLength := groupSize * groupsCount
+	for i := 0; i < totalLength; i++ {
+		if i%groupSize == 0 && i != 0 {
 			code += "-"
 		}
 		if i%2 == 0 {
