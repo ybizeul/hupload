@@ -91,6 +91,7 @@ You can quickly test **Hupload** in a container, or run it in production :
 
 ```
 mkdir data
+chown 65532:65532
 docker run -v $(pwd)/data:/data -p 8080:8080 ghcr.io/ybizeul/hupload/hupload
 ```
 
