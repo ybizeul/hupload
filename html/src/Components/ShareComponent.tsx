@@ -38,7 +38,7 @@ export function ShareComponent(props: {share: Share}) {
                 <Group justify="flex-end">
                     <CopyButton value={window.location.protocol + '//' + window.location.host + '/' + name}>
                     {({ copied, copy }) => (
-                        <Tooltip withArrow arrowOffset={10} arrowSize={4} label="Copy URL">
+                        <Tooltip withArrow arrowOffset={10} arrowSize={4} label={copied?"Copied!":"Copy URL"}>
                             <ActionIcon ml="sm" variant="light" color={copied ? 'teal' : 'blue'} onClick={copy} >
                             <IconLink style={{ width: '70%', height: '70%' }} stroke={1.5}/>
                             </ActionIcon>

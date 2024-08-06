@@ -36,7 +36,7 @@ export function Share() {
       <Box w="100%" ta="center">
           <CopyButton value={window.location.protocol + '//' + window.location.host + '/' + share}>
             {({ copied, copy }) => (
-              <Tooltip withArrow arrowOffset={10} arrowSize={4} label="Copy URL">
+              <Tooltip withArrow arrowOffset={10} arrowSize={4} label={copied?"Copied!":"Copy URL"}>
                 <Button mb="sm" justify="center" variant="outline" color={copied ? 'teal' : 'gray'} size="xs" onClick={copy}><IconLink style={{ width: '70%', height: '70%' }} stroke={1.5}/>{share}</Button>
               </Tooltip>
             )}
