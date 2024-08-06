@@ -14,8 +14,12 @@ import (
 // - username: test
 //   password: $2y$10$ro2aBKU9jyqfokF2arnaEO3GKmAawnfLfEFq1dGuGl9CYEutrxGCa
 
+type FileAuthenticationConfig struct {
+	Path string `yaml:"path"`
+}
+
 type AuthenticationFile struct {
-	Options map[string]any
+	Options FileAuthenticationConfig
 }
 
 func NewAuthenticationFile(m map[string]any) (*AuthenticationFile, error) {
@@ -24,17 +28,15 @@ func NewAuthenticationFile(m map[string]any) (*AuthenticationFile, error) {
 		return nil, err
 	}
 
-	r := &AuthenticationFile{}
+	var r AuthenticationFile
 
 	err = yaml.Unmarshal(b, &r.Options)
 	if err != nil {
 		return nil, err
 	}
 
-	path, ok := r.Options["path"].(string)
-	if !ok {
-		return nil, err
-	}
+	path := r.Options.Path
+
 	_, err = os.Stat(path)
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -42,14 +44,14 @@ func NewAuthenticationFile(m map[string]any) (*AuthenticationFile, error) {
 		}
 		return nil, err
 	}
-	return r, nil
+	return &r, nil
 }
 
 func (a *AuthenticationFile) AuthenticateUser(username, password string) (bool, error) {
 	// Prepare struct to load users.yaml
 	var users []User
 
-	path, _ := a.Options["path"].(string)
+	path := a.Options.Path
 
 	// Fail if we can't open the file
 	pf, err := os.Open(path)

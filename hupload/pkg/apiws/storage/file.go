@@ -36,7 +36,7 @@ func NewFileStorage(m map[string]any) *FileBackend {
 		return nil
 	}
 
-	r := &FileBackend{}
+	var r FileBackend
 
 	err = yaml.Unmarshal(b, &r.Options)
 	if err != nil {
@@ -45,7 +45,7 @@ func NewFileStorage(m map[string]any) *FileBackend {
 
 	r.initialize()
 
-	return r
+	return &r
 }
 
 // initialize creates the root directory for the backend
