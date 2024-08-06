@@ -17,9 +17,15 @@ import (
 
 const suffix = "_huploadtemp"
 
+type FileStorageConfig struct {
+	Path         string `yaml:"path"`
+	MaxFileSize  int64  `yaml:"max_file_mb"`
+	MaxShareSize int64  `yaml:"max_share_mb"`
+}
+
 // FileBackend is a backend that stores files on the filesystem
 type FileBackend struct {
-	Options map[string]any
+	Options FileStorageConfig
 }
 
 // NewFileStorage creates a new FileBackend, m is the configuration as found
@@ -44,7 +50,7 @@ func NewFileStorage(m map[string]any) *FileBackend {
 
 // initialize creates the root directory for the backend
 func (b *FileBackend) initialize() {
-	path := b.stringOption("path")
+	path := b.Options.Path
 	if path == "" {
 		panic("path is required")
 	}
@@ -54,29 +60,29 @@ func (b *FileBackend) initialize() {
 	}
 }
 
-func (b *FileBackend) stringOption(o string) string {
-	v, ok := b.Options[o].(string)
-	if !ok {
-		return ""
-	}
-	return v
-}
+// func (b *FileBackend) stringOption(o string) string {
+// 	v, ok := b.Options[o].(string)
+// 	if !ok {
+// 		return ""
+// 	}
+// 	return v
+// }
 
-func (b *FileBackend) int64Option(o string) int64 {
-	v, ok := b.Options[o].(int)
-	if !ok {
-		return 0
-	}
-	return int64(v)
-}
+// func (b *FileBackend) int64Option(o string) int64 {
+// 	v, ok := b.Options[o].(int)
+// 	if !ok {
+// 		return 0
+// 	}
+// 	return int64(v)
+// }
 
 func (b *FileBackend) CreateShare(s string, o string) error {
-	_, err := os.Stat(path.Join(b.stringOption("path"), s))
+	_, err := os.Stat(path.Join(b.Options.Path, s))
 	if err == nil {
 		return errors.New("share already exists")
 	}
 
-	p := path.Join(b.stringOption("path"), s)
+	p := path.Join(b.Options.Path, s)
 	err = os.Mkdir(p, 0755)
 	if err != nil {
 		slog.Error("cannot create share", slog.String("error", err.Error()), slog.String("path", p))
@@ -89,7 +95,7 @@ func (b *FileBackend) CreateShare(s string, o string) error {
 		DateCreated: time.Now(),
 	}
 
-	f, err := os.Create(path.Join(b.stringOption("path"), s, ".metadata"))
+	f, err := os.Create(path.Join(b.Options.Path, s, ".metadata"))
 	if err != nil {
 		return err
 	}
@@ -104,7 +110,7 @@ func (b *FileBackend) CreateShare(s string, o string) error {
 }
 
 func (b *FileBackend) CreateItem(s string, i string, r *bufio.Reader) (*Item, error) {
-	p := path.Join(b.stringOption("path"), s, i)
+	p := path.Join(b.Options.Path, s, i)
 	f, err := os.Create(p + suffix)
 	if err != nil {
 		return nil, errors.New("cannot create item")
@@ -117,7 +123,7 @@ func (b *FileBackend) CreateItem(s string, i string, r *bufio.Reader) (*Item, er
 
 	maxWrite := int64(0)
 
-	maxShare := b.int64Option("max_share_mb") * 1024 * 1024
+	maxShare := b.Options.MaxShareSize * 1024 * 1024
 	if maxShare > 0 {
 		maxWrite = maxShare - share.Size
 		if maxWrite <= 0 {
@@ -125,7 +131,7 @@ func (b *FileBackend) CreateItem(s string, i string, r *bufio.Reader) (*Item, er
 		}
 	}
 
-	maxItem := b.int64Option("max_file_mb") * 1024 * 1024
+	maxItem := b.Options.MaxFileSize * 1024 * 1024
 	if maxItem > 0 {
 		if maxWrite > maxItem || maxWrite == 0 {
 			maxWrite = maxItem
@@ -168,7 +174,7 @@ func (b *FileBackend) CreateItem(s string, i string, r *bufio.Reader) (*Item, er
 }
 
 func (b *FileBackend) GetShare(s string) (*Share, error) {
-	fm, err := os.Open(path.Join(b.stringOption("path"), s, ".metadata"))
+	fm, err := os.Open(path.Join(b.Options.Path, s, ".metadata"))
 	if err != nil {
 		return nil, err
 	}
@@ -183,7 +189,7 @@ func (b *FileBackend) GetShare(s string) (*Share, error) {
 }
 
 func (b *FileBackend) ListShares() ([]Share, error) {
-	d, err := os.ReadDir(b.stringOption("path"))
+	d, err := os.ReadDir(b.Options.Path)
 	if err != nil {
 		return nil, err
 	}
@@ -207,7 +213,7 @@ func (b *FileBackend) ListShares() ([]Share, error) {
 }
 
 func (b *FileBackend) DeleteShare(s string) error {
-	sharePath := path.Join(b.stringOption("path"), s)
+	sharePath := path.Join(b.Options.Path, s)
 	err := os.RemoveAll(sharePath)
 	if err != nil {
 		return err
@@ -216,7 +222,7 @@ func (b *FileBackend) DeleteShare(s string) error {
 }
 
 func (b *FileBackend) ListShare(s string) ([]Item, error) {
-	d, err := os.ReadDir(path.Join(b.stringOption("path"), s))
+	d, err := os.ReadDir(path.Join(b.Options.Path, s))
 	if err != nil {
 		return nil, err
 	}
@@ -240,7 +246,7 @@ func (b *FileBackend) ListShare(s string) ([]Item, error) {
 }
 
 func (b *FileBackend) GetItem(s string, i string) (*Item, error) {
-	p := path.Join(b.stringOption("path"), s, i)
+	p := path.Join(b.Options.Path, s, i)
 	stat, err := os.Stat(p)
 	if err != nil {
 		return nil, err
@@ -252,7 +258,7 @@ func (b *FileBackend) GetItem(s string, i string) (*Item, error) {
 }
 
 func (b *FileBackend) GetItemData(s string, i string) (*bufio.Reader, error) {
-	p := path.Join(b.stringOption("path"), s, i)
+	p := path.Join(b.Options.Path, s, i)
 	f, err := os.Open(p)
 	if err != nil {
 		return nil, err
@@ -261,12 +267,12 @@ func (b *FileBackend) GetItemData(s string, i string) (*bufio.Reader, error) {
 }
 
 func (b *FileBackend) UpdateMetadata(s string) error {
-	sd, err := os.ReadDir(path.Join(b.stringOption("path"), s))
+	sd, err := os.ReadDir(path.Join(b.Options.Path, s))
 	if err != nil {
 		return err
 	}
 
-	fm, err := os.OpenFile(path.Join(b.stringOption("path"), s, ".metadata"), os.O_RDWR, 0644)
+	fm, err := os.OpenFile(path.Join(b.Options.Path, s, ".metadata"), os.O_RDWR, 0644)
 	if err != nil {
 		return err
 	}

@@ -81,12 +81,12 @@ func TestLoadGoodConfig(t *testing.T) {
 		t.Errorf("Expected *config.FileBackend, got %v", reflect.TypeOf(s).String())
 	}
 
-	if s.(*storage.FileBackend).Options["max_file_mb"] != 500 {
-		t.Errorf("Expected 500, got %v", s.(*storage.FileBackend).Options["max_file_mb"])
+	if s.(*storage.FileBackend).Options.MaxFileSize != 500 {
+		t.Errorf("Expected 500, got %v", s.(*storage.FileBackend).Options.MaxFileSize)
 	}
 
-	if s.(*storage.FileBackend).Options["max_share_mb"] != 2000 {
-		t.Errorf("Expected 2000, got %v", s.(*storage.FileBackend).Options["max_share_mb"])
+	if s.(*storage.FileBackend).Options.MaxShareSize != 2000 {
+		t.Errorf("Expected 2000, got %v", s.(*storage.FileBackend).Options.MaxShareSize)
 	}
 
 	_, err = c.Authentication()
