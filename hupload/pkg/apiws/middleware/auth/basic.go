@@ -7,6 +7,11 @@ import (
 	"github.com/ybizeul/hupload/pkg/apiws/authentication"
 )
 
+var (
+	ErrBasicAuthNoCredentials        = errors.New("no basic authentication provided")
+	ErrBasicAuthAuthenticationFailed = errors.New("authentication failed")
+)
+
 // BasicAuthenticator uses a password file to authenticate users, like :
 //   - username: admin
 //     password: $2y$10$AJEytAoJfc4yQjUS8/cG6eXADlgK/Dt3AvdB0boPJ7EcHofewGQIK
@@ -34,7 +39,7 @@ func (a BasicAuthMiddleware) Middleware(next http.Handler) http.Handler {
 				return
 			}
 			if !b {
-				serveNextError(next, w, r, errors.New("authentication failed"))
+				serveNextError(next, w, r, ErrBasicAuthAuthenticationFailed)
 				return
 			} else {
 				serveNextAuthenticated(qUser, next, w, r)
@@ -43,6 +48,6 @@ func (a BasicAuthMiddleware) Middleware(next http.Handler) http.Handler {
 		}
 
 		// Fail by default
-		serveNextError(next, w, r, errors.New("no basic authentication provided"))
+		serveNextError(next, w, r, ErrBasicAuthNoCredentials)
 	})
 }

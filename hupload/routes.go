@@ -19,7 +19,7 @@ func postShare(w http.ResponseWriter, r *http.Request) {
 		_, _ = w.Write([]byte("no user in context"))
 		return
 	}
-	code := generateCode()
+	code := generateCode(4, 3)
 	err := api.Storage.CreateShare(code, user)
 	if err != nil {
 		slog.Error("postShare", slog.String("error", err.Error()))

@@ -38,16 +38,19 @@ func generateRandomString(length int) string {
 }
 
 func (j JWTAuthMiddleware) Middleware(next http.Handler) http.Handler {
-	if j.HMACSecret == "" {
-		j.HMACSecret = generateRandomString(32)
+	if HMACSecret == "" {
+		HMACSecret = j.HMACSecret
+		if HMACSecret == "" {
+			HMACSecret = generateRandomString(32)
+		}
 	}
-	HMACSecret = j.HMACSecret
+	j.HMACSecret = HMACSecret
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Check that authentication has been previoulsy approved
 		// If request is already authenticated, generate a JWT token
 		if r.Context().Value(AuthStatus) == AuthStatusSuccess {
 			user := UserForRequest(r)
-			short, long, err := generateTokens(user)
+			short, long, err := generateTokens(user, []byte(j.HMACSecret))
 			if err != nil {
 				serveNextError(next, w, r, err)
 				return
@@ -107,7 +110,7 @@ func (j JWTAuthMiddleware) Middleware(next http.Handler) http.Handler {
 				if !ok {
 					serveNextError(next, w, r, JWTAuthNoSubClaim)
 				}
-				short, long, err := generateTokens(user)
+				short, long, err := generateTokens(user, []byte(j.HMACSecret))
 				if err != nil {
 					serveNextError(next, w, r, err)
 				}
@@ -124,7 +127,7 @@ func (j JWTAuthMiddleware) Middleware(next http.Handler) http.Handler {
 	})
 }
 
-func generateTokens(user string) (string, string, error) {
+func generateTokens(user string, hmac []byte) (string, string, error) {
 	var (
 		err   error
 		t     *jwt.Token
@@ -155,7 +158,7 @@ func generateTokens(user string) (string, string, error) {
 			"exp":     time.Now().Add(time.Minute * 20).Unix(),
 		})
 
-	long, err = t.SignedString([]byte(HMACSecret))
+	long, err = t.SignedString(hmac)
 
 	if err != nil {
 		return "", "", err

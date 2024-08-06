@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"net/http"
 
+	"github.com/ybizeul/hupload/internal/config"
 	"github.com/ybizeul/hupload/pkg/apiws/authentication"
 	"github.com/ybizeul/hupload/pkg/apiws/middleware/auth"
 	logger "github.com/ybizeul/hupload/pkg/apiws/middleware/log"
@@ -14,19 +15,25 @@ import (
 )
 
 type APIWS struct {
+	// StaticUI is the file system containing the static web directory.
 	StaticUI fs.FS
+	// HTTP port to listen on
 	HTTPPort int
-	mux      *http.ServeMux
+	// mux is the main ServeMux used by the API Web Server.
+	mux *http.ServeMux
 
-	TemplateData any
+	// TemplateData is used to customized some templated parts of the web UI.
+	TemplateData config.ConfigValues
 
-	Storage        storage.Storage
+	// Storage is the storage backend
+	Storage storage.Storage
+	// Authentication is the authentication backend
 	Authentication authentication.Authentication
 }
 
 // New creates a new API Web Server. staticUI is the file system containing the
 // web root directory.
-func New(staticUI fs.FS, t any) (*APIWS, error) {
+func New(staticUI fs.FS, t config.ConfigValues) (*APIWS, error) {
 	d, err := fs.ReadDir(staticUI, ".")
 	if err != nil {
 		return nil, err
@@ -43,10 +50,13 @@ func New(staticUI fs.FS, t any) (*APIWS, error) {
 	}, nil
 }
 
+// SetStorage sets the storage backend that will be used to create shares, store
+// and retrieve content.
 func (a *APIWS) SetStorage(b storage.Storage) {
 	a.Storage = b
 }
 
+// SetAuthentication
 func (a *APIWS) SetAuthentication(b authentication.Authentication) {
 	a.Authentication = b
 }
@@ -89,6 +99,7 @@ func (a *APIWS) Start() {
 	})
 
 	slog.Info(fmt.Sprintf("Starting web service on port %d", a.HTTPPort))
+
 	err := http.ListenAndServe(fmt.Sprintf(":%d", a.HTTPPort), logger.NewLogger(a.mux))
 	if err != nil {
 		slog.Error("unable to start http server", slog.String("error", err.Error()))
