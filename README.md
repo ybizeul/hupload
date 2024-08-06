@@ -94,7 +94,7 @@ and needs access to the shares directory
 
 ```
 mkdir data
-chown 65532:65532
+chown 65532:65532 data
 docker run -v $(pwd)/data:/data -p 8080:8080 ghcr.io/ybizeul/hupload/hupload
 ```
 
