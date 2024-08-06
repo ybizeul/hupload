@@ -89,6 +89,9 @@ $2y$10$LIcTF3HKNhV6qh3oi3ysHOnhiXpLOU22N61JzZXoSWQbNOpDhS/g.
 
 You can quickly test **Hupload** in a container, or run it in production :
 
+Nite that the container is running as **nonroot** user, and needs access to the 
+shares directory
+
 ```
 mkdir data
 chown 65532:65532
