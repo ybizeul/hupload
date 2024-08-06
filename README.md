@@ -14,6 +14,9 @@ The overall concept is that share names are random tokens that can be generated
 by **hupload** and are publicly accessible so users don't have to log in to 
 upload content.
 
+Note that "Copy" buttons will not work over insecure connection (http without 
+SSL)
+
 ## Screenshots
 
 **Admin page**
