@@ -60,22 +60,6 @@ func (b *FileBackend) initialize() {
 	}
 }
 
-// func (b *FileBackend) stringOption(o string) string {
-// 	v, ok := b.Options[o].(string)
-// 	if !ok {
-// 		return ""
-// 	}
-// 	return v
-// }
-
-// func (b *FileBackend) int64Option(o string) int64 {
-// 	v, ok := b.Options[o].(int)
-// 	if !ok {
-// 		return 0
-// 	}
-// 	return int64(v)
-// }
-
 func (b *FileBackend) CreateShare(s string, o string) error {
 	_, err := os.Stat(path.Join(b.Options.Path, s))
 	if err == nil {
