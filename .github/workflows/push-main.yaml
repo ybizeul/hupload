@@ -4,8 +4,8 @@ on:
       - main
     paths-ignore:
       - 'README.md'
-      - 'readme_images'
-      - 'Artwork'
+      - 'readme_images/*'
+      - 'Artwork/*'
 jobs:
   release:
     name: release
