@@ -1,8 +1,6 @@
 package auth
 
 import (
-	"crypto/rand"
-	"encoding/base64"
 	"errors"
 	"fmt"
 	"log/slog"
@@ -22,29 +20,18 @@ var (
 	longTokenMinutesExpire  = 20 * time.Minute
 )
 
-var HMACSecret string
+//var HMACSecret string
 
 type JWTAuthMiddleware struct {
 	HMACSecret string
 }
 
-func generateRandomString(length int) string {
-	b := make([]byte, length)
-	_, err := rand.Read(b)
-	if err != nil {
-		panic(err)
-	}
-	return base64.StdEncoding.EncodeToString(b)
+func NewJWTAuthMiddleware(hmac string) *JWTAuthMiddleware {
+	return &JWTAuthMiddleware{HMACSecret: hmac}
 }
 
 func (j JWTAuthMiddleware) Middleware(next http.Handler) http.Handler {
-	if HMACSecret == "" {
-		HMACSecret = j.HMACSecret
-		if HMACSecret == "" {
-			HMACSecret = generateRandomString(32)
-		}
-	}
-	j.HMACSecret = HMACSecret
+
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 		// Check JWT cookies
@@ -56,7 +43,7 @@ func (j JWTAuthMiddleware) Middleware(next http.Handler) http.Handler {
 			// If request is already authenticated, generate a JWT token
 			if r.Context().Value(AuthStatus) == AuthStatusSuccess {
 				user := UserForRequest(r)
-				short, long, err := generateTokens(user, []byte(j.HMACSecret))
+				short, long, err := j.generateTokens(user)
 				if err != nil {
 					serveNextError(next, w, r, err)
 					return
@@ -68,6 +55,11 @@ func (j JWTAuthMiddleware) Middleware(next http.Handler) http.Handler {
 				serveNextAuthenticated(user, next, w, r)
 				return
 			}
+
+			// Delete cookies
+			http.SetCookie(w, &http.Cookie{Name: "X-Token", Value: "deleted", Path: "/", Expires: time.Unix(0, 0)})
+			http.SetCookie(w, &http.Cookie{Name: "X-Token-Refresh", Value: "deleted", Path: "/", Expires: time.Unix(0, 0)})
+
 			serveNextError(next, w, r, JWTAuthNoAuthorizationHeader)
 			return
 		}
@@ -91,11 +83,15 @@ func (j JWTAuthMiddleware) Middleware(next http.Handler) http.Handler {
 		})
 
 		if err != nil {
+			http.SetCookie(w, &http.Cookie{Name: "X-Token", Value: "deleted", Path: "/", Expires: time.Unix(0, 0)})
+			http.SetCookie(w, &http.Cookie{Name: "X-Token-Refresh", Value: "deleted", Path: "/", Expires: time.Unix(0, 0)})
 			serveNextError(next, w, r, fmt.Errorf("Unable to parse token: %w", err))
 			return
 		}
 
 		if !token.Valid {
+			http.SetCookie(w, &http.Cookie{Name: "X-Token", Value: "deleted", Path: "/", Expires: time.Unix(0, 0)})
+			http.SetCookie(w, &http.Cookie{Name: "X-Token-Refresh", Value: "deleted", Path: "/", Expires: time.Unix(0, 0)})
 			serveNextError(next, w, r, errors.New("Invalid token"))
 			return
 		}
@@ -110,7 +106,7 @@ func (j JWTAuthMiddleware) Middleware(next http.Handler) http.Handler {
 				if !ok {
 					serveNextError(next, w, r, JWTAuthNoSubClaim)
 				}
-				short, long, err := generateTokens(user, []byte(j.HMACSecret))
+				short, long, err := j.generateTokens(user)
 				if err != nil {
 					serveNextError(next, w, r, err)
 				}
@@ -127,7 +123,7 @@ func (j JWTAuthMiddleware) Middleware(next http.Handler) http.Handler {
 	})
 }
 
-func generateTokens(user string, hmac []byte) (string, string, error) {
+func (j *JWTAuthMiddleware) generateTokens(user string) (string, string, error) {
 	var (
 		err   error
 		t     *jwt.Token
@@ -143,7 +139,7 @@ func generateTokens(user string, hmac []byte) (string, string, error) {
 			"exp": time.Now().Add(time.Minute * 5).Unix(),
 		})
 
-	short, err = t.SignedString([]byte(HMACSecret))
+	short, err = t.SignedString([]byte(j.HMACSecret))
 
 	if err != nil {
 		return "", "", err
@@ -158,7 +154,7 @@ func generateTokens(user string, hmac []byte) (string, string, error) {
 			"exp":     time.Now().Add(time.Minute * 20).Unix(),
 		})
 
-	long, err = t.SignedString(hmac)
+	long, err = t.SignedString([]byte(j.HMACSecret))
 
 	if err != nil {
 		return "", "", err

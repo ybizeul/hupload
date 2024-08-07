@@ -1,6 +1,8 @@
 package main
 
 import (
+	"crypto/rand"
+	"encoding/base64"
 	"os"
 	"strconv"
 
@@ -12,13 +14,19 @@ import (
 
 func startWebServer(api *apiws.APIWS) {
 
+	// Get JWT_SECRET
+	hmac := os.Getenv("JWT_SECRET")
+	if len(hmac) == 0 {
+		hmac = generateRandomString(32)
+	}
+
 	// Define authenticators for protected routes
 	authenticators := []auth.AuthMiddleware{
 		auth.BasicAuthMiddleware{
 			Authentication: api.Authentication,
 		},
 		auth.JWTAuthMiddleware{
-			HMACSecret: os.Getenv("JWT_SECRET"),
+			HMACSecret: hmac,
 		},
 	}
 
@@ -52,4 +60,13 @@ func startWebServer(api *apiws.APIWS) {
 		api.HTTPPort = p
 	}
 	api.Start()
+}
+
+func generateRandomString(length int) string {
+	b := make([]byte, length)
+	_, err := rand.Read(b)
+	if err != nil {
+		panic(err)
+	}
+	return base64.StdEncoding.EncodeToString(b)
 }

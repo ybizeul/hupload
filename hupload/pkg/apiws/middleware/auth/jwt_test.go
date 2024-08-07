@@ -15,7 +15,7 @@ func TestJWTAuth(t *testing.T) {
 		HMACSecret: secret,
 	}
 
-	long, short, err := generateTokens("admin", []byte(secret))
+	long, short, err := m.generateTokens("admin")
 
 	if err != nil {
 		t.Errorf("Expected no error, got %v", err)
@@ -57,17 +57,22 @@ func TestJWTAuth(t *testing.T) {
 }
 
 func TestJWTAuthBadSecret(t *testing.T) {
+	// First generate a valid token with a different secret
+	bad_m := JWTAuthMiddleware{
+		HMACSecret: "badSecret",
+	}
 
+	long, short, err := bad_m.generateTokens("admin")
+
+	if err != nil {
+		t.Errorf("Expected no error, got %v", err)
+	}
+
+	// Test token with correct secret
 	secret := "secret"
 
 	m := JWTAuthMiddleware{
 		HMACSecret: secret,
-	}
-
-	long, short, err := generateTokens("admin", []byte("badsecret"))
-
-	if err != nil {
-		t.Errorf("Expected no error, got %v", err)
 	}
 
 	fn1 := func(w http.ResponseWriter, r *http.Request) {
@@ -91,6 +96,19 @@ func TestJWTAuthBadSecret(t *testing.T) {
 
 	if r.Code != http.StatusUnauthorized {
 		t.Errorf("Expected Unauthorized, got %v", r.Code)
+	}
+
+	c := r.Result().Cookies()
+	if len(c) != 2 {
+		t.Errorf("Expected 2 cookies, got %v", len(c))
+	}
+	for _, v := range c {
+		if v.Value != "deleted" {
+			t.Errorf("Expected deleted, got %v", v.Value)
+		}
+		if v.Expires.Unix() != 0 {
+			t.Errorf("Expected 0, got %v", v.Expires.Unix())
+		}
 	}
 	b, _ := io.ReadAll(r.Result().Body)
 	if string(b) != "UNAUTHORIZED" {
