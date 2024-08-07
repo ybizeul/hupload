@@ -46,28 +46,28 @@ func (j JWTAuthMiddleware) Middleware(next http.Handler) http.Handler {
 	}
 	j.HMACSecret = HMACSecret
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Check that authentication has been previoulsy approved
-		// If request is already authenticated, generate a JWT token
-		if r.Context().Value(AuthStatus) == AuthStatusSuccess {
-			user := UserForRequest(r)
-			short, long, err := generateTokens(user, []byte(j.HMACSecret))
-			if err != nil {
-				serveNextError(next, w, r, err)
-				return
-			}
-
-			http.SetCookie(w, &http.Cookie{Name: "X-Token", Value: short, Path: "/", Expires: time.Now().Add(shortTokenMinutesExpire)})
-			http.SetCookie(w, &http.Cookie{Name: "X-Token-Refresh", Value: long, Path: "/", Expires: time.Now().Add(longTokenMinutesExpire)})
-
-			serveNextAuthenticated(user, next, w, r)
-			return
-		}
 
 		// Check JWT cookies
 		shortCookie, _ := r.Cookie("X-Token")
 		longCookie, _ := r.Cookie("X-Token-Refresh")
 
 		if shortCookie == nil && longCookie == nil {
+			// Check that authentication has been previoulsy approved
+			// If request is already authenticated, generate a JWT token
+			if r.Context().Value(AuthStatus) == AuthStatusSuccess {
+				user := UserForRequest(r)
+				short, long, err := generateTokens(user, []byte(j.HMACSecret))
+				if err != nil {
+					serveNextError(next, w, r, err)
+					return
+				}
+
+				http.SetCookie(w, &http.Cookie{Name: "X-Token", Value: short, Path: "/", Expires: time.Now().Add(shortTokenMinutesExpire)})
+				http.SetCookie(w, &http.Cookie{Name: "X-Token-Refresh", Value: long, Path: "/", Expires: time.Now().Add(longTokenMinutesExpire)})
+
+				serveNextAuthenticated(user, next, w, r)
+				return
+			}
 			serveNextError(next, w, r, JWTAuthNoAuthorizationHeader)
 			return
 		}

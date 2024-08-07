@@ -2,7 +2,10 @@ export interface Share {
   name: string;
   owner: string;
   count: number;
-    size: number;
+  size: number;
+  created: Date;
+  validity: number;
+  isvalid: boolean;
 }
 
 export interface Item {

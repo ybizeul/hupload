@@ -25,6 +25,7 @@ export function Shares(props: {owner: string|null}) {
   const updateShares = useCallback(() => {
     H.get('/share').then(
       (res) => {
+        console.log(res)
         setShares(res as Share[])
       })
       .catch((e) => {

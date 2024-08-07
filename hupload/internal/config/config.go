@@ -6,8 +6,8 @@ import (
 
 	"gopkg.in/yaml.v3"
 
+	"github.com/ybizeul/hupload/internal/storage"
 	"github.com/ybizeul/hupload/pkg/apiws/authentication"
-	"github.com/ybizeul/hupload/pkg/apiws/storage"
 )
 
 type TypeOptions struct {
@@ -16,22 +16,27 @@ type TypeOptions struct {
 }
 
 type ConfigValues struct {
-	Title          string
-	Storage        TypeOptions `yaml:"storage"`
-	Authentication TypeOptions `yaml:"auth"`
+	Title               string
+	DefaultValidityDays int         `yaml:"availability_days"`
+	Storage             TypeOptions `yaml:"storage"`
+	Authentication      TypeOptions `yaml:"auth"`
 }
 
 // Config is the internal representation of Hupload configuration file
 type Config struct {
 	Path   string
 	Values ConfigValues
+
+	Storage        storage.Storage
+	Authentication authentication.Authentication
 }
 
 // Load reads the configuration file and populates the Config struct
-func (c *Config) Load() (bool, error) {
+func (c *Config) Load() (fileExists bool, err error) {
 	// Set default templating values
 	c.Values = ConfigValues{
-		Title: "Hupload",
+		Title:               "Hupload",
+		DefaultValidityDays: 7,
 		Storage: TypeOptions{
 			Type: "file",
 			Options: map[string]any{
@@ -43,11 +48,30 @@ func (c *Config) Load() (bool, error) {
 		},
 	}
 
+	fileExists = true
+
+	defer func() {
+		if err != nil {
+			return
+		}
+
+		c.Storage, err = c.storage()
+		if err != nil {
+			return
+		}
+
+		c.Authentication, err = c.authentication()
+		if err != nil {
+			return
+		}
+	}()
+
 	// Open the configuration file
-	f, err := os.Open(c.Path)
-	if err != nil {
-		if errors.Is(err, os.ErrNotExist) {
-			return false, nil
+	f, err2 := os.Open(c.Path)
+	if err2 != nil {
+		if errors.Is(err2, os.ErrNotExist) {
+			fileExists = false
+			return
 		}
 		return true, err
 	}
@@ -64,7 +88,9 @@ func (c *Config) Load() (bool, error) {
 
 // Storage returns the storage backend struct that will be used to create
 // shares, store and retrieve content.
-func (c *Config) Storage() (storage.Storage, error) {
+
+func (c *Config) storage() (storage.Storage, error) {
+
 	// Check if the configuration has a storage backend defined
 	s := c.Values.Storage
 	// if !ok {
@@ -95,7 +121,7 @@ func (c *Config) Storage() (storage.Storage, error) {
 
 // Authentication returns the authentication backend struct that will be used
 // to authenticate users.
-func (c *Config) Authentication() (authentication.Authentication, error) {
+func (c *Config) authentication() (authentication.Authentication, error) {
 	// Check if the configuration has a authentication backend defined
 	a := c.Values.Authentication
 

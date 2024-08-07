@@ -14,6 +14,8 @@ var uiFS embed.FS
 
 var api *apiws.APIWS
 
+var cfg config.Config
+
 func main() {
 	initLogging()
 	slog.Info("Start Hupload")
@@ -23,12 +25,12 @@ func main() {
 	if cfgPath == "" {
 		cfgPath = "config.yml"
 	}
-	c := config.Config{
+	cfg = config.Config{
 		Path: cfgPath,
 	}
 
 	// Load configuration
-	found, err := c.Load()
+	found, err := cfg.Load()
 	if !found {
 		slog.Warn("No configuration file found, using default values", slog.String("path", cfgPath))
 	}
@@ -37,28 +39,29 @@ func main() {
 	}
 
 	// Create API web service with the embedded UI
-	api, err = apiws.New(uiFS, c.Values)
+	api, err = apiws.New(uiFS, cfg.Values)
 	if err != nil {
 		panic(err)
 	}
 
-	// Create storage backend from configuration
-	b, err := c.Storage()
-	if err != nil {
-		panic(err)
-	}
+	api.SetAuthentication(cfg.Authentication)
+	// // Create storage backend from configuration
+	// b, err := cfg.Storage()
+	// if err != nil {
+	// 	panic(err)
+	// }
 
-	// Set as current storage backend for the application
-	api.SetStorage(b)
+	// // // Set as current storage backend for the application
+	// // api.SetStorage(b)
 
-	// Create backend from configuration
-	a, err := c.Authentication()
-	if err != nil {
-		panic(err)
-	}
+	// // Create backend from configuration
+	// a, err := cfg.Authentication()
+	// if err != nil {
+	// 	panic(err)
+	// }
 
-	// Set as current backend for the application
-	api.SetAuthentication(a)
+	// // Set as current backend for the application
+	// api.SetAuthentication(a)
 
 	// Start the web server
 	startWebServer(api)
