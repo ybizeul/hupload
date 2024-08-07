@@ -22,10 +22,17 @@ func startWebServer(api *apiws.APIWS) {
 		},
 	}
 
+	authenticatorsOpen := []auth.AuthMiddleware{
+		auth.OpenAuthMiddleware{},
+		auth.JWTAuthMiddleware{
+			HMACSecret: os.Getenv("JWT_SECRET"),
+		},
+	}
+
 	// Setup routes
 	// Guests can access names share and post new files
 	api.AddRoute("POST /api/v1/share/{share}/{item}", nil, postItem)
-	api.AddRoute("GET /api/v1/share/{share}", nil, getShare)
+	api.AddRoute("GET /api/v1/share/{share}", authenticatorsOpen, getShare)
 
 	// Protected routes
 	api.AddRoute("POST /api/v1/login", authenticators, postLogin)
