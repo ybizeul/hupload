@@ -55,6 +55,8 @@ be used to configure storage backend and authentication.
 Sample configuration file :
 
 ```
+Title: Hupload
+availability_days: 12
 auth:
   type: file
   options:

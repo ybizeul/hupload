@@ -1,4 +1,5 @@
 title: Hupload
+availability_days: 12
 auth:
   type: file
   options:
