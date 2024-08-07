@@ -20,6 +20,8 @@ export function ShareComponent(props: {share: Share}) {
     const size = share.size
     const countString = count?(count + ' item' + (count > 1 ? 's' : '')):"empty"
 
+    const remaining = share.validity===0?0:(new Date(share.created).getTime() + share.validity*1000*60*60*24 - Date.now()) / 1000 / 60 / 60 / 24
+    console.log(share.name + " " + remaining)
     // Function
     const deleteShare = () => {
         H.delete('/share/'+name).then(() => {
@@ -30,11 +32,10 @@ export function ShareComponent(props: {share: Share}) {
         <>
         {!deleted &&
         <Paper key={key} withBorder shadow="xs" radius="md" mt={10} pos="relative" className={classes.paper}>
-            {!share.isvalid&&
-            <Group flex={1} w="100%" pos="absolute" bottom="0.1em" style={{justifyContent:"center"}} gap="0.2em">
-                <IconClock color="red" size="0.8em"  width={"1em"}/>
-                <Text size="xs" c="gray">Expired</Text>
-            </Group>}
+            <Group flex={1} w="100%" pos="absolute" bottom="0.1em" style={{justifyContent:"center"}} align="center" gap="0.2em">
+                <IconClock color={(remaining<0)?"red":"gray"} size="0.8em"  width={"1em"}/>
+                <Text size="xs" c="gray">{(share.validity===0)?"Unlimited":(remaining<0)?"Expired":remaining.toFixed() + " day" + (remaining>1&&"s") + " left"}</Text>
+            </Group>
             <Box p="sm">
             <Flex h={45} align={"center"}>
                 <Group flex="1" gap="0" align="center">

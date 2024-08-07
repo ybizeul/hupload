@@ -3,6 +3,8 @@ export interface Share {
   owner: string;
   count: number;
   size: number;
+  created: Date;
+  validity: number;
   isvalid: boolean;
 }
 
