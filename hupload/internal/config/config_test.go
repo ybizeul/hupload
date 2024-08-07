@@ -1,20 +1,28 @@
 package config
 
 import (
-	"errors"
 	"reflect"
 	"testing"
 
+	"github.com/ybizeul/hupload/internal/storage"
 	"github.com/ybizeul/hupload/pkg/apiws/authentication"
-	"github.com/ybizeul/hupload/pkg/apiws/storage"
 )
 
 func TestLoadEmptyConfig(t *testing.T) {
 	c := Config{}
-	c.Load()
+	present, err := c.Load()
+
+	if present {
+		t.Errorf("Expected config file to be missing")
+	}
+
+	if err != nil {
+		t.Errorf("Expected no error, got %v", err)
+	}
 
 	expect := ConfigValues{
-		Title: "Hupload",
+		Title:               "Hupload",
+		DefaultValidityDays: 7,
 		Storage: TypeOptions{
 			Type: "file",
 			Options: map[string]any{
@@ -48,7 +56,8 @@ func TestLoadGoodConfig(t *testing.T) {
 	}
 
 	expect := ConfigValues{
-		Title: "Hupload",
+		Title:               "Hupload",
+		DefaultValidityDays: 7,
 		Storage: TypeOptions{
 			Type: "file",
 			Options: map[string]any{
@@ -71,11 +80,7 @@ func TestLoadGoodConfig(t *testing.T) {
 		t.Errorf("Expected %v, got %v", expect, got)
 	}
 
-	s, err := c.Storage()
-
-	if err != nil {
-		t.Errorf("Expected no error, got %v", err)
-	}
+	s := c.Storage
 
 	if reflect.TypeOf(s).String() != "*storage.FileBackend" {
 		t.Errorf("Expected *config.FileBackend, got %v", reflect.TypeOf(s).String())
@@ -89,10 +94,10 @@ func TestLoadGoodConfig(t *testing.T) {
 		t.Errorf("Expected 2000, got %v", s.(*storage.FileBackend).Options.MaxShareSize)
 	}
 
-	_, err = c.Authentication()
+	a := c.Authentication
 
-	if err != nil {
-		t.Errorf("Expected no error, got %v", err)
+	if a == nil {
+		t.Errorf("Expected authentication backend to be created")
 	}
 }
 
@@ -116,16 +121,13 @@ func TestMissingUsersFile(t *testing.T) {
 	c := Config{
 		Path: "tests/config_missing_users_file.yml",
 	}
-	b, _ := c.Load()
+	b, err := c.Load()
+
+	if err != authentication.ErrAuthenticationMissingUsersFile {
+		t.Errorf("Expected ErrAuthenticationMissingUsersFile, got %v", err)
+	}
 
 	if !b {
 		t.Errorf("Expected config file to be found")
 	}
-
-	_, err := c.Authentication()
-
-	if !errors.Is(err, authentication.ErrAuthenticationMissingUsersFile) {
-		t.Errorf("Expected ErrAuthenticationMissingUsersFile to be returned")
-	}
-
 }

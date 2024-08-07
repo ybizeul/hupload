@@ -32,7 +32,7 @@ export function ShareComponent(props: {share: Share}) {
         <Paper key={key} p="md" shadow="xs" radius="md" mt={10} className={classes.paper}>
             <Flex h={45} align={"center"}>
                 <Group flex="1" gap="0" align="baseline">
-                    <Anchor style={{ whiteSpace: "nowrap"}} flex={"1"} component={Link} to={'/'+name}><Text>{name}</Text></Anchor>
+                    <Anchor style={{ whiteSpace: "nowrap"}} flex={"1"} component={Link} to={'/'+name}><Text>{name}{!share.isvalid&&" (expired)"}</Text></Anchor>
                     <Text size="xs" c="gray">{countString + (size?(' | ' + humanFileSize(size)):'')}</Text>
                 </Group>
                 <Group justify="flex-end">

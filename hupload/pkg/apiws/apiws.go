@@ -11,7 +11,6 @@ import (
 	"github.com/ybizeul/hupload/pkg/apiws/authentication"
 	"github.com/ybizeul/hupload/pkg/apiws/middleware/auth"
 	logger "github.com/ybizeul/hupload/pkg/apiws/middleware/log"
-	"github.com/ybizeul/hupload/pkg/apiws/storage"
 )
 
 type APIWS struct {
@@ -25,8 +24,8 @@ type APIWS struct {
 	// TemplateData is used to customized some templated parts of the web UI.
 	TemplateData config.ConfigValues
 
-	// Storage is the storage backend
-	Storage storage.Storage
+	// // Storage is the storage backend
+	// Storage storage.Storage
 	// Authentication is the authentication backend
 	Authentication authentication.Authentication
 }
@@ -52,9 +51,9 @@ func New(staticUI fs.FS, t config.ConfigValues) (*APIWS, error) {
 
 // SetStorage sets the storage backend that will be used to create shares, store
 // and retrieve content.
-func (a *APIWS) SetStorage(b storage.Storage) {
-	a.Storage = b
-}
+// func (a *APIWS) SetStorage(b storage.Storage) {
+// 	a.Storage = b
+// }
 
 // SetAuthentication
 func (a *APIWS) SetAuthentication(b authentication.Authentication) {
