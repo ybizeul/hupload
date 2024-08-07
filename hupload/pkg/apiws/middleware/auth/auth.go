@@ -26,18 +26,30 @@ const (
 // serveNextAuthenticated adds a passes w and r to next middleware after adding
 // successful authentication context key/value
 func serveNextAuthenticated(user string, next http.Handler, w http.ResponseWriter, r *http.Request) {
-	next.ServeHTTP(w,
-		r.WithContext(
-			context.WithValue(
+	if user == "" {
+		next.ServeHTTP(w,
+			r.WithContext(
 				context.WithValue(
 					r.Context(),
 					AuthStatus,
-					AuthStatusSuccess),
-				AuthUser,
-				user,
+					AuthStatusSuccess,
+				),
 			),
-		),
-	)
+		)
+	} else {
+		next.ServeHTTP(w,
+			r.WithContext(
+				context.WithValue(
+					context.WithValue(
+						r.Context(),
+						AuthStatus,
+						AuthStatusSuccess),
+					AuthUser,
+					user,
+				),
+			),
+		)
+	}
 }
 
 // serveNextError adds a passes w and r to next middleware after adding
