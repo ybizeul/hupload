@@ -16,10 +16,10 @@ func setupSuite() func(t *testing.T) {
 }
 func TestCreateShare(t *testing.T) {
 	tearDown := setupSuite()
-	c := map[string]any{
-		"path":         "data",
-		"max_file_mb":  5,
-		"max_share_mb": 10,
+	c := FileStorageConfig{
+		Path:         "data",
+		MaxFileSize:  5,
+		MaxShareSize: 10,
 	}
 
 	f := NewFileStorage(c)

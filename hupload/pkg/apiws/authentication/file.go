@@ -22,22 +22,15 @@ type AuthenticationFile struct {
 	Options FileAuthenticationConfig
 }
 
-func NewAuthenticationFile(m map[string]any) (*AuthenticationFile, error) {
-	b, err := yaml.Marshal(m)
-	if err != nil {
-		return nil, err
-	}
+func NewAuthenticationFile(o FileAuthenticationConfig) (*AuthenticationFile, error) {
 
-	var r AuthenticationFile
-
-	err = yaml.Unmarshal(b, &r.Options)
-	if err != nil {
-		return nil, err
+	r := AuthenticationFile{
+		Options: o,
 	}
 
 	path := r.Options.Path
 
-	_, err = os.Stat(path)
+	_, err := os.Stat(path)
 	if err != nil {
 		if os.IsNotExist(err) {
 			return nil, ErrAuthenticationMissingUsersFile

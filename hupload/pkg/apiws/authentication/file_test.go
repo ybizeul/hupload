@@ -6,10 +6,11 @@ import (
 )
 
 func TestAuthentication(t *testing.T) {
-	m := map[string]any{
-		"path": "../../../tests/config/users.yml",
+	c := FileAuthenticationConfig{
+		Path: "tests/users.yml",
 	}
-	a, err := NewAuthenticationFile(m)
+
+	a, err := NewAuthenticationFile(c)
 
 	if err != nil {
 		t.Errorf("Expected no error, got %v", err)
@@ -41,22 +42,12 @@ func TestAuthentication(t *testing.T) {
 	}
 }
 
-func TestAuthenticationBadConfig(t *testing.T) {
-	m := map[string]any{
-		"path": 3,
-	}
-	_, err := NewAuthenticationFile(m)
-
-	if errors.Is(err, ErrAuthenticationInvalidPath) {
-		t.Errorf("Expected error, got nil")
-	}
-}
-
 func TestAuthenticationInexistantUsersFile(t *testing.T) {
-	m := map[string]any{
-		"path": "nonexistant",
+	c := FileAuthenticationConfig{
+		Path: "tests/users_inexistant.yml",
 	}
-	_, err := NewAuthenticationFile(m)
+
+	_, err := NewAuthenticationFile(c)
 
 	if !errors.Is(err, ErrAuthenticationMissingUsersFile) {
 		t.Errorf("Expected error, got nil")

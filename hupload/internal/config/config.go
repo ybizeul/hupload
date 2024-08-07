@@ -86,61 +86,58 @@ func (c *Config) Load() (fileExists bool, err error) {
 	return true, nil
 }
 
-// Storage returns the storage backend struct that will be used to create
+// storage returns the storage backend struct that will be used to create
 // shares, store and retrieve content.
 
 func (c *Config) storage() (storage.Storage, error) {
-
-	// Check if the configuration has a storage backend defined
 	s := c.Values.Storage
-	// if !ok {
-	// 	return DefaultStorage(), nil
-	// }
-
-	// Check if storage type is valid
 	if s.Type == "" {
 		return nil, ErrMissingStorageBackendType
 	}
 
-	switch s.Type {
+	switch c.Values.Storage.Type {
 	case "file":
-		return storage.NewFileStorage(s.Options), nil
+		var options storage.FileStorageConfig
+		b, err := yaml.Marshal(s.Options)
+		if err != nil {
+			return nil, err
+		}
+
+		err = yaml.Unmarshal(b, &options)
+		if err != nil {
+			return nil, err
+		}
+
+		return storage.NewFileStorage(options), nil
 	}
 
 	return nil, ErrUnknownStorageBackend
 }
 
-// // If no storage configuration is defined, use the default one
-// func DefaultStorage() storage.Storage {
-// 	return storage.NewFileStorage(map[string]any{
-// 		"options": map[string]any{
-// 			"path": "data",
-// 		},
-// 	})
-// }
-
-// Authentication returns the authentication backend struct that will be used
+// authentication returns the authentication backend struct that will be used
 // to authenticate users.
 func (c *Config) authentication() (authentication.Authentication, error) {
-	// Check if the configuration has a authentication backend defined
 	a := c.Values.Authentication
-
-	// Check if authentication type is valid
-	if a.Type == "" {
-		return nil, ErrMissingAuthenticationBackendType
-	}
 
 	switch a.Type {
 	case "file":
-		return authentication.NewAuthenticationFile(a.Options)
+		var options authentication.FileAuthenticationConfig
+
+		b, err := yaml.Marshal(a.Options)
+		if err != nil {
+			return nil, err
+		}
+
+		err = yaml.Unmarshal(b, &options)
+		if err != nil {
+			return nil, err
+		}
+		return authentication.NewAuthenticationFile(options)
 	case "default":
 		return authentication.NewAuthenticationDefault(), nil
+	case "":
+		return nil, ErrMissingAuthenticationBackendType
 	}
 
 	return nil, ErrUnknownAuthenticationBackend
 }
-
-// // If no authentication configuration is defined, use the default one
-// func DefaultAuthentication() authentication.Authentication {
-// 	return authentication.NewAuthenticationDefault()
-// }

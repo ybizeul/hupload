@@ -9,10 +9,11 @@ import (
 )
 
 func TestBasicAuth(t *testing.T) {
-	p := map[string]any{
-		"path": "tests/users.yml",
+	c := authentication.FileAuthenticationConfig{
+		Path: "tests/users.yml",
 	}
-	a, err := authentication.NewAuthenticationFile(p)
+
+	a, err := authentication.NewAuthenticationFile(c)
 
 	if err != nil {
 		t.Errorf("Expected no error, got %v", err)
@@ -46,10 +47,11 @@ func TestBasicAuth(t *testing.T) {
 }
 
 func TestBasicWrongCredentials(t *testing.T) {
-	p := map[string]any{
-		"path": "tests/users.yml",
+	c := authentication.FileAuthenticationConfig{
+		Path: "tests/users.yml",
 	}
-	a, err := authentication.NewAuthenticationFile(p)
+
+	a, err := authentication.NewAuthenticationFile(c)
 
 	if err != nil {
 		t.Errorf("Expected no error, got %v", err)
@@ -79,10 +81,11 @@ func TestBasicWrongCredentials(t *testing.T) {
 }
 
 func TestBasicAuthNoCredentials(t *testing.T) {
-	p := map[string]any{
-		"path": "tests/users.yml",
+	c := authentication.FileAuthenticationConfig{
+		Path: "tests/users.yml",
 	}
-	a, err := authentication.NewAuthenticationFile(p)
+
+	a, err := authentication.NewAuthenticationFile(c)
 
 	if err != nil {
 		t.Errorf("Expected no error, got %v", err)
