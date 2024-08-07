@@ -24,7 +24,7 @@ export function ItemComponent(props: {item?: Item, queueItem?: QueueItem}) {
         }
     }
     return (
-    <Paper key={key} p="md" shadow="xs" radius="md" mt={10} className={classes.paper}>
+    <Paper key={key} withBorder p="md" shadow="xs" radius="md" mt={10} className={classes.paper}>
         <Flex direction="row" align="center" h={45}>
             <Text truncate="end">{fileName}</Text>
             <Box flex={1} ta={"right"}>
