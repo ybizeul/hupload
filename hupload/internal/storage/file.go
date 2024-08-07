@@ -171,7 +171,7 @@ func (b *FileBackend) ListShares() ([]Share, error) {
 	if err != nil {
 		return nil, err
 	}
-	var r []Share
+	r := []Share{}
 
 	// Shares loop
 	for _, f := range d {
