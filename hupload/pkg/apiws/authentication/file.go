@@ -4,7 +4,7 @@ import (
 	"os"
 
 	"golang.org/x/crypto/bcrypt"
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 )
 
 // AuthenticationFile takes users from a yaml file
@@ -23,7 +23,6 @@ type AuthenticationFile struct {
 }
 
 func NewAuthenticationFile(o FileAuthenticationConfig) (*AuthenticationFile, error) {
-
 	r := AuthenticationFile{
 		Options: o,
 	}
