@@ -16,9 +16,10 @@ type TypeOptions struct {
 }
 
 type ConfigValues struct {
-	Title          string
-	Storage        TypeOptions `yaml:"storage"`
-	Authentication TypeOptions `yaml:"auth"`
+	Title                   string
+	DefaultAvailabilityDays int
+	Storage                 TypeOptions `yaml:"storage"`
+	Authentication          TypeOptions `yaml:"auth"`
 }
 
 // Config is the internal representation of Hupload configuration file
@@ -31,7 +32,8 @@ type Config struct {
 func (c *Config) Load() (bool, error) {
 	// Set default templating values
 	c.Values = ConfigValues{
-		Title: "Hupload",
+		Title:                   "Hupload",
+		DefaultAvailabilityDays: 7,
 		Storage: TypeOptions{
 			Type: "file",
 			Options: map[string]any{

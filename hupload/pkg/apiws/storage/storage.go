@@ -9,8 +9,9 @@ type Share struct {
 	Name        string    `json:"name"`
 	DateCreated time.Time `json:"created"`
 	Owner       string    `json:"owner"`
-	Size        int64     `json:"size"`
-	Count       int64     `json:"count"`
+
+	Size  int64 `json:"size"`
+	Count int64 `json:"count"`
 }
 
 type Item struct {
