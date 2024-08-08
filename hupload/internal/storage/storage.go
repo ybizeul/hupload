@@ -2,6 +2,7 @@ package storage
 
 import (
 	"bufio"
+	"io"
 	"time"
 )
 
@@ -13,8 +14,6 @@ type Share struct {
 
 	Size  int64 `json:"size"`
 	Count int64 `json:"count"`
-
-	Valid bool `json:"isvalid"`
 }
 
 func (s *Share) IsValid() bool {
@@ -59,8 +58,5 @@ type Storage interface {
 	GetItem(string, string) (*Item, error)
 
 	// GetItem returns the item identified by share and item
-	GetItemData(string, string) (*bufio.Reader, error)
-
-	// UpdateMetadata updates the metadata of share
-	UpdateMetadata(string) error
+	GetItemData(string, string) (io.ReadCloser, error)
 }

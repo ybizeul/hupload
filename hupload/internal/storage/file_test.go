@@ -3,6 +3,8 @@ package storage
 import (
 	"bufio"
 	"bytes"
+	"errors"
+	"io"
 	"log"
 	"os"
 	"reflect"
@@ -147,7 +149,7 @@ func TestFileOverflow(t *testing.T) {
 
 	c := FileStorageConfig{
 		Path:         "data",
-		MaxFileSize:  2,
+		MaxFileSize:  1,
 		MaxShareSize: 3,
 	}
 
@@ -170,8 +172,8 @@ func TestFileOverflow(t *testing.T) {
 	_, err = f.CreateItem("test", "test.txt", reader)
 	defer r.Close()
 
-	if err == nil {
-		t.Errorf("Expected error, got nil")
+	if !errors.Is(err, ErrMaxShareSizeReached) {
+		t.Errorf("Expected ErrMaxShareSizeReached, got %v", err)
 	}
 }
 
@@ -235,6 +237,7 @@ func TestSafeShareName(t *testing.T) {
 		t.Errorf("Expected true, got false")
 	}
 }
+
 func createFile(path string, size int) {
 	s := int64(size * 1024 * 1024)
 	fd, err := os.Create(path)
@@ -252,5 +255,143 @@ func createFile(path string, size int) {
 	err = fd.Close()
 	if err != nil {
 		log.Fatal("Failed to close file")
+	}
+}
+
+func TestGetItemData(t *testing.T) {
+	c := FileStorageConfig{
+		Path:         "file_testdata/data",
+		MaxFileSize:  1,
+		MaxShareSize: 2,
+	}
+
+	f := NewFileStorage(c)
+	if f == nil {
+		t.Errorf("Expected FileStorage to be created")
+	}
+
+	f.initialize()
+
+	r, err := f.GetItemData("test", "test.txt")
+	if err != nil {
+		t.Errorf("Expected no error, got %v", err)
+	}
+
+	b, err := io.ReadAll(r)
+	if err != nil {
+		t.Errorf("Expected no error, got %v", err)
+	}
+
+	r.Close()
+
+	if !bytes.Equal(b, []byte("test")) {
+		t.Errorf("Expected test, got %v", string(b))
+	}
+}
+
+func TestGetShare(t *testing.T) {
+	c := FileStorageConfig{
+		Path:         "file_testdata/data",
+		MaxFileSize:  1,
+		MaxShareSize: 2,
+	}
+
+	f := NewFileStorage(c)
+
+	share, err := f.GetShare("test")
+	if err != nil {
+		t.Errorf("Expected no error, got %v", err)
+	}
+
+	parsedTime, err := time.Parse("2006-01-02T15:04:05.99-07:00", "2024-08-08T16:20:25.231034+02:00")
+	if err != nil {
+		t.Errorf("Expected no error, got %v", err)
+	}
+
+	want := Share{
+		Name:        "test",
+		Owner:       "admin",
+		Validity:    10,
+		Size:        4,
+		Count:       1,
+		DateCreated: parsedTime,
+	}
+
+	if !reflect.DeepEqual(*share, want) {
+		t.Errorf("Expected %v, got %v", want, share)
+	}
+}
+
+func TestListShare(t *testing.T) {
+	c := FileStorageConfig{
+		Path:         "file_testdata/data",
+		MaxFileSize:  1,
+		MaxShareSize: 2,
+	}
+
+	f := NewFileStorage(c)
+
+	items, err := f.ListShare("test")
+	if err != nil {
+		t.Errorf("Expected no error, got %v", err)
+	}
+
+	items[0].ItemInfo.DateModified = time.Time{}
+
+	want := []Item{
+		{
+			Path: "test/test.txt",
+			ItemInfo: ItemInfo{
+				Size:         4,
+				DateModified: time.Time{},
+			},
+		},
+	}
+
+	if !reflect.DeepEqual(items, want) {
+		t.Errorf("Expected %v, got %v", want, items)
+	}
+}
+
+func TestListShares(t *testing.T) {
+	c := FileStorageConfig{
+		Path:         "file_testdata/data",
+		MaxFileSize:  1,
+		MaxShareSize: 2,
+	}
+
+	f := NewFileStorage(c)
+
+	shares, err := f.ListShares()
+	if err != nil {
+		t.Errorf("Expected no error, got %v", err)
+	}
+
+	parsedTime, err := time.Parse("2006-01-02T15:04:05.99-07:00", "2024-08-08T16:20:25.231034+02:00")
+	if err != nil {
+		t.Errorf("Expected no error, got %v", err)
+	}
+
+	want := []Share{
+		{
+			Name:        "test",
+			Owner:       "admin",
+			Validity:    10,
+			Size:        4,
+			Count:       1,
+			DateCreated: parsedTime,
+		},
+		{
+			Name:        "test2",
+			Owner:       "admin",
+			Validity:    10,
+			Size:        4,
+			Count:       1,
+			DateCreated: parsedTime,
+		},
+	}
+
+	if !reflect.DeepEqual(shares, want) {
+		t.Errorf("Expected %v, got %v", want, shares)
 	}
 }

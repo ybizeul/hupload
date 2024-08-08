@@ -10,7 +10,7 @@ import (
 
 func TestBasicAuth(t *testing.T) {
 	c := authentication.FileAuthenticationConfig{
-		Path: "tests/users.yml",
+		Path: "basic_testdata/users.yml",
 	}
 
 	a, err := authentication.NewAuthenticationFile(c)
@@ -48,7 +48,7 @@ func TestBasicAuth(t *testing.T) {
 
 func TestBasicWrongCredentials(t *testing.T) {
 	c := authentication.FileAuthenticationConfig{
-		Path: "tests/users.yml",
+		Path: "basic_testdata/users.yml",
 	}
 
 	a, err := authentication.NewAuthenticationFile(c)
@@ -82,7 +82,7 @@ func TestBasicWrongCredentials(t *testing.T) {
 
 func TestBasicAuthNoCredentials(t *testing.T) {
 	c := authentication.FileAuthenticationConfig{
-		Path: "tests/users.yml",
+		Path: "basic_testdata/users.yml",
 	}
 
 	a, err := authentication.NewAuthenticationFile(c)

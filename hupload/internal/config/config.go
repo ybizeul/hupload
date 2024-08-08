@@ -10,11 +10,23 @@ import (
 	"github.com/ybizeul/hupload/pkg/apiws/authentication"
 )
 
+// TypeOption is a Type as a string and a map of options for the yaml
+// configuration file.
+// It is used for storage and authentication backends so new backends can be
+// added without modifying the code.
+// When loading configuration, the Type is matched in a switch statement and
+// the corresponding backend is created. Options are then marshalled and
+// unmarshalled to the configuration struct of the corresponding backend.
 type TypeOptions struct {
 	Type    string
 	Options map[string]any
 }
 
+// ConfigValues is the struct that will be populated by the yaml configuration
+// file.
+// It will also be sent as-is to the templating engine to render the variables
+// in the HTML templates, i.e. {{.Title}} will be replaced by the value of
+// ConfigValues.Title.
 type ConfigValues struct {
 	Title               string
 	DefaultValidityDays int         `yaml:"availability_days"`
@@ -22,7 +34,9 @@ type ConfigValues struct {
 	Authentication      TypeOptions `yaml:"auth"`
 }
 
-// Config is the internal representation of Hupload configuration file
+// Config is the internal representation of Hupload configuration file at path
+// Path. Storage and Authentication are interfaces to the actual backends used
+// to store shares data and authenticate users.
 type Config struct {
 	Path   string
 	Values ConfigValues
@@ -32,6 +46,13 @@ type Config struct {
 }
 
 // Load reads the configuration file and populates the Config struct
+// accordingly. The actual creation of the storage and authentication backends
+// is done into the defer block so that if no error is populated in err, the
+// Config struct is fully populated with default backends if none had been
+// defined during execution, like when the config file is missing.
+// fileExists is a boolean that is set to false if the configuration file is
+// missing so appropriate action can be taken by the caller.
+
 func (c *Config) Load() (fileExists bool, err error) {
 	// Set default templating values
 	c.Values = ConfigValues{
@@ -87,7 +108,9 @@ func (c *Config) Load() (fileExists bool, err error) {
 }
 
 // storage returns the storage backend struct that will be used to create
-// shares, store and retrieve content.
+// shares, store and retrieve content. It requires that the configuration
+// struct has been populated with the values from the yaml configuration file.
+// it returns a storage.Storage interface and an error if something failed
 
 func (c *Config) storage() (storage.Storage, error) {
 	s := c.Values.Storage
@@ -114,8 +137,11 @@ func (c *Config) storage() (storage.Storage, error) {
 	return nil, ErrUnknownStorageBackend
 }
 
-// authentication returns the authentication backend struct that will be used
-// to authenticate users.
+// authentication returns the authentication backend struct that will be used to
+// authenticate users. It requires that the configuration struct has been
+// populated with the values from the yaml configuration file. It returns an
+// authentication.Authentication interface and an error if something failed
+
 func (c *Config) authentication() (authentication.Authentication, error) {
 	a := c.Values.Authentication
 

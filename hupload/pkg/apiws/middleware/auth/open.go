@@ -2,12 +2,9 @@ package auth
 
 import (
 	"net/http"
-
-	"github.com/ybizeul/hupload/pkg/apiws/authentication"
 )
 
 type OpenAuthMiddleware struct {
-	Authentication authentication.Authentication
 }
 
 func (a OpenAuthMiddleware) Middleware(next http.Handler) http.Handler {

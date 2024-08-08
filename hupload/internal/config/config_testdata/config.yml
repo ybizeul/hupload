@@ -1,8 +1,9 @@
 title: Hupload
+availability_days: 12
 auth:
-    type: file
+  type: file
   options:
-    path: users.yml
+    path: config_testdata/users.yml
 storage:
   type: file
   options:

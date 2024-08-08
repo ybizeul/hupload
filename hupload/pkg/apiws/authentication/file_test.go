@@ -7,7 +7,7 @@ import (
 
 func TestAuthentication(t *testing.T) {
 	c := FileAuthenticationConfig{
-		Path: "tests/users.yml",
+		Path: "file_testdata/users.yml",
 	}
 
 	a, err := NewAuthenticationFile(c)
@@ -44,7 +44,7 @@ func TestAuthentication(t *testing.T) {
 
 func TestAuthenticationInexistantUsersFile(t *testing.T) {
 	c := FileAuthenticationConfig{
-		Path: "tests/users_inexistant.yml",
+		Path: "file_testdata/users_inexistant.yml",
 	}
 
 	_, err := NewAuthenticationFile(c)

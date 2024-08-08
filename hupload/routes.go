@@ -140,21 +140,34 @@ func deleteShare(w http.ResponseWriter, r *http.Request) {
 
 // getItem returns the item identified by the request parameter
 func getItem(w http.ResponseWriter, r *http.Request) {
-	item, err := cfg.Storage.GetItem(r.PathValue("share"), r.PathValue("item"))
+	shareName := r.PathValue("share")
+	itemName := r.PathValue("item")
+
+	item, err := cfg.Storage.GetItem(shareName, itemName)
+	if err != nil {
+		slog.Error("getItem", slog.String("error", err.Error()))
+		_, _ = w.Write([]byte(err.Error()))
+		return
+	}
+
+	reader, err := cfg.Storage.GetItemData(shareName, itemName)
 	if err != nil {
 		slog.Error("getShares", slog.String("error", err.Error()))
 		_, _ = w.Write([]byte(err.Error()))
 		return
 	}
-	reader, err := cfg.Storage.GetItemData(r.PathValue("share"), r.PathValue("item"))
-	if err != nil {
-		slog.Error("getShares", slog.String("error", err.Error()))
-		_, _ = w.Write([]byte(err.Error()))
-		return
-	}
+
+	defer reader.Close()
+
 	w.Header().Add("Content-Length", fmt.Sprintf("%d", item.ItemInfo.Size))
 	w.Header().Add("Content-Disposition", "attachment")
-	_, _ = io.Copy(w, reader)
+
+	_, err = io.Copy(w, reader)
+	if err != nil {
+		slog.Error("getItem", slog.String("error", err.Error()))
+		_, _ = w.Write([]byte(err.Error()))
+		return
+	}
 }
 
 // postLogin returns the user name for the current session

@@ -1,6 +1,7 @@
 package config
 
 import (
+	"os"
 	"reflect"
 	"testing"
 
@@ -9,6 +10,10 @@ import (
 )
 
 func TestLoadEmptyConfig(t *testing.T) {
+	t.Cleanup(func() {
+		os.Remove("data")
+	})
+
 	c := Config{}
 	present, err := c.Load()
 
@@ -42,8 +47,12 @@ func TestLoadEmptyConfig(t *testing.T) {
 }
 
 func TestLoadGoodConfig(t *testing.T) {
+	t.Cleanup(func() {
+		os.Remove("data")
+	})
+
 	c := Config{
-		Path: "tests/config.yml",
+		Path: "config_testdata/config.yml",
 	}
 	b, err := c.Load()
 
@@ -69,7 +78,7 @@ func TestLoadGoodConfig(t *testing.T) {
 		Authentication: TypeOptions{
 			Type: "file",
 			Options: map[string]any{
-				"path": "tests/users.yml",
+				"path": "config_testdata/users.yml",
 			},
 		},
 	}
@@ -103,7 +112,7 @@ func TestLoadGoodConfig(t *testing.T) {
 
 func TestLoadBadConfig(t *testing.T) {
 	c := Config{
-		Path: "tests/config_bad_syntax.txt",
+		Path: "config_testdata/config_bad_syntax.txt",
 	}
 	b, err := c.Load()
 
@@ -118,8 +127,12 @@ func TestLoadBadConfig(t *testing.T) {
 }
 
 func TestMissingUsersFile(t *testing.T) {
+	t.Cleanup(func() {
+		os.Remove("data")
+	})
+
 	c := Config{
-		Path: "tests/config_missing_users_file.yml",
+		Path: "config_testdata/config_missing_users_file.yml",
 	}
 	b, err := c.Load()
 

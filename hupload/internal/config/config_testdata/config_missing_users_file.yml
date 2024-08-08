@@ -2,7 +2,7 @@ title: Hupload
 auth:
   type: file
   options:
-    path: ../../tests/config/users_notexistant.yml
+    path: config_testdata/users_notexistant.yml
 storage:
   type: file
   options:
