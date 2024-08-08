@@ -74,9 +74,7 @@ func TestCreateItem(t *testing.T) {
 	})
 
 	c := FileStorageConfig{
-		Path:         "data",
-		MaxFileSize:  1,
-		MaxShareSize: 2,
+		Path: "data",
 	}
 
 	f := NewFileStorage(c)
@@ -96,17 +94,20 @@ func TestCreateItem(t *testing.T) {
 
 	if err != nil {
 		t.Errorf("Expected no error, got %v", err)
+		return
 	}
 
 	// Test item result
 	if item.ItemInfo.Size != 4 {
 		t.Errorf("Expected 4, got %v", item.ItemInfo.Size)
+		return
 	}
 
 	// Test file on disk
 	content, _ := os.ReadFile("data/test/test.txt")
 	if !bytes.Equal(content, []byte("test")) {
 		t.Errorf("Expected test, got %v", string(content))
+		return
 	}
 }
 

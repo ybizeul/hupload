@@ -148,7 +148,9 @@ func (b *FileBackend) CreateItem(s string, i string, r *bufio.Reader) (*Item, er
 
 	// maxWrite is the actual allowed size for the item, so we fix the limit
 	// to one more byte
-	maxWrite++
+	if maxWrite > 0 {
+		maxWrite++
+	}
 
 	// path.Join("/", i) is used to avoid path traversal
 	p := path.Join(b.Options.Path, s, path.Join("/", i))
@@ -159,8 +161,11 @@ func (b *FileBackend) CreateItem(s string, i string, r *bufio.Reader) (*Item, er
 	}
 	defer f.Close()
 
+	src := r
 	// Substitute bufio.Reader with a limited reader
-	src := bufio.NewReader(io.LimitReader(r, maxWrite))
+	if maxWrite != 0 {
+		src = bufio.NewReader(io.LimitReader(r, maxWrite))
+	}
 
 	written, err := io.Copy(f, src)
 	if err != nil {
