@@ -20,10 +20,14 @@ SSL)
 ## Screenshots
 
 **Admin page**
-![Screenshot 1](readme_images/screenshot_1.png)
+
+![Screenshot 1](readme_images/screenshot_1_dark.png#gh-dark-mode-only)
+![Screenshot 1](readme_images/screenshot_1_light.png#gh-light-mode-only)
 
 **Share page with upload box**
-![Screenshot 2](readme_images/screenshot_2.png)
+
+![Screenshot 2](readme_images/screenshot_2_dark.png#gh-dark-mode-only)
+![Screenshot 2](readme_images/screenshot_2_light.png#gh-light-mode-only)
 
 ## Environment variables
 
