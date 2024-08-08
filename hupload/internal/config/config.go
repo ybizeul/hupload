@@ -135,8 +135,6 @@ func (c *Config) authentication() (authentication.Authentication, error) {
 		return authentication.NewAuthenticationFile(options)
 	case "default":
 		return authentication.NewAuthenticationDefault(), nil
-	case "":
-		return nil, ErrMissingAuthenticationBackendType
 	}
 
 	return nil, ErrUnknownAuthenticationBackend

@@ -71,13 +71,6 @@ func postItem(w http.ResponseWriter, r *http.Request) {
 		_, _ = w.Write([]byte(err.Error()))
 		return
 	}
-
-	err = cfg.Storage.UpdateMetadata(r.PathValue("share"))
-	if err != nil {
-		_, _ = w.Write([]byte(err.Error()))
-		return
-	}
-
 	_, _ = w.Write(c)
 }
 

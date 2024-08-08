@@ -41,7 +41,7 @@ type Storage interface {
 	CreateShare(name, owner string, validity int) error
 
 	// CreateItem creates a new item in a share
-	CreateItem(string, string, *bufio.Reader) (*Item, error)
+	CreateItem(share, item string, reader *bufio.Reader) (*Item, error)
 
 	// GetShare returns the share identified by share
 	GetShare(string) (*Share, error)

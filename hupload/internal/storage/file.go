@@ -8,6 +8,7 @@ import (
 	"log/slog"
 	"os"
 	"path"
+	"regexp"
 	"sort"
 	"strings"
 	"time"
@@ -51,7 +52,15 @@ func (b *FileBackend) initialize() {
 	}
 }
 
+func isShareNameSafe(n string) bool {
+	m := regexp.MustCompile(`^[a-zA-Z0-9_-]+$`).MatchString(n)
+	return m
+}
+
 func (b *FileBackend) CreateShare(name, owner string, validity int) error {
+	if !isShareNameSafe(name) {
+		return errors.New("invalid share name")
+	}
 	_, err := os.Stat(path.Join(b.Options.Path, name))
 	if err == nil {
 		return errors.New("share already exists")
@@ -85,7 +94,15 @@ func (b *FileBackend) CreateShare(name, owner string, validity int) error {
 	return nil
 }
 
+var (
+	ErrMaxShareSizeAlreadyReached = errors.New("Max share capacity already reached")
+	ErrMaxShareSizeReached        = errors.New("Max share size reached")
+)
+
 func (b *FileBackend) CreateItem(s string, i string, r *bufio.Reader) (*Item, error) {
+	if !isShareNameSafe(s) {
+		return nil, errors.New("invalid share name")
+	}
 	p := path.Join(b.Options.Path, s, i)
 	f, err := os.Create(p + suffix)
 	if err != nil {
@@ -94,8 +111,9 @@ func (b *FileBackend) CreateItem(s string, i string, r *bufio.Reader) (*Item, er
 	defer f.Close()
 
 	share, err := b.GetShare(s)
-
-	src := r
+	if err != nil {
+		return nil, errors.New("cannot get share")
+	}
 
 	maxWrite := int64(0)
 
@@ -103,7 +121,7 @@ func (b *FileBackend) CreateItem(s string, i string, r *bufio.Reader) (*Item, er
 	if maxShare > 0 {
 		maxWrite = maxShare - share.Size
 		if maxWrite <= 0 {
-			return nil, errors.New("Max share capacity already reached")
+			return nil, ErrMaxShareSizeReached
 		}
 	}
 
@@ -114,17 +132,7 @@ func (b *FileBackend) CreateItem(s string, i string, r *bufio.Reader) (*Item, er
 		}
 	}
 
-	if maxWrite > 0 {
-		// Check if there is a max bytes associated to share
-		if err != nil {
-			return nil, errors.New("cannot get share")
-		}
-		if maxWrite <= 0 {
-			return nil, errors.New("Max share capacity already reached")
-		}
-
-		src = bufio.NewReader(io.LimitReader(r, maxWrite))
-	}
+	src := bufio.NewReader(io.LimitReader(r, maxWrite))
 
 	written, err := io.Copy(f, src)
 	if err != nil {
@@ -134,7 +142,7 @@ func (b *FileBackend) CreateItem(s string, i string, r *bufio.Reader) (*Item, er
 
 	if written == 0 || written == maxWrite {
 		os.Remove(p + suffix)
-		return nil, errors.New("File too big or share is full")
+		return nil, ErrMaxShareSizeReached
 	}
 
 	err = os.Rename(p+suffix, p)
@@ -146,10 +154,14 @@ func (b *FileBackend) CreateItem(s string, i string, r *bufio.Reader) (*Item, er
 	if err != nil {
 		return nil, errors.New("cannot get added item")
 	}
+	b.UpdateMetadata(s)
 	return item, nil
 }
 
 func (b *FileBackend) GetShare(s string) (*Share, error) {
+	if !isShareNameSafe(s) {
+		return nil, errors.New("invalid share name")
+	}
 	fm, err := os.Open(path.Join(b.Options.Path, s, ".metadata"))
 	if err != nil {
 		return nil, err
@@ -191,6 +203,9 @@ func (b *FileBackend) ListShares() ([]Share, error) {
 }
 
 func (b *FileBackend) DeleteShare(s string) error {
+	if !isShareNameSafe(s) {
+		return errors.New("invalid share name")
+	}
 	sharePath := path.Join(b.Options.Path, s)
 	err := os.RemoveAll(sharePath)
 	if err != nil {
@@ -200,6 +215,9 @@ func (b *FileBackend) DeleteShare(s string) error {
 }
 
 func (b *FileBackend) ListShare(s string) ([]Item, error) {
+	if !isShareNameSafe(s) {
+		return []Item{}, errors.New("invalid share name")
+	}
 	d, err := os.ReadDir(path.Join(b.Options.Path, s))
 	if err != nil {
 		return nil, err
@@ -224,6 +242,9 @@ func (b *FileBackend) ListShare(s string) ([]Item, error) {
 }
 
 func (b *FileBackend) GetItem(s string, i string) (*Item, error) {
+	if !isShareNameSafe(s) {
+		return nil, errors.New("invalid share name")
+	}
 	p := path.Join(b.Options.Path, s, i)
 	stat, err := os.Stat(p)
 	if err != nil {
@@ -236,6 +257,9 @@ func (b *FileBackend) GetItem(s string, i string) (*Item, error) {
 }
 
 func (b *FileBackend) GetItemData(s string, i string) (*bufio.Reader, error) {
+	if !isShareNameSafe(s) {
+		return nil, errors.New("invalid share name")
+	}
 	p := path.Join(b.Options.Path, s, i)
 	f, err := os.Open(p)
 	if err != nil {
@@ -245,6 +269,9 @@ func (b *FileBackend) GetItemData(s string, i string) (*bufio.Reader, error) {
 }
 
 func (b *FileBackend) UpdateMetadata(s string) error {
+	if !isShareNameSafe(s) {
+		return errors.New("invalid share name")
+	}
 	sd, err := os.ReadDir(path.Join(b.Options.Path, s))
 	if err != nil {
 		return err
