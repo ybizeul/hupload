@@ -22,7 +22,7 @@ export function Share() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    H.get('/share/' + share).then(
+    H.get('/shares/' + share).then(
     (res) => {
       setItems(res as Item[])
     })
@@ -37,11 +37,12 @@ export function Share() {
   },[share, navigate])
 
   return (
-    expired && 
+    expired?
       <Center><Text size="xl" ta="center">Sorry, this share has expired</Text></Center>
-    ||
+    :
     items &&
       <>
+      {/* Top of page copy button */}
       <Box w="100%" ta="center">
           <CopyButton value={window.location.protocol + '//' + window.location.host + '/' + share}>
             {({ copied, copy }) => (
@@ -51,9 +52,10 @@ export function Share() {
             )}
           </CopyButton>
       </Box>
+      {/* Files drop zone */}
       <Dropzone
         onDrop={(files) => {
-          const U = new UploadQueue(H,"/share/"+share, setQueue)
+          const U = new UploadQueue(H,"/shares/"+share, setQueue)
           const newItems = items.filter((i) => {
             return !files.some((f) => f.name === i.Path.split("/")[1])
           })
@@ -99,11 +101,13 @@ export function Share() {
         </Group>
       </Dropzone>
       {
+        // Display upload queue items
         queue.map((q) => (
           <ItemComponent key={'up_' + q.file.name} queueItem={q} />
         ))
       }
       {
+        // Display share items
         items.map((item) => (
           <ItemComponent key={item.Path} item={item} />
         ))

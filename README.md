@@ -119,17 +119,17 @@ The following endpoints are available under `/api/v1`
 
 **Basic Authentication Required**
 
-| Type     | URL                     | Description                          |
-|----------|-------------------------|--------------------------------------|
-| `GET`    | `/share`                | Get a list of all shares
-| `POST`   | `/share`                | Create a new share with a random name
-| `PUT`    | `/share/{share}`        | Create a new share named `{share}`
-| `DELETE` | `/share/{share}`        | Delete a share and all its content
-| `GET`    | `/share/{share}/{item}` | Get an `{item}` (file) content
+| Type     | URL                            | Description                          |
+|----------|--------------------------------|--------------------------------------|
+| `GET`    | `/shares`                      | Get a list of all shares
+| `POST`   | `/shares`                      | Create a new share with a random name
+| `PUT`    | `/shares/{share}`              | Create a new share named `{share}`
+| `DELETE` | `/shares/{share}`              | Delete a share and all its content
+| `GET`    | `/shares/{share}/items/{item}` | Get an `{item}` (file) content
 
 **Public Endpoints**
 
-| Type     | URL                     | Description                          |
-|----------|-------------------------|--------------------------------------|
-| `POST`   | `/share/{share}/{item}` | Post a new file `{item}` in `{share}` (multipart form encoded)
-| `GET`    |	`/share/{share}`        | Get a `{share}` content
+| Type     | URL                            | Description                          |
+|----------|--------------------------------|--------------------------------------|
+| `POST`   | `/shares/{share}/items/{item}` | Post a new file `{item}` in `{share}` (multipart form encoded)
+| `GET`    | `/shares/{share}`              | Get a `{share}` content

@@ -7,12 +7,16 @@ import { useNavigate } from "react-router-dom";
 import { useLoggedInContext } from "../LoggedInContext";
 
 export function Login() {
+    // Initialize States
     const [username, setUsername] = useState<undefined|string>("")
     const [password, setPassword] = useState<undefined|string>("")
     const [error, setError] = useState<APIServerError|undefined>()
+
+    // Initialize hooks
     const navigate = useNavigate();
     const { setLoggedIn } = useLoggedInContext()
     
+    // Functions
     function authenticate(event:React.FormEvent<HTMLFormElement>) {
         event.preventDefault()
         if (username && password) {

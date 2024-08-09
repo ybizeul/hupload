@@ -38,17 +38,21 @@ func startWebServer(api *apiws.APIWS) {
 	}
 
 	// Setup routes
-	// Guests can access names share and post new files
-	api.AddRoute("POST /api/v1/share/{share}/{item}", nil, postItem)
-	api.AddRoute("GET /api/v1/share/{share}", authenticatorsOpen, getShare)
+
+	// Guests can access a share and post new files in it
+	// That's Hupload principle, the security is based on the share name
+	// which is usually a random string.
+
+	api.AddRoute("POST /api/v1/shares/{share}/items/{item}", nil, postItem)
+	api.AddRoute("GET /api/v1/shares/{share}", authenticatorsOpen, getShare)
 
 	// Protected routes
 	api.AddRoute("POST /api/v1/login", authenticators, postLogin)
-	api.AddRoute("POST /api/v1/share", authenticators, postShare)
-	api.AddRoute("DELETE /api/v1/share/{share}", authenticators, deleteShare)
-	api.AddRoute("PUT /api/v1/share/{share}", authenticators, putShare)
-	api.AddRoute("GET /api/v1/share/{share}/{item}", authenticators, getItem)
-	api.AddRoute("GET /api/v1/share", authenticators, getShares)
+	api.AddRoute("POST /api/v1/shares", authenticators, postShare)
+	api.AddRoute("DELETE /api/v1/shares/{share}", authenticators, deleteShare)
+	api.AddRoute("PUT /api/v1/shares/{share}", authenticators, putShare)
+	api.AddRoute("GET /api/v1/shares/{share}/items/{item}", authenticators, getItem)
+	api.AddRoute("GET /api/v1/shares", authenticators, getShares)
 	api.AddRoute("GET /api/v1/version", authenticators, getVersion)
 
 	if os.Getenv("HTTP_PORT") != "" {

@@ -13,7 +13,7 @@ export function Shares(props: {owner: string|null}) {
   const navigate = useNavigate();
 
   const createShare = () => {
-    H.post('/share').then(
+    H.post('/shares').then(
       () => {
         updateShares()
       })
@@ -23,9 +23,8 @@ export function Shares(props: {owner: string|null}) {
       })
   }
   const updateShares = useCallback(() => {
-    H.get('/share').then(
+    H.get('/shares').then(
       (res) => {
-        console.log(res)
         setShares(res as Share[])
       })
       .catch((e) => {

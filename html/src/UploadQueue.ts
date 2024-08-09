@@ -40,7 +40,7 @@ export class UploadQueue {
             formData.append("file", f.file);
             
             return new Promise((resolve, reject) => {
-                this.API.upload(this.path+'/'+f.file.name, f.file, 
+                this.API.upload(this.path+'/items/'+f.file.name, f.file, 
                     (e: AxiosProgressEvent) => {
                         if (e.total) {
                             f.loaded = e.loaded
