@@ -159,6 +159,7 @@ func getItem(w http.ResponseWriter, r *http.Request) {
 
 	defer reader.Close()
 
+	w.Header().Add("Content-Type", "application/octet-stream")
 	w.Header().Add("Content-Length", fmt.Sprintf("%d", item.ItemInfo.Size))
 	w.Header().Add("Content-Disposition", "attachment")
 
