@@ -1,3 +1,3 @@
-export * from "./Share";
+export * from "./SharePage";
 export * from "./Login";
-export * from "./Shares";
+export * from "./SharesPage";

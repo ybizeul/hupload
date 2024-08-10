@@ -7,6 +7,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"path"
 	"reflect"
 	"testing"
 	"time"
@@ -32,39 +33,73 @@ func TestCreateShare(t *testing.T) {
 
 	f.initialize()
 
-	err := f.CreateShare("test", "admin", 10)
-	if err != nil {
-		t.Errorf("Expected no error, got %v", err)
+	tests := []struct {
+		f      func() (*Share, error)
+		expect Share
+	}{
+		{
+			func() (*Share, error) {
+				return f.CreateShare("test", "admin", 10, "upload")
+			},
+			Share{
+				Name:     "test",
+				Owner:    "admin",
+				Validity: 10,
+				Exposure: "upload",
+			},
+		},
+		{
+			func() (*Share, error) {
+				return f.CreateShare("test", "admin", 10, "both")
+			},
+			Share{
+				Name:     "test",
+				Owner:    "admin",
+				Validity: 10,
+				Exposure: "both",
+			},
+		},
+		{
+			func() (*Share, error) {
+				return f.CreateShare("test", "admin", 10, "download")
+			},
+			Share{
+				Name:     "test",
+				Owner:    "admin",
+				Validity: 10,
+				Exposure: "download",
+			},
+		},
 	}
 
-	// Ch
-	_, err = os.Stat("data/test")
-	if err != nil {
-		t.Errorf("Expected share directory to be created")
-	}
+	for _, test := range tests {
+		share, err := test.f()
+		share.DateCreated = time.Time{}
+		if err != nil {
+			t.Errorf("Expected no error, got %v", err)
+		}
 
-	metadata_f, err := os.Open("data/test/.metadata")
+		_, err = os.Stat(path.Join(c.Path, share.Name))
+		if err != nil {
+			t.Errorf("Expected share directory to be created")
+		}
 
-	if err != nil {
-		t.Errorf("Expected metadata to be written")
-	}
+		metadata_f, err := os.Open(path.Join(c.Path, share.Name, ".metadata"))
+		if err != nil {
+			t.Errorf("Expected metadata to be written")
+		}
 
-	expect := Share{
-		Name:     "test",
-		Owner:    "admin",
-		Validity: 10,
-	}
+		var got Share
+		err = yaml.NewDecoder(metadata_f).Decode(&got)
+		if err != nil {
+			t.Errorf("Expected no error, got %v", err)
+		}
 
-	var got Share
-	err = yaml.NewDecoder(metadata_f).Decode(&got)
-
-	if err != nil {
-		t.Errorf("Expected metadata to be decoded")
-	}
-
-	got.DateCreated = time.Time{}
-	if !reflect.DeepEqual(expect, got) {
-		t.Errorf("Expected %v, got %v", expect, got)
+		got.DateCreated = time.Time{}
+		if !reflect.DeepEqual(&test.expect, &got) {
+			t.Errorf("Expected %v, got %v", share, got)
+		}
+		os.RemoveAll(path.Join(c.Path, share.Name))
 	}
 }
 
@@ -84,13 +119,13 @@ func TestCreateItem(t *testing.T) {
 
 	f.initialize()
 
-	err := f.CreateShare("test", "admin", 10)
+	share, err := f.CreateShare("test", "admin", 10, "upload")
 	if err != nil {
 		t.Errorf("Expected no error, got %v", err)
 	}
 
 	reader := bufio.NewReader(bytes.NewReader([]byte("test")))
-	item, err := f.CreateItem("test", "test.txt", reader)
+	item, err := f.CreateItem(share.Name, "test.txt", reader)
 
 	if err != nil {
 		t.Errorf("Expected no error, got %v", err)
@@ -129,9 +164,9 @@ func TestDeleteShare(t *testing.T) {
 
 	f.initialize()
 
-	_ = f.CreateShare("test", "admin", 10)
+	share, _ := f.CreateShare("test", "admin", 10, "upload")
 
-	err := f.DeleteShare("test")
+	err := f.DeleteShare(share.Name)
 	if err != nil {
 		t.Errorf("Expected no error, got %v", err)
 	}
@@ -161,7 +196,7 @@ func TestFileOverflow(t *testing.T) {
 
 	f.initialize()
 
-	err := f.CreateShare("test", "admin", 10)
+	share, err := f.CreateShare("test", "admin", 10, "upload")
 	if err != nil {
 		t.Errorf("Expected no error, got %v", err)
 	}
@@ -170,7 +205,7 @@ func TestFileOverflow(t *testing.T) {
 
 	r, _ := os.Open("2mb")
 	reader := bufio.NewReader(r)
-	_, err = f.CreateItem("test", "test.txt", reader)
+	_, err = f.CreateItem(share.Name, "test.txt", reader)
 	defer r.Close()
 
 	if !errors.Is(err, ErrMaxShareSizeReached) {
@@ -197,7 +232,7 @@ func TestShareOverflow(t *testing.T) {
 
 	f.initialize()
 
-	err := f.CreateShare("test", "admin", 10)
+	share, err := f.CreateShare("test", "admin", 10, "upload")
 	if err != nil {
 		t.Errorf("Expected no error, got %v", err)
 	}
@@ -208,7 +243,7 @@ func TestShareOverflow(t *testing.T) {
 	defer r.Close()
 
 	reader := bufio.NewReader(r)
-	_, err = f.CreateItem("test", "test.txt", reader)
+	_, err = f.CreateItem(share.Name, "test.txt", reader)
 
 	if err != nil {
 		t.Errorf("Expected no error, got %v", err)
@@ -218,7 +253,7 @@ func TestShareOverflow(t *testing.T) {
 	defer s.Close()
 
 	reader = bufio.NewReader(s)
-	_, err = f.CreateItem("test", "test2.txt", reader)
+	_, err = f.CreateItem(share.Name, "test2.txt", reader)
 
 	if err == nil {
 		t.Errorf("Expected error, got nil")

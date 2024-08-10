@@ -45,24 +45,8 @@ func main() {
 	}
 
 	api.SetAuthentication(cfg.Authentication)
-	// // Create storage backend from configuration
-	// b, err := cfg.Storage()
-	// if err != nil {
-	// 	panic(err)
-	// }
-
-	// // // Set as current storage backend for the application
-	// // api.SetStorage(b)
-
-	// // Create backend from configuration
-	// a, err := cfg.Authentication()
-	// if err != nil {
-	// 	panic(err)
-	// }
-
-	// // Set as current backend for the application
-	// api.SetAuthentication(a)
 
 	// Start the web server
-	startWebServer(api)
+	setup(api)
+	api.Start()
 }

@@ -12,7 +12,7 @@ import (
 	"github.com/ybizeul/hupload/pkg/apiws/middleware/auth"
 )
 
-func startWebServer(api *apiws.APIWS) {
+func setup(api *apiws.APIWS) {
 
 	// Get JWT_SECRET
 	hmac := os.Getenv("JWT_SECRET")
@@ -44,14 +44,15 @@ func startWebServer(api *apiws.APIWS) {
 	// which is usually a random string.
 
 	api.AddRoute("POST /api/v1/shares/{share}/items/{item}", nil, postItem)
+	api.AddRoute("GET /api/v1/shares/{share}/items", authenticatorsOpen, getShareItems)
 	api.AddRoute("GET /api/v1/shares/{share}", authenticatorsOpen, getShare)
+	api.AddRoute("GET /api/v1/shares/{share}/items/{item}", authenticatorsOpen, getItem)
 
 	// Protected routes
 	api.AddRoute("POST /api/v1/login", authenticators, postLogin)
 	api.AddRoute("POST /api/v1/shares", authenticators, postShare)
 	api.AddRoute("DELETE /api/v1/shares/{share}", authenticators, deleteShare)
 	api.AddRoute("PUT /api/v1/shares/{share}", authenticators, putShare)
-	api.AddRoute("GET /api/v1/shares/{share}/items/{item}", authenticators, getItem)
 	api.AddRoute("GET /api/v1/shares", authenticators, getShares)
 	api.AddRoute("GET /api/v1/version", authenticators, getVersion)
 
@@ -63,7 +64,6 @@ func startWebServer(api *apiws.APIWS) {
 		}
 		api.HTTPPort = p
 	}
-	api.Start()
 }
 
 func generateRandomString(length int) string {

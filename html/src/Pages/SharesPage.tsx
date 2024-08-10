@@ -3,17 +3,33 @@ import { useCallback, useEffect, useState } from "react";
 import { H } from "../APIClient";
 import { useNavigate } from "react-router-dom";
 import { Share } from "../hupload";
-import {ShareComponent} from "@/Components";
-import { Box, Button, Text } from "@mantine/core";
+import {ShareComponent, SplitButton} from "@/Components";
+import { Box, Text } from "@mantine/core";
 
-export function Shares(props: {owner: string|null}) {
+export function SharesPage(props: {owner: string|null}) {
+  // Initialize props
   const { owner } = props
-  const [shares, setShares] = useState<Share[]|undefined>(undefined)
 
+  // Initialize state
+  const [shares, setShares] = useState<Share[]|undefined>(undefined)
+  const [exposure,setExposure] = useState<string>("upload")
+  const [validity,setValidity] = useState<number>(7)
+  // Initialize hooks
   const navigate = useNavigate();
 
+  const updateShareProperties = (exposure: string, validity: number|string) => {
+    setExposure(exposure)
+    if (typeof validity === 'number') {
+      setValidity(validity)
+    }
+  }
+
   const createShare = () => {
-    H.post('/shares').then(
+    const data = {
+      exposure: exposure,
+      validity: validity
+    }
+    H.post('/shares', data).then(
       () => {
         updateShares()
       })
@@ -37,11 +53,12 @@ export function Shares(props: {owner: string|null}) {
     updateShares()
   },[updateShares])
 
+
   return (
     shares &&
       <>
       <Box ta="center" mt="xl" mb="xl">
-      <Button onClick={() => createShare()}>Create Share</Button>
+      <SplitButton exposure={exposure} validity={validity} onChange={updateShareProperties} onClick={() => createShare()}>Create Share</SplitButton>
       </Box>
       {
         shares.length == 0 ?

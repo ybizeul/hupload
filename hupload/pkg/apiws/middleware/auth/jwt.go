@@ -38,12 +38,14 @@ func (j JWTAuthMiddleware) Middleware(next http.Handler) http.Handler {
 		shortCookie, _ := r.Cookie("X-Token")
 		longCookie, _ := r.Cookie("X-Token-Refresh")
 
-		if shortCookie == nil && longCookie == nil {
+		upstreamUser := UserForRequest(r)
+		upstreamAuth := r.Context().Value(AuthStatus) == AuthStatusSuccess
+
+		if (shortCookie == nil && longCookie == nil) || (upstreamUser != "" && upstreamAuth) {
 			// Check that authentication has been previoulsy approved
 			// If request is already authenticated, generate a JWT token
-			if r.Context().Value(AuthStatus) == AuthStatusSuccess {
-				user := UserForRequest(r)
-				short, long, err := j.generateTokens(user)
+			if upstreamAuth {
+				short, long, err := j.generateTokens(upstreamUser)
 				if err != nil {
 					serveNextError(next, w, r, err)
 					return
@@ -52,7 +54,7 @@ func (j JWTAuthMiddleware) Middleware(next http.Handler) http.Handler {
 				http.SetCookie(w, &http.Cookie{Name: "X-Token", Value: short, Path: "/", Expires: time.Now().Add(shortTokenMinutesExpire)})
 				http.SetCookie(w, &http.Cookie{Name: "X-Token-Refresh", Value: long, Path: "/", Expires: time.Now().Add(longTokenMinutesExpire)})
 
-				serveNextAuthenticated(user, next, w, r)
+				serveNextAuthenticated(upstreamUser, next, w, r)
 				return
 			}
 
@@ -98,8 +100,9 @@ func (j JWTAuthMiddleware) Middleware(next http.Handler) http.Handler {
 
 		if claims, ok := token.Claims.(jwt.MapClaims); ok {
 			user, ok := claims["sub"].(string)
-			if !ok {
+			if !ok || user == "" {
 				serveNextError(next, w, r, JWTAuthNoSubClaim)
+				return
 			}
 			_, ok = claims["refresh"]
 			if ok {

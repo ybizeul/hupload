@@ -34,35 +34,35 @@ export function ShareComponent(props: {share: Share}) {
         {!deleted &&
         <Paper key={key} withBorder shadow="xs" radius="md" mt={10} pos="relative" className={classes.paper}>
             {/* Share component footer */}
-            <Group flex={1} w="100%" pos="absolute" bottom="0.1em" style={{justifyContent:"center"}} align="center" gap="0.2em">
+            <Group wrap="nowrap" flex={1} w="100%" pos="absolute" bottom="0.1em" style={{justifyContent:"center"}} align="center" gap="0.2em">
                 <IconClock color={(remaining===null || remaining > 0 )?"gray":"red"} size="0.8em"  width={"1em"}/>
-                <Text size="xs" c="gray">{
+                <Text style={{ whiteSpace: "nowrap"}} size="xs" c="gray">{
                     (remaining === null)?
                     "Unlimited"
                     :
                     (remaining<0)?
                     "Expired"
                     :
-                    prettyfiedCount(remaining,"day","days",null) + " left"}
+                    prettyfiedCount(remaining,"day","days",null) + " left"} | {share.exposure==="download"?"Guests can download":(share.exposure==="both"?"Guests can upload & download":"Guests can upload")}
                 </Text>
             </Group>
-            <Box p="sm">
-                <Flex h={45} align={"center"}>
+            <Box p="lg">
+                <Flex align={"center"}>
                     {/* Share name */}
-                    <Group flex="1" gap="0" align="center">
+                    <Group flex="1" gap="0" align="baseline">
                         <Anchor style={{ whiteSpace: "nowrap"}} flex={"1"} component={Link} to={'/'+name}><Text>{name}</Text></Anchor>
                         <Stack gap="0" align="flex-end">
-                            <Text size="xs" c="gray">{countString + (size?(' | ' + humanFileSize(size)):'')}</Text>
+                            <Text mr="xs" size="xs" c="gray">{countString + (size?(' | ' + humanFileSize(size)):'')}</Text>
                         </Stack>
                     </Group>
                     {/* Share component tail */}
-                    <Group justify="flex-end">
+                    <Group justify="flex-end" gap="xs" wrap="nowrap" align="baseline">
                         {/* Copy button */}
                         <CopyButton value={window.location.protocol + '//' + window.location.host + '/' + name}>
                         {({ copied, copy }) => (
                             <Tooltip withArrow arrowOffset={10} arrowSize={4} label={copied?"Copied!":"Copy URL"}>
-                                <ActionIcon ml="sm" variant="light" color={copied ? 'teal' : 'blue'} onClick={copy} >
-                                <IconLink style={{ width: '70%', height: '70%' }} stroke={1.5}/>
+                                <ActionIcon variant="light" color={copied ? 'teal' : 'blue'} onClick={copy} >
+                                    <IconLink style={{ width: '70%', height: '70%' }} stroke={1.5}/>
                                 </ActionIcon>
                             </Tooltip>
                         )}

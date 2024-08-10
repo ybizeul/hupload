@@ -71,21 +71,25 @@ func isShareNameSafe(n string) bool {
 // CreateShare creates a new share with the provided name, owner and validity
 // in days. It returns an error if the share already exists or if the name is
 // invalid. owner is only used to populate metadata.
+var (
+	ErrShareAlreadyExists = errors.New("share already exists")
+)
 
-func (b *FileBackend) CreateShare(name, owner string, validity int) error {
+func (b *FileBackend) CreateShare(name, owner string, validity int, exposure string) (*Share, error) {
 	if !isShareNameSafe(name) {
-		return errors.New("invalid share name")
+		return nil, errors.New("invalid share name")
 	}
+
 	_, err := os.Stat(path.Join(b.Options.Path, name))
 	if err == nil {
-		return errors.New("share already exists")
+		return nil, ErrShareAlreadyExists
 	}
 
 	p := path.Join(b.Options.Path, name)
 	err = os.Mkdir(p, 0755)
 	if err != nil {
 		slog.Error("cannot create share", slog.String("error", err.Error()), slog.String("path", p))
-		return errors.New("cannot create share")
+		return nil, errors.New("cannot create share")
 	}
 
 	m := Share{
@@ -93,20 +97,21 @@ func (b *FileBackend) CreateShare(name, owner string, validity int) error {
 		Owner:       owner,
 		DateCreated: time.Now(),
 		Validity:    validity,
+		Exposure:    exposure,
 	}
 
 	f, err := os.Create(path.Join(b.Options.Path, name, ".metadata"))
 	if err != nil {
-		return err
+		return nil, err
 	}
 	defer f.Close()
 
 	err = json.NewEncoder(f).Encode(m)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return nil
+	return &m, nil
 }
 
 // CreateItem creates a new item in the provided share with the provided name
@@ -125,7 +130,7 @@ func (b *FileBackend) CreateItem(s string, i string, r *bufio.Reader) (*Item, er
 	// Get Share metadata
 	share, err := b.GetShare(s)
 	if err != nil {
-		return nil, errors.New("cannot get share")
+		return nil, err
 	}
 
 	// Check amount of free capacity in share according to current limits

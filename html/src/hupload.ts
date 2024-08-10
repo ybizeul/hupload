@@ -5,6 +5,7 @@ export interface Share {
   size: number;
   created: Date;
   validity: number;
+  exposure: string;
   isvalid: boolean;
 }
 

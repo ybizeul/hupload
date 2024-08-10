@@ -1,0 +1,9 @@
+Title: Hupload Test
+storage:
+  type: file
+  options:
+    path: tmptest/data
+auth:
+  type: file
+  options:
+    path: testdata/users.yml

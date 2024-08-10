@@ -6,7 +6,7 @@ import { Container, MantineProvider } from "@mantine/core";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 
 import { H } from "./APIClient";
-import { Share, Login, Shares } from "@/Pages";
+import { SharePage, Login, SharesPage } from "@/Pages";
 
 import { LoggedInContext } from "@/LoggedInContext";
 import { VersionComponent } from "@/Components";
@@ -42,8 +42,8 @@ export default function App() {
         <LoggedInContext.Provider value={{loggedIn,setLoggedIn}}>
         <Routes>
             <Route path="/" element={<Login />}/>
-            <Route path="/shares" element={<>{loggedIn&&<Haffix/>}<Shares owner={loggedIn}/></>} />
-            <Route path=":share" element={<>{loggedIn&&<Haffix/>}<Share /></>} />
+            <Route path="/shares" element={<>{loggedIn&&<Haffix/>}<SharesPage owner={loggedIn}/></>} />
+            <Route path=":share" element={<>{loggedIn&&<Haffix/>}<SharePage /></>} />
           </Routes>
         </LoggedInContext.Provider>
       </BrowserRouter>

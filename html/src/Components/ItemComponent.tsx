@@ -2,17 +2,13 @@ import { ActionIcon, Box, Center, Flex, Paper, rem, RingProgress, Text, Tooltip 
 import { IconCheck, IconDownload, IconX } from "@tabler/icons-react";
 import { QueueItem } from "../UploadQueue";
 import { humanFileSize, Item } from "../hupload";
-import { useLoggedInContext } from "../LoggedInContext";
 import classes from './ItemComponent.module.css';
 import { ReactNode } from "react";
 
-export function ItemComponent(props: {item?: Item, queueItem?: QueueItem}) {
+export function ItemComponent(props: {download: boolean, item?: Item, queueItem?: QueueItem}) {
 
     // Initialize props
-    const {item, queueItem} = props
-
-    // Initialize hooks
-    const {loggedIn} = useLoggedInContext()
+    const {download, item, queueItem} = props
 
     // Other initializations
 
@@ -71,7 +67,7 @@ export function ItemComponent(props: {item?: Item, queueItem?: QueueItem}) {
             :item&&
             <>
                 <Text size="xs" c="gray" style={{whiteSpace: "nowrap"}}>{humanFileSize(item.ItemInfo.Size)}</Text>
-                {loggedIn&&
+                {download &&
                 <ActionIcon ml="sm" component="a" href={'/api/v1/shares/'+item?.Path.split("/")[0]+'/items/'+item?.Path.split("/")[1]} aria-label="Download" variant="light" color="blue">
                     <IconDownload style={{ width: '70%', height: '70%' }} stroke={1.5} />
                 </ActionIcon>

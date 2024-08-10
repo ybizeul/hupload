@@ -11,6 +11,7 @@ type Share struct {
 	DateCreated time.Time `json:"created"`
 	Owner       string    `json:"owner"`
 	Validity    int       `json:"validity"`
+	Exposure    string    `json:"exposure"`
 
 	Size  int64 `json:"size"`
 	Count int64 `json:"count"`
@@ -37,7 +38,7 @@ type ItemInfo struct {
 // BackendInterface must be implemented by any backend
 type Storage interface {
 	// CreateShare creates a new share
-	CreateShare(name, owner string, validity int) error
+	CreateShare(name, owner string, validity int, exposure string) (*Share, error)
 
 	// CreateItem creates a new item in a share
 	CreateItem(share, item string, reader *bufio.Reader) (*Item, error)
