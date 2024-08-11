@@ -47,11 +47,7 @@ func postShare(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
-	err = json.NewEncoder(w).Encode(share)
-	if err != nil {
-		slog.Error("postShare", slog.String("error", err.Error()))
-		return
-	}
+	writeSuccessJSON(w, share)
 }
 
 // putShare creates a new share with name from the request parameter
@@ -74,18 +70,21 @@ func putShare(w http.ResponseWriter, r *http.Request) {
 	share, err := cfg.Storage.CreateShare(r.PathValue("share"), user, params.Validity, params.Exposure)
 	if err != nil {
 		slog.Error("putShare", slog.String("error", err.Error()))
-		if errors.Is(err, storage.ErrShareAlreadyExists) {
+		switch {
+		case errors.Is(err, storage.ErrInvalidShareName):
+			writeError(w, http.StatusBadRequest, "invalid share name")
+			return
+		case errors.Is(err, storage.ErrShareNotFound):
+			writeError(w, http.StatusNotFound, "share not found")
+			return
+		case errors.Is(err, storage.ErrShareAlreadyExists):
 			writeError(w, http.StatusConflict, "share already exists")
 			return
 		}
 		writeError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
-	err = json.NewEncoder(w).Encode(share)
-	if err != nil {
-		slog.Error("postShare", slog.String("error", err.Error()))
-		return
-	}
+	writeSuccessJSON(w, share)
 }
 
 // postItem copies a new item in the share and returns the json description

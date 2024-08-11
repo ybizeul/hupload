@@ -3,6 +3,8 @@ storage:
   type: file
   options:
     path: tmptest/data
+    max_file_mb: 3
+    max_share_mb: 5
 auth:
   type: file
   options:

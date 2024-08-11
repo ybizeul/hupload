@@ -3,7 +3,6 @@ package storage
 import (
 	"bufio"
 	"encoding/json"
-	"errors"
 	"io"
 	"log/slog"
 	"os"
@@ -71,13 +70,10 @@ func isShareNameSafe(n string) bool {
 // CreateShare creates a new share with the provided name, owner and validity
 // in days. It returns an error if the share already exists or if the name is
 // invalid. owner is only used to populate metadata.
-var (
-	ErrShareAlreadyExists = errors.New("share already exists")
-)
 
 func (b *FileBackend) CreateShare(name, owner string, validity int, exposure string) (*Share, error) {
 	if !isShareNameSafe(name) {
-		return nil, errors.New("invalid share name")
+		return nil, ErrInvalidShareName
 	}
 
 	_, err := os.Stat(path.Join(b.Options.Path, name))
@@ -89,7 +85,7 @@ func (b *FileBackend) CreateShare(name, owner string, validity int, exposure str
 	err = os.Mkdir(p, 0755)
 	if err != nil {
 		slog.Error("cannot create share", slog.String("error", err.Error()), slog.String("path", p))
-		return nil, errors.New("cannot create share")
+		return nil, err
 	}
 
 	m := Share{
@@ -351,7 +347,7 @@ func (b *FileBackend) GetItemData(s string, i string) (io.ReadCloser, error) {
 
 func (b *FileBackend) updateMetadata(s string) error {
 	if !isShareNameSafe(s) {
-		return errors.New("invalid share name")
+		return ErrInvalidShareName
 	}
 	sd, err := os.ReadDir(path.Join(b.Options.Path, s))
 	if err != nil {
