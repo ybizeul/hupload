@@ -23,7 +23,7 @@ func postShare(w http.ResponseWriter, r *http.Request) {
 	user := auth.UserForRequest(r)
 	if user == "" {
 		slog.Error("postShare", slog.String("error", "no user in context"))
-		_, _ = w.Write([]byte("no user in context"))
+		http.Error(w, "no user in context", http.StatusBadRequest)
 		return
 	}
 	code := generateCode(4, 3)
@@ -41,10 +41,10 @@ func postShare(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		slog.Error("postShare", slog.String("error", err.Error()))
 		if errors.Is(err, storage.ErrShareAlreadyExists) {
-			w.WriteHeader(http.StatusConflict)
+			writeError(w, http.StatusConflict, "share already exists")
 			return
 		}
-		_, _ = w.Write([]byte(err.Error()))
+		writeError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 	err = json.NewEncoder(w).Encode(share)
@@ -59,7 +59,7 @@ func putShare(w http.ResponseWriter, r *http.Request) {
 	user := auth.UserForRequest(r)
 	if user == "" {
 		slog.Error("putShare", slog.String("error", "no user in context"))
-		_, _ = w.Write([]byte("no user in context"))
+		writeError(w, http.StatusUnauthorized, "no user in context")
 		return
 	}
 
@@ -75,10 +75,10 @@ func putShare(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		slog.Error("putShare", slog.String("error", err.Error()))
 		if errors.Is(err, storage.ErrShareAlreadyExists) {
-			w.WriteHeader(http.StatusConflict)
+			writeError(w, http.StatusConflict, "share already exists")
 			return
 		}
-		_, _ = w.Write([]byte(err.Error()))
+		writeError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 	err = json.NewEncoder(w).Encode(share)
@@ -90,30 +90,55 @@ func putShare(w http.ResponseWriter, r *http.Request) {
 
 // postItem copies a new item in the share and returns the json description
 func postItem(w http.ResponseWriter, r *http.Request) {
+	share, err := cfg.Storage.GetShare(r.PathValue("share"))
+	if err != nil {
+		slog.Error("postItem", slog.String("error", err.Error()))
+		switch {
+		case errors.Is(err, storage.ErrInvalidShareName):
+			writeError(w, http.StatusBadRequest, "invalid share name")
+			return
+		case errors.Is(err, storage.ErrShareNotFound):
+			writeError(w, http.StatusNotFound, "share not found")
+			return
+		}
+		writeError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	if auth.UserForRequest(r) == "" && (share.Exposure != "both" && share.Exposure != "upload") {
+		writeError(w, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+
 	mp, err := r.MultipartReader()
 	if err != nil {
-		_, _ = w.Write([]byte(err.Error()))
+		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 	np, err := mp.NextPart()
 	if err != nil {
-		_, _ = w.Write([]byte(err.Error()))
+		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 	b := bufio.NewReader(np)
-	item, err := cfg.Storage.CreateItem(r.PathValue("share"), np.FileName(), b)
+	item, err := cfg.Storage.CreateItem(r.PathValue("share"), r.PathValue("item"), b)
 	if err != nil {
-		w.WriteHeader(http.StatusNotAcceptable)
-		_, _ = w.Write([]byte(err.Error()))
+		switch {
+		case errors.Is(err, storage.ErrInvalidShareName):
+			writeError(w, http.StatusBadRequest, "invalid share name")
+			return
+		case errors.Is(err, storage.ErrShareNotFound):
+			writeError(w, http.StatusNotFound, "share not found")
+			return
+		case errors.Is(err, storage.ErrMaxShareSizeReached):
+			writeError(w, http.StatusInsufficientStorage, "max share size reached")
+			return
+		}
+		writeError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	c, err := json.Marshal(item)
-	if err != nil {
-		_, _ = w.Write([]byte(err.Error()))
-		return
-	}
-	_, _ = w.Write(c)
+	writeSuccessJSON(w, item)
 }
 
 // getShares returns the list of shares as json
@@ -122,77 +147,68 @@ func getShares(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		slog.Error("getShares", slog.String("error", err.Error()))
-		w.WriteHeader(http.StatusInternalServerError)
-		_, _ = w.Write([]byte(err.Error()))
+		writeError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
-	response, err := json.Marshal(shares)
-	if err != nil {
-		slog.Error("getShares", slog.String("error", err.Error()))
-		w.WriteHeader(http.StatusInternalServerError)
-		_, _ = w.Write([]byte(err.Error()))
-		return
-	}
-	_, _ = w.Write(response)
+
+	writeSuccessJSON(w, shares)
 }
 
 // getShareItems returns the share identified by the request parameter
 func getShare(w http.ResponseWriter, r *http.Request) {
 	share, err := cfg.Storage.GetShare(r.PathValue("share"))
+
 	if err != nil {
-		slog.Error("getShares", slog.String("error", err.Error()))
-		w.WriteHeader(http.StatusBadRequest)
-		_, _ = w.Write([]byte(err.Error()))
+		slog.Error("getShare", slog.String("error", err.Error()))
+		switch {
+		case errors.Is(err, storage.ErrInvalidShareName):
+			writeError(w, http.StatusBadRequest, "invalid share name")
+			return
+		case errors.Is(err, storage.ErrShareNotFound):
+			writeError(w, http.StatusNotFound, "share not found")
+			return
+		}
+		writeError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
 	if auth.UserForRequest(r) == "" && !share.IsValid() {
-		w.WriteHeader(http.StatusGone)
-		_, _ = w.Write([]byte("Share expired"))
+		writeError(w, http.StatusGone, "Share expired")
 		return
 	}
 
-	b, err := json.Marshal(share)
-	if err != nil {
-		slog.Error("getShares", slog.String("error", err.Error()))
-		w.WriteHeader(http.StatusInternalServerError)
-		_, _ = w.Write([]byte(err.Error()))
-		return
-	}
-	_, _ = w.Write(b)
+	writeSuccessJSON(w, share)
 }
 
 // getShareItems returns the share content identified by the request parameter
 func getShareItems(w http.ResponseWriter, r *http.Request) {
 	share, err := cfg.Storage.GetShare(r.PathValue("share"))
 	if err != nil {
-		slog.Error("getShares", slog.String("error", err.Error()))
-		w.WriteHeader(http.StatusBadRequest)
-		_, _ = w.Write([]byte(err.Error()))
+		slog.Error("getShareItems", slog.String("error", err.Error()))
+		switch {
+		case errors.Is(err, storage.ErrInvalidShareName):
+			writeError(w, http.StatusBadRequest, "invalid share name")
+			return
+		case errors.Is(err, storage.ErrShareNotFound):
+			writeError(w, http.StatusNotFound, "share not found")
+			return
+		}
+		writeError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
 	if auth.UserForRequest(r) == "" && !share.IsValid() {
-		w.WriteHeader(http.StatusGone)
-		_, _ = w.Write([]byte("Share expired"))
+		writeError(w, http.StatusGone, "Share expired")
 		return
 	}
 
-	content, err := cfg.Storage.ListShare(r.PathValue("share"))
+	content, err := cfg.Storage.ListShare(share.Name)
 	if err != nil {
-		slog.Error("getShares", slog.String("error", err.Error()))
-		w.WriteHeader(http.StatusBadRequest)
-		_, _ = w.Write([]byte(err.Error()))
+		slog.Error("getShareItems", slog.String("error", err.Error()))
+		writeError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
-	b, err := json.Marshal(content)
-	if err != nil {
-		slog.Error("getShares", slog.String("error", err.Error()))
-		w.WriteHeader(http.StatusInternalServerError)
-		_, _ = w.Write([]byte(err.Error()))
-		return
-	}
-	_, _ = w.Write(b)
+	writeSuccessJSON(w, content)
 }
 
 // deleteShare deletes the share identified by the request parameter
@@ -200,10 +216,18 @@ func deleteShare(w http.ResponseWriter, r *http.Request) {
 	err := cfg.Storage.DeleteShare(r.PathValue("share"))
 	if err != nil {
 		slog.Error("deleteShare", slog.String("error", err.Error()))
-		w.WriteHeader(http.StatusInternalServerError)
-		_, _ = w.Write([]byte(err.Error()))
+		switch {
+		case errors.Is(err, storage.ErrInvalidShareName):
+			writeError(w, http.StatusBadRequest, "invalid share name")
+			return
+		case errors.Is(err, storage.ErrShareNotFound):
+			writeError(w, http.StatusNotFound, "share not found")
+			return
+		}
+		writeError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
+	writeSuccess(w, "share deleted")
 }
 
 // getItem returns the item identified by the request parameter
@@ -214,28 +238,38 @@ func getItem(w http.ResponseWriter, r *http.Request) {
 	share, err := cfg.Storage.GetShare(shareName)
 	if err != nil {
 		slog.Error("getItem", slog.String("error", err.Error()))
-		_, _ = w.Write([]byte(err.Error()))
+		switch {
+		case errors.Is(err, storage.ErrInvalidShareName):
+			writeError(w, http.StatusBadRequest, "invalid share name")
+			return
+		case errors.Is(err, storage.ErrShareNotFound):
+			writeError(w, http.StatusNotFound, "share not found")
+			return
+		}
+		writeError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
 	if auth.UserForRequest(r) == "" && (share.Exposure != "both" && share.Exposure != "download") {
-		slog.Error("getItem", slog.String("error", "unauthorized"))
-		w.WriteHeader(http.StatusUnauthorized)
+		writeError(w, http.StatusUnauthorized, "unauthorized")
 		return
 	}
 
 	item, err := cfg.Storage.GetItem(shareName, itemName)
 	if err != nil {
-		slog.Error("getItem", slog.String("error", err.Error()))
-		w.WriteHeader(http.StatusNotFound)
-		_, _ = w.Write([]byte(err.Error()))
+		switch {
+		case errors.Is(err, storage.ErrItemNotFound):
+			writeError(w, http.StatusNotFound, "share not found")
+			return
+		}
+		writeError(w, http.StatusUnauthorized, "unauthorized")
 		return
 	}
 
 	reader, err := cfg.Storage.GetItemData(shareName, itemName)
 	if err != nil {
 		slog.Error("getShares", slog.String("error", err.Error()))
-		_, _ = w.Write([]byte(err.Error()))
+		writeError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
@@ -248,7 +282,7 @@ func getItem(w http.ResponseWriter, r *http.Request) {
 	_, err = io.Copy(w, reader)
 	if err != nil {
 		slog.Error("getItem", slog.String("error", err.Error()))
-		_, _ = w.Write([]byte(err.Error()))
+		writeError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 }
@@ -260,14 +294,7 @@ func postLogin(w http.ResponseWriter, r *http.Request) {
 	}{
 		User: auth.UserForRequest(r),
 	}
-
-	b, err := json.Marshal(u)
-	if err != nil {
-		slog.Error("postLogin", slog.String("error", err.Error()))
-		w.WriteHeader(http.StatusInternalServerError)
-	}
-
-	_, _ = w.Write(b)
+	writeSuccessJSON(w, u)
 }
 
 // getVersion returns hupload version
@@ -277,12 +304,5 @@ func getVersion(w http.ResponseWriter, r *http.Request) {
 	}{
 		Version: version,
 	}
-
-	b, err := json.Marshal(v)
-	if err != nil {
-		slog.Error("getVersion", slog.String("error", err.Error()))
-		w.WriteHeader(http.StatusInternalServerError)
-	}
-
-	_, _ = w.Write(b)
+	writeSuccessJSON(w, v)
 }

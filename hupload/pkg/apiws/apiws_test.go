@@ -12,6 +12,27 @@ import (
 	"github.com/ybizeul/hupload/pkg/apiws/middleware/auth"
 )
 
+type APIResult struct {
+	Status  string `json:"status"`
+	Message string `json:"message,omitempty"`
+}
+
+func writeError(w http.ResponseWriter, code int, msg string) {
+	w.WriteHeader(code)
+	_ = json.NewEncoder(w).Encode(APIResult{Status: "error", Message: msg})
+}
+
+func writeSuccessJSON(w http.ResponseWriter, body any) {
+	err := json.NewEncoder(w).Encode(body)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, err.Error())
+	}
+}
+
+func writeSuccess(w http.ResponseWriter, message string) {
+	writeSuccessJSON(w, APIResult{Status: "success", Message: message})
+}
+
 func makeAPI(staticUI fs.FS, templateData any) *APIWS {
 	api, err := New(staticUI, templateData)
 	if err != nil {
@@ -28,8 +49,7 @@ func TestSimpleAPI(t *testing.T) {
 	api := makeAPI(nil, nil)
 
 	api.AddRoute("GET /", nil, func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-		_ = json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
+		writeSuccessJSON(w, map[string]string{"status": "ok"})
 	})
 
 	req := httptest.NewRequest("GET", "/", nil)
@@ -61,8 +81,7 @@ func TestAuthAPI(t *testing.T) {
 	api := makeAPI(nil, nil)
 
 	api.AddRoute("GET /", []auth.AuthMiddleware{authenticator}, func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-		_ = json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
+		writeSuccessJSON(w, map[string]string{"status": "ok"})
 	})
 
 	var (

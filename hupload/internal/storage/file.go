@@ -118,13 +118,10 @@ func (b *FileBackend) CreateShare(name, owner string, validity int, exposure str
 // and content. It returns an error if the share does not exist, or if the item
 // doesn't fit in the share or if the share is full. The content is read from
 // the provided bufio.Reader.
-var (
-	ErrMaxShareSizeReached = errors.New("Max share size reached")
-)
 
 func (b *FileBackend) CreateItem(s string, i string, r *bufio.Reader) (*Item, error) {
 	if !isShareNameSafe(s) {
-		return nil, errors.New("invalid share name")
+		return nil, ErrInvalidShareName
 	}
 
 	// Get Share metadata
@@ -162,7 +159,7 @@ func (b *FileBackend) CreateItem(s string, i string, r *bufio.Reader) (*Item, er
 	f, err := os.Create(p + suffix)
 	if err != nil {
 		slog.Error("cannot create item", slog.String("error", err.Error()), slog.String("path", p))
-		return nil, errors.New("cannot create item")
+		return nil, err
 	}
 	defer f.Close()
 
@@ -175,7 +172,7 @@ func (b *FileBackend) CreateItem(s string, i string, r *bufio.Reader) (*Item, er
 	written, err := io.Copy(f, src)
 	if err != nil {
 		os.Remove(p + suffix)
-		return nil, errors.New("cannot copy item content")
+		return nil, err
 	}
 
 	// If nothing was written or if the max write limit was reached, remove the
@@ -208,10 +205,13 @@ func (b *FileBackend) CreateItem(s string, i string, r *bufio.Reader) (*Item, er
 
 func (b *FileBackend) GetShare(s string) (*Share, error) {
 	if !isShareNameSafe(s) {
-		return nil, errors.New("invalid share name")
+		return nil, ErrInvalidShareName
 	}
 	fm, err := os.Open(path.Join(b.Options.Path, s, ".metadata"))
 	if err != nil {
+		if os.IsNotExist(err) {
+			return nil, ErrShareNotFound
+		}
 		return nil, err
 	}
 	defer fm.Close()
@@ -259,7 +259,7 @@ func (b *FileBackend) ListShares() ([]Share, error) {
 
 func (b *FileBackend) DeleteShare(s string) error {
 	if !isShareNameSafe(s) {
-		return errors.New("invalid share name")
+		return ErrInvalidShareName
 	}
 	sharePath := path.Join(b.Options.Path, s)
 	err := os.RemoveAll(sharePath)
@@ -276,7 +276,7 @@ func (b *FileBackend) DeleteShare(s string) error {
 
 func (b *FileBackend) ListShare(s string) ([]Item, error) {
 	if !isShareNameSafe(s) {
-		return []Item{}, errors.New("invalid share name")
+		return nil, ErrInvalidShareName
 	}
 
 	d, err := os.ReadDir(path.Join(b.Options.Path, s))
@@ -311,7 +311,7 @@ func (b *FileBackend) ListShare(s string) ([]Item, error) {
 // the share or the item do not exist or if the share name is invalid.
 func (b *FileBackend) GetItem(s string, i string) (*Item, error) {
 	if !isShareNameSafe(s) {
-		return nil, errors.New("invalid share name")
+		return nil, ErrInvalidShareName
 	}
 
 	// path.Join("/", i) is used to avoid path traversal
@@ -319,6 +319,9 @@ func (b *FileBackend) GetItem(s string, i string) (*Item, error) {
 
 	stat, err := os.Stat(p)
 	if err != nil {
+		if os.IsNotExist(err) {
+			return nil, ErrItemNotFound
+		}
 		return nil, err
 	}
 
@@ -332,7 +335,7 @@ func (b *FileBackend) GetItem(s string, i string) (*Item, error) {
 // if the share or the item do not exist or if the share name is invalid.
 func (b *FileBackend) GetItemData(s string, i string) (io.ReadCloser, error) {
 	if !isShareNameSafe(s) {
-		return nil, errors.New("invalid share name")
+		return nil, ErrInvalidShareName
 	}
 
 	// path.Join("/", i) is used to avoid path traversal
