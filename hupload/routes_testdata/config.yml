@@ -6,4 +6,4 @@ storage:
 auth:
   type: file
   options:
-    path: testdata/users.yml
+    path: routes_testdata/users.yml

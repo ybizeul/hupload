@@ -28,6 +28,10 @@ type BasicAuthMiddleware struct {
 
 func (a BasicAuthMiddleware) Middleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if a.Authentication == nil {
+			serveNextError(next, w, r, errors.New("no authentication backend"))
+			return
+		}
 		// Collect authentication from request
 		qUser, qPasswd, ok := r.BasicAuth()
 

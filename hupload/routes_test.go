@@ -13,13 +13,18 @@ import (
 	"github.com/ybizeul/hupload/pkg/apiws"
 )
 
-func testAPIServer() *apiws.APIWS {
+func getAPIServer(t *testing.T) *apiws.APIWS {
 
 	cfg = config.Config{
-		Path: "testdata/config.yml",
+		Path: "routes_testdata/config.yml",
 	}
 
-	_, _ = cfg.Load()
+	_, err := cfg.Load()
+
+	if err != nil {
+		t.Fatal(err)
+		return nil
+	}
 
 	result, _ := apiws.New(nil, cfg.Values)
 
@@ -29,14 +34,12 @@ func testAPIServer() *apiws.APIWS {
 	return result
 }
 
-var token string
-
 func TestCreateShare(t *testing.T) {
 	t.Cleanup(func() {
 		os.RemoveAll("tmptest")
 	})
 
-	api := testAPIServer()
+	api := getAPIServer(t)
 
 	// Create a share without authentication should fail
 	t.Run("Create a share without authentication should fail", func(t *testing.T) {
@@ -52,10 +55,12 @@ func TestCreateShare(t *testing.T) {
 
 		if w.Code != http.StatusUnauthorized {
 			t.Errorf("Expected status %d, got %d", http.StatusUnauthorized, w.Code)
+			return
 		}
 	})
 
 	// Create a share with authentication should work
+	var token *string
 	t.Run("Create a share with authentication should succeed", func(t *testing.T) {
 		var (
 			req *http.Request
@@ -71,6 +76,7 @@ func TestCreateShare(t *testing.T) {
 
 		if w.Code != http.StatusOK {
 			t.Errorf("Expected status %d, got %d", http.StatusOK, w.Code)
+			return
 		}
 
 		var share *storage.Share
@@ -80,13 +86,17 @@ func TestCreateShare(t *testing.T) {
 		_, err := os.Stat(path.Join("tmptest/data/", share.Name))
 		if err != nil {
 			t.Errorf("Expected share directory to be created")
+			return
 		}
 
-		token = w.Result().Cookies()[0].Value
+		token = &w.Result().Cookies()[0].Value
 	})
 
 	var share *storage.Share
 	t.Run("Create a share with token should succeed", func(t *testing.T) {
+		if token == nil {
+			t.Skip("No token created")
+		}
 		var (
 			req *http.Request
 			w   *httptest.ResponseRecorder
@@ -95,7 +105,7 @@ func TestCreateShare(t *testing.T) {
 
 		req.AddCookie(&http.Cookie{
 			Name:  "X-Token",
-			Value: token,
+			Value: *token,
 		})
 
 		w = httptest.NewRecorder()
@@ -112,10 +122,14 @@ func TestCreateShare(t *testing.T) {
 		_, err := os.Stat(path.Join("tmptest/data/", share.Name))
 		if err != nil {
 			t.Errorf("Expected share directory to be created")
+			return
 		}
 	})
 
 	t.Run("Create a share with same name should fail", func(t *testing.T) {
+		if share == nil {
+			t.Skip("No share created")
+		}
 		var (
 			req *http.Request
 			w   *httptest.ResponseRecorder
@@ -124,7 +138,7 @@ func TestCreateShare(t *testing.T) {
 
 		req.AddCookie(&http.Cookie{
 			Name:  "X-Token",
-			Value: token,
+			Value: *token,
 		})
 
 		w = httptest.NewRecorder()
