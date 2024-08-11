@@ -23,7 +23,7 @@ export function SplitButton(props: SplitButtonProps) {
   return (
     <Group wrap="nowrap" gap={0} justify='center'>
       <Button onClick={onClick} className={classes.button}>{children}</Button>
-      <Popover>
+      <Popover opened={opened} onClose={close}>
         <Popover.Target>
           <ActionIcon
             variant="filled"
@@ -48,6 +48,7 @@ export function SplitButton(props: SplitButtonProps) {
                 onChange={(v) => { setValidity(v); onChange(exposure,v)}}
                 />
             </Stack>
+            <Button mt="sm" w="100%" onClick={() => {onClick(); close();}}>Create</Button>
         </Popover.Dropdown>
         </Popover>
     </Group>
