@@ -6,8 +6,8 @@ import (
 	"io/fs"
 	"log/slog"
 	"net/http"
+	"path"
 
-	"github.com/ybizeul/hupload/internal/config"
 	"github.com/ybizeul/hupload/pkg/apiws/authentication"
 	"github.com/ybizeul/hupload/pkg/apiws/middleware/auth"
 	logger "github.com/ybizeul/hupload/pkg/apiws/middleware/log"
@@ -23,7 +23,7 @@ type APIWS struct {
 	Mux *http.ServeMux
 
 	// TemplateData is used to customized some templated parts of the web UI.
-	TemplateData config.ConfigValues
+	TemplateData any
 
 	// Authentication is the authentication backend
 	Authentication authentication.Authentication
@@ -31,7 +31,7 @@ type APIWS struct {
 
 // New creates a new API Web Server. staticUI is the file system containing the
 // web root directory.
-func New(staticUI fs.FS, t config.ConfigValues) (*APIWS, error) {
+func New(staticUI fs.FS, templateData any) (*APIWS, error) {
 	var f fs.FS = nil
 
 	if staticUI != nil {
@@ -48,7 +48,7 @@ func New(staticUI fs.FS, t config.ConfigValues) (*APIWS, error) {
 	result := &APIWS{
 		StaticUI:     f,
 		HTTPPort:     8080,
-		TemplateData: t,
+		TemplateData: templateData,
 		Mux:          http.NewServeMux(),
 	}
 
@@ -56,7 +56,18 @@ func New(staticUI fs.FS, t config.ConfigValues) (*APIWS, error) {
 		result.Mux.HandleFunc("GET /{path...}", func(w http.ResponseWriter, r *http.Request) {
 			_, err := fs.Stat(result.StaticUI, r.URL.Path[1:])
 			if err == nil {
-				http.ServeFileFS(w, r, result.StaticUI, r.URL.Path[1:])
+				if path.Ext(r.URL.Path) == ".html" {
+					tmpl, err := template.New(r.URL.Path[1:]).ParseFS(result.StaticUI, r.URL.Path[1:])
+					if err != nil {
+						slog.Error("unable to parse template", slog.String("error", err.Error()))
+					}
+					err = tmpl.Execute(w, result.TemplateData)
+					if err != nil {
+						slog.Error("unable to execute template", slog.String("error", err.Error()))
+					}
+				} else {
+					http.ServeFileFS(w, r, result.StaticUI, r.URL.Path[1:])
+				}
 			} else {
 				tmpl, err := template.New("index.html").ParseFS(result.StaticUI, "index.html")
 				if err != nil {
