@@ -36,7 +36,7 @@ func setup(api *apiws.APIWS) {
 			Authentication: api.Authentication,
 		},
 		auth.JWTAuthMiddleware{
-			HMACSecret: os.Getenv("JWT_SECRET"),
+			HMACSecret: hmac,
 		},
 	}
 
@@ -46,7 +46,7 @@ func setup(api *apiws.APIWS) {
 	// That's Hupload principle, the security is based on the share name
 	// which is usually a random string.
 
-	api.AddRoute("POST /api/v1/shares/{share}/items/{item}", nil, postItem)
+	api.AddRoute("POST /api/v1/shares/{share}/items/{item}", authenticatorsOpen, postItem)
 	api.AddRoute("GET /api/v1/shares/{share}/items", authenticatorsOpen, getShareItems)
 	api.AddRoute("GET /api/v1/shares/{share}", authenticatorsOpen, getShare)
 	api.AddRoute("GET /api/v1/shares/{share}/items/{item}", authenticatorsOpen, getItem)

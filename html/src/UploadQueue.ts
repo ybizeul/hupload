@@ -58,7 +58,7 @@ export class UploadQueue {
                 .catch((e) => {
                     f.finished = true; 
                     f.failed = true
-                    f.error = e.response?.data
+                    f.error = e.response?.data.message
                     this.updateProgress()
                     this.progressCallback = undefined
                     reject(e)
