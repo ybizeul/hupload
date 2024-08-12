@@ -10,7 +10,6 @@ export function ShareComponent(props: {share: Share}) {
     // Initialize props
     const {share} = props
 
-    console.log(share)
     // Initialize States
     const [deleted,setDeleted] = useState(false)
 
