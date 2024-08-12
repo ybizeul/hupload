@@ -33,7 +33,6 @@ export function SharePage() {
       return false
     }
 
-    console.log(share)
     return share.exposure === "" || share.exposure === "upload" || share.exposure === "both"
   }
 
