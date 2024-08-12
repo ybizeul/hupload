@@ -816,6 +816,38 @@ func TestUpload(t *testing.T) {
 		}
 	})
 
+	t.Run("Upload a file without authentication should work authenticated (download share)", func(t *testing.T) {
+		shareName := "uploadondownloadwithauth"
+		makeShare(t, shareName, ShareParameters{
+			Exposure: "download",
+			Validity: 7,
+		})
+
+		fileSize := 3 * 1024 * 1024
+		pr, ct := multipartWriter(fileSize)
+
+		req = httptest.NewRequest("POST", path.Join("/api/v1/shares", shareName, "items", "newfile.txt"), pr)
+
+		req.SetBasicAuth("admin", "hupload")
+
+		req.Header.Set("Content-Type", ct)
+
+		w = httptest.NewRecorder()
+
+		api.Mux.ServeHTTP(w, req)
+
+		if w.Code != http.StatusOK {
+			t.Errorf("Expected status %d, got %d", http.StatusOK, w.Code)
+			return
+		}
+
+		_, err := os.Stat(path.Join("tmptest/data/", shareName, "newfile.txt"))
+		if err != nil {
+			t.Errorf("Expected file to be created")
+			return
+		}
+	})
+
 	t.Run("Upload a file too big should not work", func(t *testing.T) {
 		makeShare(t, "toobig", ShareParameters{
 			Exposure: "upload",
