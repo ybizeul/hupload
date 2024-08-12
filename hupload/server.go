@@ -32,6 +32,9 @@ func setup(api *apiws.APIWS) {
 
 	authenticatorsOpen := []auth.AuthMiddleware{
 		auth.OpenAuthMiddleware{},
+		auth.BasicAuthMiddleware{
+			Authentication: api.Authentication,
+		},
 		auth.JWTAuthMiddleware{
 			HMACSecret: os.Getenv("JWT_SECRET"),
 		},

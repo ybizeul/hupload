@@ -1,7 +1,10 @@
 package main
 
 import (
+	"bufio"
+	"crypto/rand"
 	"encoding/json"
+	"fmt"
 	"io"
 	"mime/multipart"
 	"net/http"
@@ -37,12 +40,19 @@ func getAPIServer(t *testing.T) *apiws.APIWS {
 	return result
 }
 
-func makeShare(name string, params ShareParameters) *storage.Share {
+func makeShare(t *testing.T, name string, params ShareParameters) *storage.Share {
 	share, err := cfg.Storage.CreateShare(name, "admin", params.Validity, params.Exposure)
 	if err != nil {
-		return nil
+		t.Fatal(err)
 	}
 	return share
+}
+
+func makeItem(t *testing.T, shareName, fileName string, size int) {
+	_, err := cfg.Storage.CreateItem(shareName, fileName, bufio.NewReader(io.LimitReader(rand.Reader, int64(size))))
+	if err != nil {
+		t.Fatal(err)
+	}
 }
 
 func TestCreateShare(t *testing.T) {
@@ -235,12 +245,12 @@ func TestGetShare(t *testing.T) {
 
 	api := getAPIServer(t)
 
-	makeShare("test", ShareParameters{
+	makeShare(t, "test", ShareParameters{
 		Exposure: "upload",
 		Validity: 7,
 	})
 
-	makeShare("test2", ShareParameters{
+	makeShare(t, "test2", ShareParameters{
 		Exposure: "upload",
 		Validity: 7,
 	})
@@ -387,47 +397,345 @@ func TestGetShare(t *testing.T) {
 			t.Errorf("Expected error, got %s", result.Status)
 		}
 	})
+
+	t.Run("Get share items should work", func(t *testing.T) {
+		var (
+			req *http.Request
+			w   *httptest.ResponseRecorder
+		)
+
+		shareName := "itemstest"
+
+		makeShare(t, shareName, ShareParameters{})
+		makeItem(t, shareName, "newfile.txt", 1*1024*1024)
+		makeItem(t, shareName, "newfile2.txt", 2*1024*1024)
+
+		req = httptest.NewRequest("GET", path.Join("/api/v1/shares/", shareName, "items"), nil)
+
+		w = httptest.NewRecorder()
+
+		api.Mux.ServeHTTP(w, req)
+
+		if w.Code != http.StatusOK {
+			t.Errorf("Expected status %d, got %d", http.StatusOK, w.Code)
+			return
+		}
+
+		var result []storage.Item
+
+		_ = json.NewDecoder(w.Body).Decode(&result)
+
+		if len(result) != 2 {
+			t.Errorf("Expected 2 items, got %d", len(result))
+			return
+		}
+
+		if result[0].Path != path.Join(shareName, "newfile2.txt") {
+			t.Errorf("Expected newfile2.txt, got %s", result[0].Path)
+			return
+		}
+		if result[1].Path != path.Join(shareName, "newfile.txt") {
+			t.Errorf("Expected newfile.txt, got %s", result[0].Path)
+			return
+		}
+
+		if result[0].ItemInfo.Size != 2*1024*1024 {
+			t.Errorf("Expected size 2*1024*1024, got %d", result[0].ItemInfo.Size)
+			return
+		}
+		if result[1].ItemInfo.Size != 1*1024*1024 {
+			t.Errorf("Expected size 1*1024*1024, got %d", result[0].ItemInfo.Size)
+			return
+		}
+	})
+
+	t.Run("Get share items on inexistant share shouldn't work", func(t *testing.T) {
+		var (
+			req *http.Request
+			w   *httptest.ResponseRecorder
+		)
+
+		shareName := "notexistant"
+
+		req = httptest.NewRequest("GET", path.Join("/api/v1/shares/", shareName, "items"), nil)
+
+		w = httptest.NewRecorder()
+
+		api.Mux.ServeHTTP(w, req)
+
+		if w.Code != http.StatusNotFound {
+			t.Errorf("Expected status %d, got %d", http.StatusNotFound, w.Code)
+			return
+		}
+	})
+
+	t.Run("Get share items on invalid share shouldn't work", func(t *testing.T) {
+		var (
+			req *http.Request
+			w   *httptest.ResponseRecorder
+		)
+
+		shareName := url.QueryEscape("../notexistant")
+
+		req = httptest.NewRequest("GET", path.Join("/api/v1/shares/", shareName, "items"), nil)
+
+		w = httptest.NewRecorder()
+
+		api.Mux.ServeHTTP(w, req)
+
+		if w.Code != http.StatusBadRequest {
+			t.Errorf("Expected status %d, got %d", http.StatusBadRequest, w.Code)
+			return
+		}
+	})
+}
+
+func TestDeleteShare(t *testing.T) {
+	t.Cleanup(func() {
+		os.RemoveAll("tmptest")
+	})
+
+	api := getAPIServer(t)
+
+	t.Run("delete share should work", func(t *testing.T) {
+		var (
+			req *http.Request
+			w   *httptest.ResponseRecorder
+		)
+
+		shareName := "deleteshare"
+		makeShare(t, shareName, ShareParameters{Exposure: "download"})
+
+		req = httptest.NewRequest("DELETE", path.Join("/api/v1/shares/", shareName), nil)
+		req.SetBasicAuth("admin", "hupload")
+		w = httptest.NewRecorder()
+
+		api.Mux.ServeHTTP(w, req)
+
+		if w.Code != http.StatusOK {
+			t.Errorf("Expected status %d, got %d", http.StatusOK, w.Code)
+			return
+		}
+	})
+
+	t.Run("delete share unauthentication shouldn't work", func(t *testing.T) {
+		var (
+			req *http.Request
+			w   *httptest.ResponseRecorder
+		)
+
+		shareName := "deleteshare"
+		makeShare(t, shareName, ShareParameters{Exposure: "download"})
+
+		req = httptest.NewRequest("DELETE", path.Join("/api/v1/shares/", shareName), nil)
+		w = httptest.NewRecorder()
+
+		api.Mux.ServeHTTP(w, req)
+
+		if w.Code != http.StatusUnauthorized {
+			t.Errorf("Expected status %d, got %d", http.StatusUnauthorized, w.Code)
+			return
+		}
+	})
+
+	t.Run("delete share invalid share name shouldn't work", func(t *testing.T) {
+		var (
+			req *http.Request
+			w   *httptest.ResponseRecorder
+		)
+
+		req = httptest.NewRequest("DELETE", path.Join("/api/v1/shares/", url.QueryEscape("../bogus")), nil)
+		req.SetBasicAuth("admin", "hupload")
+
+		w = httptest.NewRecorder()
+
+		api.Mux.ServeHTTP(w, req)
+
+		if w.Code != http.StatusBadRequest {
+			t.Errorf("Expected status %d, got %d", http.StatusBadRequest, w.Code)
+			return
+		}
+	})
+
+	t.Run("delete share inexistant share name shouldn't work", func(t *testing.T) {
+		var (
+			req *http.Request
+			w   *httptest.ResponseRecorder
+		)
+
+		req = httptest.NewRequest("DELETE", path.Join("/api/v1/shares/", "nonexistant"), nil)
+		req.SetBasicAuth("admin", "hupload")
+
+		w = httptest.NewRecorder()
+
+		api.Mux.ServeHTTP(w, req)
+
+		if w.Code != http.StatusNotFound {
+			t.Errorf("Expected status %d, got %d", http.StatusNotFound, w.Code)
+			return
+		}
+	})
+}
+
+func TestGetItems(t *testing.T) {
+	t.Cleanup(func() {
+		os.RemoveAll("tmptest")
+	})
+
+	api := getAPIServer(t)
+
+	t.Run("Get share item should work", func(t *testing.T) {
+		var (
+			req *http.Request
+			w   *httptest.ResponseRecorder
+		)
+
+		for _, exp := range []string{"download", "both"} {
+			shareName := "getitem" + exp
+			fileSize := 1 * 1024 * 1024
+			makeShare(t, shareName, ShareParameters{Exposure: exp})
+			makeItem(t, shareName, "newfile.txt", fileSize)
+
+			req = httptest.NewRequest("GET", path.Join("/api/v1/shares/", shareName, "items", "newfile.txt"), nil)
+
+			w = httptest.NewRecorder()
+
+			api.Mux.ServeHTTP(w, req)
+
+			if w.Code != http.StatusOK {
+				t.Errorf("Expected status %d, got %d", http.StatusOK, w.Code)
+				return
+			}
+
+			if w.Result().Header.Get("Content-Length") != fmt.Sprintf("%d", fileSize) {
+				t.Errorf("Expected size %d, got %s", fileSize, w.Result().Header.Get("Content-Size"))
+				return
+			}
+		}
+	})
+
+	t.Run("Get share items on inexistant share shouldn't work", func(t *testing.T) {
+		var (
+			req *http.Request
+			w   *httptest.ResponseRecorder
+		)
+
+		shareName := "inexistant"
+
+		req = httptest.NewRequest("GET", path.Join("/api/v1/shares/", shareName, "items", url.QueryEscape(".metadata")), nil)
+
+		w = httptest.NewRecorder()
+
+		api.Mux.ServeHTTP(w, req)
+
+		if w.Code != http.StatusNotFound {
+			t.Errorf("Expected status %d, got %d", http.StatusNotFound, w.Code)
+			return
+		}
+	})
+
+	t.Run("Get share items on invalid share item shouldn't work", func(t *testing.T) {
+		var (
+			req *http.Request
+			w   *httptest.ResponseRecorder
+		)
+
+		shareName := "invaliditem"
+
+		makeShare(t, shareName, ShareParameters{Exposure: "download"})
+		makeItem(t, shareName, "newfile.txt", 1*1024*1024)
+
+		req = httptest.NewRequest("GET", path.Join("/api/v1/shares/", shareName, "items", url.QueryEscape(".metadata")), nil)
+
+		w = httptest.NewRecorder()
+
+		api.Mux.ServeHTTP(w, req)
+
+		if w.Code != http.StatusBadRequest {
+			t.Errorf("Expected status %d, got %d", http.StatusBadRequest, w.Code)
+			return
+		}
+	})
+
+	t.Run("Get share item that does not exists shouldn't work", func(t *testing.T) {
+		var (
+			req *http.Request
+			w   *httptest.ResponseRecorder
+		)
+
+		shareName := "notexistitem"
+
+		makeShare(t, shareName, ShareParameters{Exposure: "download"})
+
+		req = httptest.NewRequest("GET", path.Join("/api/v1/shares/", shareName, "items", "notexists"), nil)
+
+		w = httptest.NewRecorder()
+
+		api.Mux.ServeHTTP(w, req)
+
+		if w.Code != http.StatusNotFound {
+			t.Errorf("Expected status %d, got %d", http.StatusNotFound, w.Code)
+			return
+		}
+	})
+
+	t.Run("Get share item upload authenticated should work", func(t *testing.T) {
+		var (
+			req *http.Request
+			w   *httptest.ResponseRecorder
+		)
+
+		shareName := "uploadauth"
+
+		makeShare(t, shareName, ShareParameters{Exposure: "upload"})
+		makeItem(t, shareName, "newfile.txt", 1*1024*1024)
+
+		req = httptest.NewRequest("GET", path.Join("/api/v1/shares/", shareName, "items", "newfile.txt"), nil)
+		req.SetBasicAuth("admin", "hupload")
+
+		w = httptest.NewRecorder()
+
+		api.Mux.ServeHTTP(w, req)
+
+		if w.Code != http.StatusOK {
+			t.Errorf("Expected status %d, got %d", http.StatusOK, w.Code)
+			return
+		}
+	})
 }
 
 // multipartWriter returns a reader and a multipart.Writer for a body with one
 // attachment of size size.
-func multipartWriter(size int) (io.Reader, *multipart.Writer) {
-	// writer will be returned to the caller
-	var writer *multipart.Writer
-
-	// multipart body will be piped from multipart.Writer to pr
-	// pr will be returned to the caller
+func multipartWriter(size int) (io.Reader, string) {
 	pr, pw := io.Pipe()
 
-	// we need to synchronize and wait for writer to be created
-	wait := make(chan struct{})
+	writer := multipart.NewWriter(pw)
 
-	// we need a go function here to avoid multipart.NewWriter(pw) bloking
+	ct := writer.FormDataContentType()
+
+	chunk := make([]byte, 1024)
+
 	go func() {
-		// data will be fed by chunks of 1024 bytes
-		chunk := make([]byte, 1024)
+		defer pw.Close()
 
-		// create a new multipart.Writer
-		writer = multipart.NewWriter(pw)
-
-		// signal that writer is created so parent function can return
-		wait <- struct{}{}
-
-		// Create the form file
-		dataPart, _ := writer.CreateFormFile("data", "file.txt")
-
-		// write size bytes to dataart
-		for i := 0; i < size; i += 1024 {
-			_, _ = dataPart.Write(chunk)
+		dataPart, err := writer.CreateFormFile("data", "file.txt")
+		if err != nil {
+			return
 		}
 
-		// close the writer
+		for i := 0; i < size; i += len(chunk) {
+			if size-i < len(chunk) {
+				chunk = make([]byte, size-i)
+			}
+			if _, err := dataPart.Write(chunk); err != nil {
+				return
+			}
+		}
 		writer.Close()
 	}()
-	<-wait
 
 	// return to caller
-	return pr, writer
+	return pr, ct
 }
 
 func TestUpload(t *testing.T) {
@@ -444,18 +752,20 @@ func TestUpload(t *testing.T) {
 
 	t.Run("Upload a file without authentication should work", func(t *testing.T) {
 		// Create upload share
-		makeShare("upload", ShareParameters{
+		makeShare(t, "upload", ShareParameters{
 			Exposure: "upload",
 			Validity: 7,
 		})
 
+		makeItem(t, "upload", "newfile.txt", 1*1024*1024)
+
 		fileSize := 1 * 1024 * 1024
 
-		pr, writer := multipartWriter(fileSize)
+		pr, ct := multipartWriter(fileSize)
 
 		req = httptest.NewRequest("POST", path.Join("/api/v1/shares", "upload", "items", "newfile.txt"), pr)
 
-		req.Header.Set("Content-Type", writer.FormDataContentType())
+		req.Header.Set("Content-Type", ct)
 
 		w = httptest.NewRecorder()
 
@@ -478,33 +788,17 @@ func TestUpload(t *testing.T) {
 	})
 
 	t.Run("Upload a file without authentication should not work (download share)", func(t *testing.T) {
-		makeShare("download", ShareParameters{
+		makeShare(t, "download", ShareParameters{
 			Exposure: "download",
 			Validity: 7,
 		})
 
-		// body := new(bytes.Buffer)
-
-		// writer := multipart.NewWriter(body)
-		// // create a new form-data header name data and filename data.txt
-		// dataPart, _ := writer.CreateFormFile("data", "file.txt")
-
-		// fileSize := 3 * 1024 * 1024
-
-		// finished := make(chan bool)
-		// go func() {
-		// 	_ = writeData(dataPart, fileSize)
-		// 	writer.Close()
-		// 	finished <- true
-		// }()
-		// <-finished
-
 		fileSize := 3 * 1024 * 1024
-		pr, writer := multipartWriter(fileSize)
+		pr, ct := multipartWriter(fileSize)
 
 		req = httptest.NewRequest("POST", path.Join("/api/v1/shares", "download", "items", "newfile.txt"), pr)
 
-		req.Header.Set("Content-Type", writer.FormDataContentType())
+		req.Header.Set("Content-Type", ct)
 
 		w = httptest.NewRecorder()
 
@@ -523,7 +817,7 @@ func TestUpload(t *testing.T) {
 	})
 
 	t.Run("Upload a file too big should not work", func(t *testing.T) {
-		makeShare("toobig", ShareParameters{
+		makeShare(t, "toobig", ShareParameters{
 			Exposure: "upload",
 			Validity: 7,
 		})
@@ -533,11 +827,11 @@ func TestUpload(t *testing.T) {
 		// dataPart, _ := writer.CreateFormFile("data", "file.txt")
 
 		fileSize := 3*1024*1024 + 1
-		pr, writer := multipartWriter(fileSize)
+		pr, ct := multipartWriter(fileSize)
 
 		req = httptest.NewRequest("POST", path.Join("/api/v1/shares", "toobig", "items", "newfile.txt"), pr)
 
-		req.Header.Set("Content-Type", writer.FormDataContentType())
+		req.Header.Set("Content-Type", ct)
 
 		w = httptest.NewRecorder()
 
@@ -556,28 +850,28 @@ func TestUpload(t *testing.T) {
 	})
 
 	t.Run("Upload too much data on a share shouldn't work", func(t *testing.T) {
-		makeShare("sharetoobig", ShareParameters{
+		makeShare(t, "sharetoobig", ShareParameters{
 			Exposure: "upload",
 			Validity: 7,
 		})
 
 		fileSize := 3 * 1024 * 1024
-		pr, writer := multipartWriter(fileSize)
+		pr, ct := multipartWriter(fileSize)
 
 		req = httptest.NewRequest("POST", path.Join("/api/v1/shares", "sharetoobig", "items", "newfile.txt"), pr)
 
-		req.Header.Set("Content-Type", writer.FormDataContentType())
+		req.Header.Set("Content-Type", ct)
 
 		w = httptest.NewRecorder()
 
 		api.Mux.ServeHTTP(w, req)
 
 		fileSize = 3 * 1024 * 1024
-		pr, writer = multipartWriter(fileSize)
+		pr, ct = multipartWriter(fileSize)
 
 		req = httptest.NewRequest("POST", path.Join("/api/v1/shares", "sharetoobig", "items", "newfile2.txt"), pr)
 
-		req.Header.Set("Content-Type", writer.FormDataContentType())
+		req.Header.Set("Content-Type", ct)
 
 		w = httptest.NewRecorder()
 

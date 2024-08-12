@@ -258,10 +258,13 @@ func getItem(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		switch {
 		case errors.Is(err, storage.ErrItemNotFound):
-			writeError(w, http.StatusNotFound, "share not found")
+			writeError(w, http.StatusNotFound, err.Error())
+			return
+		case errors.Is(err, storage.ErrInvalidItemName):
+			writeError(w, http.StatusBadRequest, err.Error())
 			return
 		}
-		writeError(w, http.StatusUnauthorized, "unauthorized")
+		writeError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 

@@ -8,5 +8,6 @@ var (
 	ErrMaxShareSizeReached = errors.New("Max share size reached")
 	ErrShareAlreadyExists  = errors.New("share already exists")
 
-	ErrItemNotFound = errors.New("item not found")
+	ErrItemNotFound    = errors.New("item not found")
+	ErrInvalidItemName = errors.New("invalid item name")
 )

@@ -67,6 +67,10 @@ func isShareNameSafe(n string) bool {
 	return m
 }
 
+func isItemNameSafe(n string) bool {
+	return !strings.HasPrefix(n, ".")
+}
+
 // CreateShare creates a new share with the provided name, owner and validity
 // in days. It returns an error if the share already exists or if the name is
 // invalid. owner is only used to populate metadata.
@@ -258,7 +262,15 @@ func (b *FileBackend) DeleteShare(s string) error {
 		return ErrInvalidShareName
 	}
 	sharePath := path.Join(b.Options.Path, s)
-	err := os.RemoveAll(sharePath)
+
+	_, err := os.Stat(sharePath)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return ErrShareNotFound
+		}
+		return err
+	}
+	err = os.RemoveAll(sharePath)
 	if err != nil {
 		return err
 	}
@@ -310,6 +322,10 @@ func (b *FileBackend) GetItem(s string, i string) (*Item, error) {
 		return nil, ErrInvalidShareName
 	}
 
+	if !isItemNameSafe(i) {
+		return nil, ErrInvalidItemName
+	}
+
 	// path.Join("/", i) is used to avoid path traversal
 	p := path.Join(b.Options.Path, s, path.Join("/", i))
 
@@ -334,14 +350,20 @@ func (b *FileBackend) GetItemData(s string, i string) (io.ReadCloser, error) {
 		return nil, ErrInvalidShareName
 	}
 
+	if !isItemNameSafe(i) {
+		return nil, ErrInvalidItemName
+	}
+
 	// path.Join("/", i) is used to avoid path traversal
 	p := path.Join(b.Options.Path, s, path.Join("/", i))
 
 	f, err := os.Open(p)
 	if err != nil {
+		if os.IsNotExist(err) {
+			return nil, ErrItemNotFound
+		}
 		return nil, err
 	}
-
 	return f, nil
 }
 
