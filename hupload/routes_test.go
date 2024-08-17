@@ -55,6 +55,27 @@ func makeItem(t *testing.T, shareName, fileName string, size int) {
 	}
 }
 
+// func createItem(t *testing.T, shareName, itemName string, size int) {
+// 	fileSize := 1 * 1024 * 1024
+
+// 	makeItem(t, shareName, itemName, fileSize)
+
+// 	pr, ct := multipartWriter(fileSize)
+
+// 	req := httptest.NewRequest("POST", path.Join("/api/v1/shares", "upload", "items", "newfile.txt"), pr)
+
+// 	req.Header.Set("Content-Type", ct)
+
+// 	w := httptest.NewRecorder()
+
+// 	api.Mux.ServeHTTP(w, req)
+
+// 	if w.Code != http.StatusOK {
+// 		t.Errorf("Expected status %d, got %d", http.StatusOK, w.Code)
+// 		return
+// 	}
+// }
+
 func TestCreateShare(t *testing.T) {
 	t.Cleanup(func() {
 		os.RemoveAll("tmptest")
@@ -922,6 +943,116 @@ func TestUpload(t *testing.T) {
 	})
 }
 
+func TestDeleteItem(t *testing.T) {
+	t.Cleanup(func() {
+		os.RemoveAll("testdelete")
+	})
+
+	api := getAPIServer(t)
+
+	var (
+		req *http.Request
+		w   *httptest.ResponseRecorder
+	)
+
+	t.Run("delete a file as admin should work", func(t *testing.T) {
+		t.Cleanup(func() {
+			os.RemoveAll("tmptest/data/uploadadmin")
+		})
+
+		// Create upload share
+		share := makeShare(t, "uploadadmin", ShareParameters{
+			Exposure: "upload",
+			Validity: 7,
+		})
+
+		makeItem(t, share.Name, "newfile.txt", 1*1024*1024)
+
+		req = httptest.NewRequest("DELETE", path.Join("/api/v1/shares", share.Name, "items", "newfile.txt"), nil)
+
+		req.SetBasicAuth("admin", "hupload")
+
+		w = httptest.NewRecorder()
+
+		api.Mux.ServeHTTP(w, req)
+
+		if w.Code != http.StatusOK {
+			t.Errorf("Expected status %d, got %d", http.StatusOK, w.Code)
+			return
+		}
+	})
+	t.Run("delete a file as guest should work on a upload share", func(t *testing.T) {
+		t.Cleanup(func() {
+			os.RemoveAll("tmptest/data/upload")
+		})
+		// Create upload share
+		share := makeShare(t, "upload", ShareParameters{
+			Exposure: "upload",
+			Validity: 7,
+		})
+
+		makeItem(t, share.Name, "newfile.txt", 1*1024*1024)
+
+		req = httptest.NewRequest("DELETE", path.Join("/api/v1/shares", share.Name, "items", "newfile.txt"), nil)
+
+		w = httptest.NewRecorder()
+
+		api.Mux.ServeHTTP(w, req)
+
+		if w.Code != http.StatusOK {
+			t.Errorf("Expected status %d, got %d", http.StatusOK, w.Code)
+			return
+		}
+	})
+
+	t.Run("delete a file as guest should work on a both share", func(t *testing.T) {
+		t.Cleanup(func() {
+			os.RemoveAll("tmptest/data/both")
+		})
+		// Create upload share
+		share := makeShare(t, "both", ShareParameters{
+			Exposure: "both",
+			Validity: 7,
+		})
+
+		makeItem(t, share.Name, "newfile.txt", 1*1024*1024)
+
+		req = httptest.NewRequest("DELETE", path.Join("/api/v1/shares", share.Name, "items", "newfile.txt"), nil)
+
+		w = httptest.NewRecorder()
+
+		api.Mux.ServeHTTP(w, req)
+
+		if w.Code != http.StatusOK {
+			t.Errorf("Expected status %d, got %d", http.StatusOK, w.Code)
+			return
+		}
+	})
+
+	t.Run("delete a file as guest should fail on a download share", func(t *testing.T) {
+		t.Cleanup(func() {
+			os.RemoveAll("tmptest/data/download")
+		})
+		// Create upload share
+		share := makeShare(t, "download", ShareParameters{
+			Exposure: "download",
+			Validity: 7,
+		})
+
+		makeItem(t, share.Name, "newfile.txt", 1*1024*1024)
+
+		req = httptest.NewRequest("DELETE", path.Join("/api/v1/shares", share.Name, "items", "newfile.txt"), nil)
+
+		w = httptest.NewRecorder()
+
+		api.Mux.ServeHTTP(w, req)
+
+		if w.Code != http.StatusUnauthorized {
+			t.Errorf("Expected status %d, got %d", http.StatusOK, w.Code)
+			return
+		}
+	})
+}
 func TestVersion(t *testing.T) {
 	t.Cleanup(func() {
 		os.RemoveAll("tmptest")

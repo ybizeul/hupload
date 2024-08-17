@@ -49,12 +49,24 @@ export function SharePage() {
     return (share.exposure === "download" || share.exposure === "both")
   }
 
+  const canDelete = () => {
+    return canDownload()
+  }
+
+  const deleteItem = (item: string) => {
+    H.delete('/shares/' + share?.name + '/items/' + item).then(() => {
+      setItems(items?.filter((i) => i.Path !== share?.name + "/" + item))
+    })
+    .catch((e) => {
+      console.log(e)
+    })
+  }
+
   useEffect(() => {
     const s=location.pathname.split("/")
     const shareSegment = s[1]
     H.get('/shares/' + shareSegment).then((res) => {
       setShare(res as Share)
-      console.log(res)
       H.get('/shares/' + shareSegment + "/items").then(
       (res) => {
         setItems(res as Item[])
@@ -148,13 +160,13 @@ export function SharePage() {
       {
         // Display upload queue items
         queue.map((q) => (
-          <ItemComponent download={false} key={'up_' + q.file.name} queueItem={q} />
+          <ItemComponent  download={false} canDelete={false} key={'up_' + q.file.name} queueItem={q} />
         ))
       }
       {
         // Display share items
         items.map((item) => (
-          <ItemComponent download={canDownload()} key={item.Path} item={item} />
+          <ItemComponent download={canDownload()} canDelete={canDelete()} onDelete={deleteItem} key={item.Path} item={item} />
         ))
       }
     </>

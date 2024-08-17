@@ -50,6 +50,7 @@ func setup(api *apiws.APIWS) {
 	api.AddRoute("GET /api/v1/shares/{share}/items", authenticatorsOpen, getShareItems)
 	api.AddRoute("GET /api/v1/shares/{share}", authenticatorsOpen, getShare)
 	api.AddRoute("GET /api/v1/shares/{share}/items/{item}", authenticatorsOpen, getItem)
+	api.AddRoute("DELETE /api/v1/shares/{share}/items/{item}", authenticatorsOpen, deleteItem)
 
 	// Protected routes
 	api.AddRoute("POST /api/v1/login", authenticators, postLogin)

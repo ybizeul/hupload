@@ -200,6 +200,32 @@ func (b *FileBackend) CreateItem(s string, i string, r *bufio.Reader) (*Item, er
 	return item, nil
 }
 
+func (b *FileBackend) DeleteItem(s string, i string) error {
+	if !isShareNameSafe(s) {
+		return ErrInvalidShareName
+	}
+
+	if !isItemNameSafe(i) {
+		return ErrInvalidItemName
+	}
+
+	p := path.Join(b.Options.Path, s, path.Join("/", i))
+	err := os.Remove(p)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return ErrItemNotFound
+		}
+		return err
+	}
+
+	err = b.updateMetadata(s)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // GetShare retrieves the metadata for a share with the provided name. It
 // returns an error if the share does not exist or if the name is invalid.
 

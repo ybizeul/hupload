@@ -15,15 +15,9 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-func TestCreateShare(t *testing.T) {
-	t.Cleanup(func() {
-		os.RemoveAll("data")
-	})
-
+func createFileBackend(t *testing.T) *FileBackend {
 	c := FileStorageConfig{
-		Path:         "data",
-		MaxFileSize:  5,
-		MaxShareSize: 10,
+		Path: "data",
 	}
 
 	f := NewFileStorage(c)
@@ -32,6 +26,15 @@ func TestCreateShare(t *testing.T) {
 	}
 
 	f.initialize()
+
+	return f
+}
+func TestCreateShare(t *testing.T) {
+	t.Cleanup(func() {
+		os.RemoveAll("data")
+	})
+
+	f := createFileBackend(t)
 
 	tests := []struct {
 		f      func() (*Share, error)
@@ -79,12 +82,12 @@ func TestCreateShare(t *testing.T) {
 			t.Errorf("Expected no error, got %v", err)
 		}
 
-		_, err = os.Stat(path.Join(c.Path, share.Name))
+		_, err = os.Stat(path.Join("data", share.Name))
 		if err != nil {
 			t.Errorf("Expected share directory to be created")
 		}
 
-		metadata_f, err := os.Open(path.Join(c.Path, share.Name, ".metadata"))
+		metadata_f, err := os.Open(path.Join("data", share.Name, ".metadata"))
 		if err != nil {
 			t.Errorf("Expected metadata to be written")
 		}
@@ -99,7 +102,7 @@ func TestCreateShare(t *testing.T) {
 		if !reflect.DeepEqual(&test.expect, &got) {
 			t.Errorf("Expected %v, got %v", share, got)
 		}
-		os.RemoveAll(path.Join(c.Path, share.Name))
+		os.RemoveAll(path.Join("data", share.Name))
 	}
 }
 
@@ -108,16 +111,7 @@ func TestCreateItem(t *testing.T) {
 		os.RemoveAll("data")
 	})
 
-	c := FileStorageConfig{
-		Path: "data",
-	}
-
-	f := NewFileStorage(c)
-	if f == nil {
-		t.Errorf("Expected FileStorage to be created")
-	}
-
-	f.initialize()
+	f := createFileBackend(t)
 
 	share, err := f.CreateShare("test", "admin", 10, "upload")
 	if err != nil {
@@ -146,6 +140,35 @@ func TestCreateItem(t *testing.T) {
 	}
 }
 
+func TestDeleteItem(t *testing.T) {
+	t.Cleanup(func() {
+		os.RemoveAll("data")
+	})
+
+	f := createFileBackend(t)
+
+	share, _ := f.CreateShare("test", "admin", 10, "upload")
+
+	t.Run("Delete inexistant item should fail", func(t *testing.T) {
+		err := f.DeleteItem(share.Name, "test.txt")
+		if err != ErrItemNotFound {
+			t.Errorf("Expected ErrItemNotFound, got %v", err)
+		}
+	})
+
+	reader := bufio.NewReader(bytes.NewReader([]byte("test")))
+	_, _ = f.CreateItem(share.Name, "test.txt", reader)
+
+	err := f.DeleteItem(share.Name, "test.txt")
+	if err != nil {
+		t.Errorf("Expected no error, got %v", err)
+	}
+
+	_, err = os.Stat(path.Join("data", share.Name, "test.txt"))
+	if err == nil {
+		t.Errorf("Expected item to be deleted")
+	}
+}
 func TestDeleteShare(t *testing.T) {
 	t.Cleanup(func() {
 		os.RemoveAll("data")
