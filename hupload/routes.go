@@ -140,6 +140,51 @@ func postItem(w http.ResponseWriter, r *http.Request) {
 	writeSuccessJSON(w, item)
 }
 
+// postItem copies a new item in the share and returns the json description
+func deleteItem(w http.ResponseWriter, r *http.Request) {
+	share, err := cfg.Storage.GetShare(r.PathValue("share"))
+	if err != nil {
+		slog.Error("postItem", slog.String("error", err.Error()))
+		switch {
+		case errors.Is(err, storage.ErrInvalidShareName):
+			writeError(w, http.StatusBadRequest, "invalid share name")
+			return
+		case errors.Is(err, storage.ErrShareNotFound):
+			writeError(w, http.StatusNotFound, "share not found")
+			return
+		}
+		writeError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	if auth.UserForRequest(r) == "" && (share.Exposure != "both" && share.Exposure != "upload") {
+		writeError(w, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+
+	err = cfg.Storage.DeleteItem(r.PathValue("share"), r.PathValue("item"))
+	if err != nil {
+		switch {
+		case errors.Is(err, storage.ErrInvalidShareName):
+			writeError(w, http.StatusBadRequest, "invalid share name")
+			return
+		case errors.Is(err, storage.ErrShareNotFound):
+			writeError(w, http.StatusNotFound, "share not found")
+			return
+		case errors.Is(err, storage.ErrInvalidItemName):
+			writeError(w, http.StatusBadRequest, "invalid item name")
+			return
+		case errors.Is(err, storage.ErrItemNotFound):
+			writeError(w, http.StatusNotFound, "item does not exists")
+			return
+		}
+		writeError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	writeSuccess(w, "item deleted")
+}
+
 // getShares returns the list of shares as json
 func getShares(w http.ResponseWriter, r *http.Request) {
 	shares, err := cfg.Storage.ListShares()
