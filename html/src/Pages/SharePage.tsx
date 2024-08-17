@@ -40,8 +40,8 @@ export function SharePage() {
     if (loggedIn) {
       return true
     }
-    // We are guest
 
+    // We are guest
     if (!share) {
       return false
     }
@@ -50,7 +50,16 @@ export function SharePage() {
   }
 
   const canDelete = () => {
-    return canDownload()
+    if (loggedIn) {
+      return true
+    }
+
+    // We are guest
+    if (!share) {
+      return false
+    }
+
+    return (share.exposure === "upload")
   }
 
   const deleteItem = (item: string) => {
