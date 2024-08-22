@@ -4,7 +4,6 @@ import classes from './SplitButton.module.css';
 import { useState } from 'react';
 import { useDisclosure } from '@mantine/hooks';
 import { Share } from '@/hupload';
-import '@mantine/tiptap/styles.css';
 import { FullHeightTextArea } from './FullHeightTextArea';
 import { Message } from './Message';
 interface SplitButtonProps {
