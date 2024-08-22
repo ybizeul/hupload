@@ -13,10 +13,12 @@ import (
 	"github.com/ybizeul/hupload/pkg/apiws/middleware/auth"
 )
 
-type ShareParameters struct {
-	Exposure string `json:"exposure"`
-	Validity int    `json:"validity"`
-}
+// type ShareParameters struct {
+// 	Exposure    string `json:"exposure"`
+// 	Validity    int    `json:"validity"`
+// 	Description string `json:"description"`
+// 	Message     string `json:"message"`
+// }
 
 // postShare creates a new share with a randomly generate name
 func postShare(w http.ResponseWriter, r *http.Request) {
@@ -26,24 +28,33 @@ func postShare(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "no user in context", http.StatusBadRequest)
 		return
 	}
-	code := generateCode(4, 3)
+
+	code := r.PathValue("share")
+	if code == "" {
+		code = generateCode(4, 3)
+	}
 
 	// Parse the request body
-	params := ShareParameters{
+	options := storage.Options{
 		Exposure: "upload",
 		Validity: cfg.Values.DefaultValidityDays,
 	}
 
 	// We ignore unmarshalling of JSON body as it is optional.
-	_ = json.NewDecoder(r.Body).Decode(&params)
+	_ = json.NewDecoder(r.Body).Decode(&options)
 
-	share, err := cfg.Storage.CreateShare(code, user, storage.Options{Validity: params.Validity, Exposure: params.Exposure})
+	share, err := cfg.Storage.CreateShare(code, user, options)
 	if err != nil {
 		slog.Error("postShare", slog.String("error", err.Error()))
-		if errors.Is(err, storage.ErrShareAlreadyExists) {
+		switch {
+		case errors.Is(err, storage.ErrInvalidShareName):
+			writeError(w, http.StatusBadRequest, "invalid share name")
+			return
+		case errors.Is(err, storage.ErrShareAlreadyExists):
 			writeError(w, http.StatusConflict, "share already exists")
 			return
 		}
+
 		writeError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
@@ -51,41 +62,41 @@ func postShare(w http.ResponseWriter, r *http.Request) {
 }
 
 // putShare creates a new share with name from the request parameter
-func putShare(w http.ResponseWriter, r *http.Request) {
-	user := auth.UserForRequest(r)
-	if user == "" {
-		slog.Error("putShare", slog.String("error", "no user in context"))
-		writeError(w, http.StatusUnauthorized, "no user in context")
-		return
-	}
+// func putShare(w http.ResponseWriter, r *http.Request) {
+// 	user := auth.UserForRequest(r)
+// 	if user == "" {
+// 		slog.Error("putShare", slog.String("error", "no user in context"))
+// 		writeError(w, http.StatusUnauthorized, "no user in context")
+// 		return
+// 	}
 
-	// Parse the request body
-	params := ShareParameters{
-		Exposure: "upload",
-		Validity: cfg.Values.DefaultValidityDays,
-	}
+// 	// Parse the request body
+// 	params := ShareParameters{
+// 		Exposure: "upload",
+// 		Validity: cfg.Values.DefaultValidityDays,
+// 	}
 
-	_ = json.NewDecoder(r.Body).Decode(&params)
+// 	_ = json.NewDecoder(r.Body).Decode(&params)
 
-	share, err := cfg.Storage.CreateShare(r.PathValue("share"), user, storage.Options{Validity: params.Validity, Exposure: params.Exposure})
-	if err != nil {
-		slog.Error("putShare", slog.String("error", err.Error()))
-		switch {
-		case errors.Is(err, storage.ErrInvalidShareName):
-			writeError(w, http.StatusBadRequest, "invalid share name")
-			return
-		case errors.Is(err, storage.ErrShareNotFound):
-			writeError(w, http.StatusNotFound, "share not found")
-			return
-		case errors.Is(err, storage.ErrShareAlreadyExists):
-			writeError(w, http.StatusConflict, "share already exists")
-			return
-		}
-		writeError(w, http.StatusInternalServerError, err.Error())
-		return
-	}
-	writeSuccessJSON(w, share)
-}
+// 	share, err := cfg.Storage.CreateShare(r.PathValue("share"), user, storage.Options{Validity: params.Validity, Exposure: params.Exposure})
+// 	if err != nil {
+// 		slog.Error("putShare", slog.String("error", err.Error()))
+// 		switch {
+// 		case errors.Is(err, storage.ErrInvalidShareName):
+// 			writeError(w, http.StatusBadRequest, "invalid share name")
+// 			return
+// 		case errors.Is(err, storage.ErrShareNotFound):
+// 			writeError(w, http.StatusNotFound, "share not found")
+// 			return
+// 		case errors.Is(err, storage.ErrShareAlreadyExists):
+// 			writeError(w, http.StatusConflict, "share already exists")
+// 			return
+// 		}
+// 		writeError(w, http.StatusInternalServerError, err.Error())
+// 		return
+// 	}
+// 	writeSuccessJSON(w, share)
+// }
 
 // postItem copies a new item in the share and returns the json description
 func postItem(w http.ResponseWriter, r *http.Request) {

@@ -8,7 +8,7 @@ import { H } from "@/APIClient";
 
 export function ShareComponent(props: {share: Share}) {
     // Initialize props
-    const {share} = props
+    const { share } = props
 
     // Initialize States
     const [deleted,setDeleted] = useState(false)
@@ -19,7 +19,7 @@ export function ShareComponent(props: {share: Share}) {
     const count = share.count
     const size = share.size
     const countString = prettyfiedCount(count,"item", "items","empty")
-    const remaining = share.validity===0?null:(new Date(share.created).getTime() + share.validity*1000*60*60*24 - Date.now()) / 1000 / 60 / 60 / 24
+    const remaining = (share.options.validity===0||share.options.validity===undefined)?null:(new Date(share.created).getTime() + share.options.validity*1000*60*60*24 - Date.now()) / 1000 / 60 / 60 / 24
 
     // Function
     const deleteShare = () => {
@@ -42,46 +42,48 @@ export function ShareComponent(props: {share: Share}) {
                     (remaining<0)?
                     "Expired"
                     :
-                    prettyfiedCount(remaining,"day","days",null) + " left"} | {share.exposure==="download"?"Guests can download":(share.exposure==="both"?"Guests can upload & download":"Guests can upload")}
+                    prettyfiedCount(remaining,"day","days",null) + " left"} | {share.options.exposure==="download"?"Guests can download":(share.options.exposure==="both"?"Guests can upload & download":"Guests can upload")}
                 </Text>
             </Group>
             <Box p="lg">
-                <Flex align={"center"}>
-                    {/* Share name */}
-                    <Group flex="1" gap="0" align="baseline">
-                        <Anchor style={{ whiteSpace: "nowrap"}} flex={"1"} component={Link} to={'/'+name}><Text>{name}</Text></Anchor>
-                        <Stack gap="0" align="flex-end">
-                            <Text mr="xs" size="xs" c="gray">{countString + (size?(' | ' + humanFileSize(size)):'')}</Text>
-                        </Stack>
-                    </Group>
-                    {/* Share component tail */}
-                    <Group justify="flex-end" gap="xs" wrap="nowrap" align="baseline">
-                        {/* Copy button */}
-                        <CopyButton value={window.location.protocol + '//' + window.location.host + '/' + name}>
-                        {({ copied, copy }) => (
-                            <Tooltip withArrow arrowOffset={10} arrowSize={4} label={copied?"Copied!":"Copy URL"}>
-                                <ActionIcon variant="light" color={copied ? 'teal' : 'blue'} onClick={copy} >
-                                    <IconLink style={{ width: '70%', height: '70%' }} stroke={1.5}/>
-                                </ActionIcon>
-                            </Tooltip>
-                        )}
-                        </CopyButton>
-                        {/* Delete button with confirmation Popover */}
-                        <Popover width={200} position="bottom" withArrow shadow="md">
-                            <Popover.Target>
-                                <Tooltip withArrow arrowOffset={10} arrowSize={4} label="Delete Share">
-                                    <ActionIcon variant="light" color="red" >
-                                        <IconTrash style={{ width: '70%', height: '70%' }} stroke={1.5}/>
+                <Stack gap="0">
+                    <Flex align={"center"}>
+                        {/* Share name */}
+                        <Group flex="1" gap="0" align="baseline">
+                            <Anchor style={{ whiteSpace: "nowrap"}} flex={"1"} component={Link} to={'/'+name}><Text>{name}</Text></Anchor>
+                            <Stack gap="0" align="flex-end">
+                                <Text mr="xs" size="xs" c="gray">{countString + (size?(' | ' + humanFileSize(size)):'')}</Text>
+                            </Stack>
+                        </Group>
+                        {/* Share component tail */}
+                        <Group justify="flex-end" gap="xs" wrap="nowrap" align="baseline">
+                            {/* Copy button */}
+                            <CopyButton value={window.location.protocol + '//' + window.location.host + '/' + name}>
+                            {({ copied, copy }) => (
+                                <Tooltip withArrow arrowOffset={10} arrowSize={4} label={copied?"Copied!":"Copy URL"}>
+                                    <ActionIcon variant="light" color={copied ? 'teal' : 'blue'} onClick={copy} >
+                                        <IconLink style={{ width: '70%', height: '70%' }} stroke={1.5}/>
                                     </ActionIcon>
                                 </Tooltip>
-                            </Popover.Target>
-                            <Popover.Dropdown className={classes.popover}>
-                                <Text ta="center" size="xs" mb="xs">Delete this share ?</Text>
-                                <Button aria-description="delete" w="100%" variant='default' c='red' size="xs" onClick={deleteShare}>Delete</Button>
-                            </Popover.Dropdown>
-                        </Popover>
-                    </Group>
-                </Flex>
+                            )}
+                            </CopyButton>
+                            {/* Delete button with confirmation Popover */}
+                            <Popover width={200} position="bottom" withArrow shadow="md">
+                                <Popover.Target>
+                                    <Tooltip withArrow arrowOffset={10} arrowSize={4} label="Delete Share">
+                                        <ActionIcon variant="light" color="red" >
+                                            <IconTrash style={{ width: '70%', height: '70%' }} stroke={1.5}/>
+                                        </ActionIcon>
+                                    </Tooltip>
+                                </Popover.Target>
+                                <Popover.Dropdown className={classes.popover}>
+                                    <Text ta="center" size="xs" mb="xs">Delete this share ?</Text>
+                                    <Button aria-description="delete" w="100%" variant='default' c='red' size="xs" onClick={deleteShare}>Delete</Button>
+                                </Popover.Dropdown>
+                            </Popover>
+                        </Group>
+                    </Flex>
+                    {share.options.description && <Text w="100%" size="xs" c="gray">{share.options.description}</Text>}</Stack>
             </Box>
         </Paper>
         }

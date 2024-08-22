@@ -8,6 +8,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import {ItemComponent} from "@/Components";
 import { Item, Share } from "../hupload";
 import { useLoggedInContext } from "@/LoggedInContext";
+import { Message } from "@/Components/Message";
 
 export function SharePage() {
 
@@ -33,7 +34,7 @@ export function SharePage() {
       return false
     }
 
-    return share.exposure === "" || share.exposure === "upload" || share.exposure === "both"
+    return share.options.exposure === "" || share.options.exposure === "upload" || share.options.exposure === "both"
   }
 
   const canDownload = () => {
@@ -46,7 +47,7 @@ export function SharePage() {
       return false
     }
 
-    return (share.exposure === "download" || share.exposure === "both")
+    return (share.options.exposure === "download" || share.options.exposure === "both")
   }
 
   const canDelete = () => {
@@ -59,7 +60,7 @@ export function SharePage() {
       return false
     }
 
-    return (share.exposure === "upload")
+    return (share.options.exposure === "upload")
   }
 
   const deleteItem = (item: string) => {
@@ -75,6 +76,8 @@ export function SharePage() {
     const s=location.pathname.split("/")
     const shareSegment = s[1]
     H.get('/shares/' + shareSegment).then((res) => {
+      const s = res as Share
+      s.options.message && console.log(decodeURIComponent(s.options.message))
       setShare(res as Share)
       H.get('/shares/' + shareSegment + "/items").then(
       (res) => {
@@ -115,6 +118,9 @@ export function SharePage() {
             )}
           </CopyButton>
       </Box>
+      {share?.options.message &&
+        <Message mb="sm" value={decodeURIComponent(share?.options.message)} />
+      }
       {/* Files drop zone */}
       {showDropZone() &&
       <>

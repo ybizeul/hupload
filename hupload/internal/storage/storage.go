@@ -27,8 +27,8 @@ type Share struct {
 	Owner       string    `json:"owner,omitempty"`
 	Options     Options   `json:"options,omitempty"`
 
-	Size  int64 `json:"size,omitempty"`
-	Count int64 `json:"count,omitempty"`
+	Size  int64 `json:"size"`
+	Count int64 `json:"count"`
 }
 
 func (s *Share) IsValid() bool {

@@ -14,20 +14,29 @@ export function SharesPage(props: {owner: string|null}) {
   const [shares, setShares] = useState<Share[]|undefined>(undefined)
   const [exposure,setExposure] = useState<string>("upload")
   const [validity,setValidity] = useState<number>(7)
+  const [description,setDescription] = useState<string>("")
+  const [message,setMessage] = useState<string>("")
+  
   // Initialize hooks
   const navigate = useNavigate();
 
-  const updateShareProperties = (exposure: string, validity: number|string) => {
-    setExposure(exposure)
+  const updateShareProperties = (props: Share["options"]) => {
+    const { exposure, validity, description, message } = props
+    console.log(props)
+    exposure && setExposure(exposure)
     if (typeof validity === 'number') {
       setValidity(validity)
     }
+    description && setDescription(description)
+    message && setMessage(message)
   }
 
   const createShare = () => {
     const data = {
       exposure: exposure,
-      validity: validity
+      validity: validity,
+      description: description,
+      message: encodeURIComponent(message),
     }
     H.post('/shares', data).then(
       () => {
@@ -58,7 +67,7 @@ export function SharesPage(props: {owner: string|null}) {
     shares &&
       <>
       <Box ta="center" mt="xl" mb="xl">
-      <SplitButton exposure={exposure} validity={validity} onChange={updateShareProperties} onClick={() => createShare()}>Create Share</SplitButton>
+      <SplitButton exposure={exposure} validity={validity} description={description} message={message} onChange={updateShareProperties} onClick={() => createShare()}>Create Share</SplitButton>
       </Box>
       {
         shares.length == 0 ?

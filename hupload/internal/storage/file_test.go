@@ -515,3 +515,45 @@ func TestMigrate(t *testing.T) {
 		t.Errorf("Expected %v, got %v", expect, share)
 	}
 }
+
+func TestShareWithDescriptionAndMessage(t *testing.T) {
+	t.Cleanup(func() {
+		os.RemoveAll("datadescription")
+	})
+
+	c := FileStorageConfig{
+		Path:         "datadescription",
+		MaxFileSize:  1,
+		MaxShareSize: 2,
+	}
+
+	f := NewFileStorage(c)
+	if f == nil {
+		t.Errorf("Expected FileStorage to be created")
+	}
+
+	f.initialize()
+
+	share, err := f.CreateShare("test", "admin", Options{Validity: 10, Exposure: "upload", Description: "test description", Message: "test message"})
+	if err != nil {
+		t.Errorf("Expected no error, got %v", err)
+	}
+
+	metadata_f, err := os.Open(path.Join("datadescription", share.Name, ".metadata"))
+	if err != nil {
+		t.Errorf("Expected metadata to be written")
+	}
+
+	var got Share
+	err = yaml.NewDecoder(metadata_f).Decode(&got)
+	if err != nil {
+		t.Errorf("Expected no error, got %v", err)
+	}
+
+	if got.Options.Description != "test description" {
+		t.Errorf("Expected test description, got %v", got.Options.Description)
+	}
+	if got.Options.Message != "test message" {
+		t.Errorf("Expected test message, got %v", got.Options.Message)
+	}
+}

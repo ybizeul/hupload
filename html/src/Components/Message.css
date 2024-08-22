@@ -1,0 +1,12 @@
+div.message > pre :where(code) {
+    padding: 0;
+    background-color: transparent;
+    border: none;
+    color: var(--mantine-color-white);
+
+}
+
+div.message {
+    overflow: scroll;
+    height: 100%;
+}
