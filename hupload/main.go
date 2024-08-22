@@ -38,6 +38,12 @@ func main() {
 		panic(err)
 	}
 
+	// Run migration
+	err = cfg.Storage.Migrate()
+	if err != nil {
+		panic(err)
+	}
+
 	// Create API web service with the embedded UI
 	api, err = apiws.New(uiFS, cfg.Values)
 	if err != nil {

@@ -37,7 +37,7 @@ func postShare(w http.ResponseWriter, r *http.Request) {
 	// We ignore unmarshalling of JSON body as it is optional.
 	_ = json.NewDecoder(r.Body).Decode(&params)
 
-	share, err := cfg.Storage.CreateShare(code, user, params.Validity, params.Exposure)
+	share, err := cfg.Storage.CreateShare(code, user, storage.Options{Validity: params.Validity, Exposure: params.Exposure})
 	if err != nil {
 		slog.Error("postShare", slog.String("error", err.Error()))
 		if errors.Is(err, storage.ErrShareAlreadyExists) {
@@ -67,7 +67,7 @@ func putShare(w http.ResponseWriter, r *http.Request) {
 
 	_ = json.NewDecoder(r.Body).Decode(&params)
 
-	share, err := cfg.Storage.CreateShare(r.PathValue("share"), user, params.Validity, params.Exposure)
+	share, err := cfg.Storage.CreateShare(r.PathValue("share"), user, storage.Options{Validity: params.Validity, Exposure: params.Exposure})
 	if err != nil {
 		slog.Error("putShare", slog.String("error", err.Error()))
 		switch {
@@ -104,7 +104,7 @@ func postItem(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if auth.UserForRequest(r) == "" && (share.Exposure != "both" && share.Exposure != "upload") {
+	if auth.UserForRequest(r) == "" && (share.Options.Exposure != "both" && share.Options.Exposure != "upload") {
 		writeError(w, http.StatusUnauthorized, "unauthorized")
 		return
 	}
@@ -157,7 +157,7 @@ func deleteItem(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if auth.UserForRequest(r) == "" && (share.Exposure != "both" && share.Exposure != "upload") {
+	if auth.UserForRequest(r) == "" && (share.Options.Exposure != "both" && share.Options.Exposure != "upload") {
 		writeError(w, http.StatusUnauthorized, "unauthorized")
 		return
 	}
@@ -294,7 +294,7 @@ func getItem(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if auth.UserForRequest(r) == "" && (share.Exposure != "both" && share.Exposure != "download") {
+	if auth.UserForRequest(r) == "" && (share.Options.Exposure != "both" && share.Options.Exposure != "download") {
 		writeError(w, http.StatusUnauthorized, "unauthorized")
 		return
 	}

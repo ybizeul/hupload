@@ -35,7 +35,6 @@ type FileBackend struct {
 }
 
 // NewFileStorage creates a new FileBackend with the provided options o
-
 func NewFileStorage(o FileStorageConfig) *FileBackend {
 	r := FileBackend{
 		Options: o,
@@ -71,11 +70,73 @@ func isItemNameSafe(n string) bool {
 	return !strings.HasPrefix(n, ".")
 }
 
+// Migrate moves all previous metadata versions to new version
+func (b *FileBackend) Migrate() error {
+	type ShareV1 struct {
+		Version     int       `json:"version"`
+		Name        string    `json:"name"`
+		DateCreated time.Time `json:"created,omitempty"`
+		Owner       string    `json:"owner,omitempty"`
+		Validity    int       `json:"validity"`
+		Exposure    string    `json:"exposure"`
+
+		Size  int64 `json:"size,omitempty"`
+		Count int64 `json:"count,omitempty"`
+	}
+
+	d, err := os.ReadDir(b.Options.Path)
+	if err != nil {
+		return err
+	}
+	for _, d := range d {
+		if !d.IsDir() {
+			continue
+		}
+
+		fm, err := os.Open(path.Join(b.Options.Path, d.Name(), ".metadata"))
+		if err != nil {
+			continue
+		}
+
+		var m ShareV1
+		err = json.NewDecoder(fm).Decode(&m)
+		if err != nil || m.Version > 0 {
+			continue
+		}
+		fm.Close()
+
+		nm := Share{
+			Version:     1,
+			Name:        m.Name,
+			DateCreated: m.DateCreated,
+			Owner:       m.Owner,
+			Options: Options{
+				Validity: m.Validity,
+				Exposure: m.Exposure,
+			},
+			Size:  m.Size,
+			Count: m.Count,
+		}
+
+		fm, err = os.Create(path.Join(b.Options.Path, d.Name(), ".metadata"))
+		if err != nil {
+			continue
+		}
+
+		err = json.NewEncoder(fm).Encode(nm)
+		if err != nil {
+			continue
+		}
+		fm.Close()
+	}
+	return nil
+}
+
 // CreateShare creates a new share with the provided name, owner and validity
 // in days. It returns an error if the share already exists or if the name is
 // invalid. owner is only used to populate metadata.
 
-func (b *FileBackend) CreateShare(name, owner string, validity int, exposure string) (*Share, error) {
+func (b *FileBackend) CreateShare(name, owner string, options Options) (*Share, error) {
 	if !isShareNameSafe(name) {
 		return nil, ErrInvalidShareName
 	}
@@ -96,8 +157,7 @@ func (b *FileBackend) CreateShare(name, owner string, validity int, exposure str
 		Name:        name,
 		Owner:       owner,
 		DateCreated: time.Now(),
-		Validity:    validity,
-		Exposure:    exposure,
+		Options:     options,
 	}
 
 	f, err := os.Create(path.Join(b.Options.Path, name, ".metadata"))

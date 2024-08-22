@@ -4,9 +4,11 @@ import (
 	"bufio"
 	"bytes"
 	"errors"
+	"fmt"
 	"io"
 	"log"
 	"os"
+	"os/exec"
 	"path"
 	"reflect"
 	"testing"
@@ -42,67 +44,67 @@ func TestCreateShare(t *testing.T) {
 	}{
 		{
 			func() (*Share, error) {
-				return f.CreateShare("test", "admin", 10, "upload")
+				return f.CreateShare("test", "admin", Options{Validity: 10, Exposure: "upload"})
 			},
 			Share{
-				Name:     "test",
-				Owner:    "admin",
-				Validity: 10,
-				Exposure: "upload",
+				Name:    "test",
+				Owner:   "admin",
+				Options: Options{Validity: 10, Exposure: "upload"},
 			},
 		},
 		{
 			func() (*Share, error) {
-				return f.CreateShare("test", "admin", 10, "both")
+				return f.CreateShare("test", "admin", Options{Validity: 10, Exposure: "both"})
 			},
 			Share{
-				Name:     "test",
-				Owner:    "admin",
-				Validity: 10,
-				Exposure: "both",
+				Name:    "test",
+				Owner:   "admin",
+				Options: Options{Validity: 10, Exposure: "both"},
 			},
 		},
 		{
 			func() (*Share, error) {
-				return f.CreateShare("test", "admin", 10, "download")
+				return f.CreateShare("test", "admin", Options{Validity: 10, Exposure: "download"})
 			},
 			Share{
-				Name:     "test",
-				Owner:    "admin",
-				Validity: 10,
-				Exposure: "download",
+				Name:    "test",
+				Owner:   "admin",
+				Options: Options{Validity: 10, Exposure: "download"},
 			},
 		},
 	}
 
 	for _, test := range tests {
-		share, err := test.f()
-		share.DateCreated = time.Time{}
-		if err != nil {
-			t.Errorf("Expected no error, got %v", err)
-		}
+		t.Run(fmt.Sprintf("Create share %+v", test.expect), func(t *testing.T) {
 
-		_, err = os.Stat(path.Join("data", share.Name))
-		if err != nil {
-			t.Errorf("Expected share directory to be created")
-		}
+			share, err := test.f()
+			share.DateCreated = time.Time{}
+			if err != nil {
+				t.Errorf("Expected no error, got %v", err)
+			}
 
-		metadata_f, err := os.Open(path.Join("data", share.Name, ".metadata"))
-		if err != nil {
-			t.Errorf("Expected metadata to be written")
-		}
+			_, err = os.Stat(path.Join("data", share.Name))
+			if err != nil {
+				t.Errorf("Expected share directory to be created")
+			}
 
-		var got Share
-		err = yaml.NewDecoder(metadata_f).Decode(&got)
-		if err != nil {
-			t.Errorf("Expected no error, got %v", err)
-		}
+			metadata_f, err := os.Open(path.Join("data", share.Name, ".metadata"))
+			if err != nil {
+				t.Errorf("Expected metadata to be written")
+			}
 
-		got.DateCreated = time.Time{}
-		if !reflect.DeepEqual(&test.expect, &got) {
-			t.Errorf("Expected %v, got %v", share, got)
-		}
-		os.RemoveAll(path.Join("data", share.Name))
+			var got Share
+			err = yaml.NewDecoder(metadata_f).Decode(&got)
+			if err != nil {
+				t.Errorf("Expected no error, got %v", err)
+			}
+
+			got.DateCreated = time.Time{}
+			if !reflect.DeepEqual(&test.expect, &got) {
+				t.Errorf("Expected %v, got %v", share, got)
+			}
+			os.RemoveAll(path.Join("data", share.Name))
+		})
 	}
 }
 
@@ -113,7 +115,7 @@ func TestCreateItem(t *testing.T) {
 
 	f := createFileBackend(t)
 
-	share, err := f.CreateShare("test", "admin", 10, "upload")
+	share, err := f.CreateShare("test", "admin", Options{Validity: 10, Exposure: "upload"})
 	if err != nil {
 		t.Errorf("Expected no error, got %v", err)
 	}
@@ -147,7 +149,7 @@ func TestDeleteItem(t *testing.T) {
 
 	f := createFileBackend(t)
 
-	share, _ := f.CreateShare("test", "admin", 10, "upload")
+	share, _ := f.CreateShare("test", "admin", Options{Validity: 10, Exposure: "upload"})
 
 	t.Run("Delete inexistant item should fail", func(t *testing.T) {
 		err := f.DeleteItem(share.Name, "test.txt")
@@ -187,7 +189,7 @@ func TestDeleteShare(t *testing.T) {
 
 	f.initialize()
 
-	share, _ := f.CreateShare("test", "admin", 10, "upload")
+	share, _ := f.CreateShare("test", "admin", Options{Validity: 10, Exposure: "upload"})
 
 	err := f.DeleteShare(share.Name)
 	if err != nil {
@@ -219,7 +221,7 @@ func TestFileOverflow(t *testing.T) {
 
 	f.initialize()
 
-	share, err := f.CreateShare("test", "admin", 10, "upload")
+	share, err := f.CreateShare("test", "admin", Options{Validity: 10, Exposure: "upload"})
 	if err != nil {
 		t.Errorf("Expected no error, got %v", err)
 	}
@@ -255,7 +257,7 @@ func TestShareOverflow(t *testing.T) {
 
 	f.initialize()
 
-	share, err := f.CreateShare("test", "admin", 10, "upload")
+	share, err := f.CreateShare("test", "admin", Options{Validity: 10, Exposure: "upload"})
 	if err != nil {
 		t.Errorf("Expected no error, got %v", err)
 	}
@@ -370,7 +372,7 @@ func TestGetShare(t *testing.T) {
 	want := Share{
 		Name:        "test",
 		Owner:       "admin",
-		Validity:    10,
+		Options:     Options{Validity: 10, Exposure: "upload"},
 		Size:        4,
 		Count:       1,
 		DateCreated: parsedTime,
@@ -435,7 +437,7 @@ func TestListShares(t *testing.T) {
 		{
 			Name:        "test",
 			Owner:       "admin",
-			Validity:    10,
+			Options:     Options{Validity: 10, Exposure: "upload"},
 			Size:        4,
 			Count:       1,
 			DateCreated: parsedTime,
@@ -443,7 +445,7 @@ func TestListShares(t *testing.T) {
 		{
 			Name:        "test2",
 			Owner:       "admin",
-			Validity:    10,
+			Options:     Options{Validity: 10, Exposure: "upload"},
 			Size:        4,
 			Count:       1,
 			DateCreated: parsedTime,
@@ -452,5 +454,64 @@ func TestListShares(t *testing.T) {
 
 	if !reflect.DeepEqual(shares, want) {
 		t.Errorf("Expected %v, got %v", want, shares)
+	}
+}
+
+func TestMigrate(t *testing.T) {
+	t.Cleanup(func() {
+		os.RemoveAll("file_testdata/data_old_copy")
+	})
+
+	cmd := exec.Command("cp", "-r", "file_testdata/data_old", "file_testdata/data_old_copy")
+	err := cmd.Run()
+	if err != nil {
+		t.Errorf("Expected no error, got %v", err)
+	}
+
+	c := FileStorageConfig{
+		Path:         "file_testdata/data_old_copy",
+		MaxFileSize:  1,
+		MaxShareSize: 2,
+	}
+
+	f := NewFileStorage(c)
+
+	err = f.Migrate()
+	if err != nil {
+		t.Errorf("Expected no error, got %v", err)
+	}
+
+	share, _ := f.GetShare("test")
+
+	parsedTime, _ := time.Parse("2006-01-02T15:04:05.99-07:00", "2024-08-08T16:20:25.231034+02:00")
+
+	expect := Share{
+		Version:     1,
+		Name:        "test",
+		Owner:       "admin",
+		Options:     Options{Validity: 10},
+		Size:        4,
+		Count:       1,
+		DateCreated: parsedTime,
+	}
+
+	if !reflect.DeepEqual(*share, expect) {
+		t.Errorf("Expected %v, got %v", expect, share)
+	}
+
+	share, _ = f.GetShare("test2")
+
+	expect = Share{
+		Version:     1,
+		Name:        "test2",
+		Owner:       "admin",
+		Options:     Options{Validity: 10},
+		Size:        4,
+		Count:       1,
+		DateCreated: parsedTime,
+	}
+
+	if !reflect.DeepEqual(*share, expect) {
+		t.Errorf("Expected %v, got %v", expect, share)
 	}
 }

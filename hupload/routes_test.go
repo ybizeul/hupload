@@ -41,7 +41,7 @@ func getAPIServer(t *testing.T) *apiws.APIWS {
 }
 
 func makeShare(t *testing.T, name string, params ShareParameters) *storage.Share {
-	share, err := cfg.Storage.CreateShare(name, "admin", params.Validity, params.Exposure)
+	share, err := cfg.Storage.CreateShare(name, "admin", storage.Options{Validity: params.Validity, Exposure: params.Exposure})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -339,7 +339,7 @@ func TestGetShare(t *testing.T) {
 
 		_ = json.NewDecoder(w.Body).Decode(&share)
 
-		if share.Name != "test" || share.Validity != 7 {
+		if share.Name != "test" || share.Options.Validity != 7 {
 			t.Errorf("Share does not match created one")
 		}
 	})
@@ -364,7 +364,7 @@ func TestGetShare(t *testing.T) {
 
 		_ = json.NewDecoder(w.Body).Decode(&share)
 
-		if share.Name != "test" || share.Validity != 7 {
+		if share.Name != "test" || share.Options.Validity != 7 {
 			t.Errorf("Share does not match created one")
 		}
 	})

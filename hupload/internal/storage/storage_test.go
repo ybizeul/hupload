@@ -9,7 +9,7 @@ func TestShouldBeValid(t *testing.T) {
 	share := Share{
 		Name:        "test",
 		Owner:       "admin",
-		Validity:    10,
+		Options:     Options{Validity: 10},
 		DateCreated: time.Now().AddDate(0, 0, -5),
 	}
 
@@ -17,7 +17,7 @@ func TestShouldBeValid(t *testing.T) {
 		t.Errorf("Expected share to be valid")
 	}
 
-	share.Validity = 0
+	share.Options.Validity = 0
 
 	if share.IsValid() == false {
 		t.Errorf("Expected share to be valid")
@@ -28,7 +28,7 @@ func TestShouldBeInvalid(t *testing.T) {
 	share := Share{
 		Name:        "test",
 		Owner:       "admin",
-		Validity:    10,
+		Options:     Options{Validity: 10},
 		DateCreated: time.Now().AddDate(0, 0, -12),
 	}
 
