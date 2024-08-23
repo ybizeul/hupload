@@ -1,7 +1,13 @@
-.wrapper {
-    height: 100%;
+.wrapper{
+    display: flex;
+    flex-grow: 1;
 }
 
+.root {
+    display: flex;
+    flex-grow: 1;
+    flex-direction: column;
+}
 .input {
-    height: 100%;
+    font-family: 'Menlo', 'Courier New', Courier, monospace;
 }

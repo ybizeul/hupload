@@ -6,8 +6,8 @@ import { marked } from 'marked';
 export function Message(props: {value: string, mb?: string, mt?: string}) {
     const { value, mb, mt } = props;
     return (
-        <Paper withBorder mb={mb} mt={mt} p="sm" h="90%">
-            <TypographyStylesProvider h={"100%"}>
+        <Paper flex="1" withBorder mb={mb} mt={mt} pt="5.5" px="12" display="flex">
+            <TypographyStylesProvider flex="1" h={"100%"} fs="sm">
                 <div className="message" dangerouslySetInnerHTML={{ __html: marked.parse(value)}}></div>
             </TypographyStylesProvider>
         </Paper>

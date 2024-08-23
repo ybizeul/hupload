@@ -1,4 +1,4 @@
-import { Button, Group, ActionIcon, rem, useMantineTheme, Popover, Drawer} from '@mantine/core';
+import { Button, Group, ActionIcon, rem, useMantineTheme, Popover, Drawer, Flex} from '@mantine/core';
 import { IconChevronDown } from '@tabler/icons-react';
 import classes from './SplitButton.module.css';
 import { useDisclosure, useMediaQuery } from '@mantine/hooks';
@@ -51,9 +51,20 @@ export function SplitButton(props: SplitButtonProps) {
         >
           <IconChevronDown style={{ width: rem(16), height: rem(16) }} stroke={1.5} />
         </ActionIcon>
-        <Drawer size="100%" opened={opened} onClose={close} title="Share Properties" position="top">
-          <ShareEditor onChange={onChange} onClick={() => {onClick();close();}} options={options}/>
-        </Drawer>
+        <Drawer.Root size="100%" opened={opened} onClose={close} position="top">
+          <Drawer.Overlay />
+          <Drawer.Content w="100%" style={{display: "flex", flexGrow: 1, flexDirection: "column", justifyContent: 'space-between'}}>
+            <Drawer.Header>
+              <Drawer.Title>Share Properties</Drawer.Title>
+              <Drawer.CloseButton />
+            </Drawer.Header>
+            <Flex flex="1" align={"stretch"}>
+              <Drawer.Body flex="1" pt="0">
+                <ShareEditor onChange={onChange} onClick={() => {onClick();close();}} options={options}/>
+              </Drawer.Body>
+            </Flex>
+          </Drawer.Content>
+        </Drawer.Root>
       </>
         }
     </Group>

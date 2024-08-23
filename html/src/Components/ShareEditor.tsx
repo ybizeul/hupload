@@ -38,10 +38,10 @@ export function ShareEditor(props: ShareEditorProps&BoxComponentProps) {
         })
     }
     return (
-      <Box miw={rem(200)} >
-      <Flex direction="column" gap="sm" justify={"space-between"}>
-        <Flex gap="sm" direction={{base: 'column', xs: 'row'}}>
-            <Stack style={{position:"relative"}} w={{base: '100%', xs: rem(250)}}>
+      <Box miw={rem(200)} h="100%" w="100%" display={"flex"}>
+        <Flex direction="column" gap="sm" w="100%" justify={"space-between"}>
+          <Flex gap="sm" w="100%" flex="1" direction={{base: 'column', xs: 'row'}}>
+            <Stack flex="1" display= "flex" style={{position:"relative"}} w={{base: '100%', xs: rem(250)}}>
               {matches&&
               <ActionIcon variant="light" radius="xl" onClick={mdPanelH.toggle} style={{position:"absolute", top: 0, right: 0}}>
                 {mdPanel?
@@ -65,22 +65,24 @@ export function ShareEditor(props: ShareEditorProps&BoxComponentProps) {
               <TextInput label="Description" value={_description} onChange={(v) => {setDescription(v.target.value); notifyChange();}}/>
             </Stack>
             {(mdPanel||!matches)&&
-            <Box flex="1" w={{base: '100%', xs: rem(400)}} pl={matches?"sm":"0"} style={{borderLeft: matches?"1px solid lightGray":""}} pos={"relative"}>
+            <Box display="flex" flex="1" w={{base: '100%', xs: rem(400)}} pl={matches?"sm":"0"} style={{borderLeft: matches?"1px solid lightGray":""}} pos={"relative"}>
               <ActionIcon size="xs" variant={preview?"filled":"subtle"} m={rem(3)} radius="xl" onClick={previewH.toggle} style={{position:"absolute", top: 0, right: 0}}>
                 <IconEye style={{ width: rem(16), height: rem(16) }} stroke={1.5} />
               </ActionIcon>
               {preview?
-              <InputWrapper label="Message" h={"100%"}>
+              <InputWrapper display="flex" style={{flexDirection:"column"}} label="Message" w="100%">
                 <Message value={_message?decodeURIComponent(_message):""} />
               </InputWrapper>
               :
-              <FullHeightTextArea flex="1" label="Message" h="90%" value={message} onChange={(v) => {setMessage(v.target.value); notifyChange();}}/>
+              <FullHeightTextArea w="100%" flex="1" label="Message" value={message} onChange={(v) => {setMessage(v.target.value); notifyChange();}}/>
               }
             </Box>
             }
+          </Flex>
+          <Flex >
+            <Button mt="sm" w="100%" onClick={onClick}>Create</Button>
+          </Flex>
         </Flex>
-        <Button mt="sm" w="100%" onClick={onClick}>Create</Button>
-        </Flex>
-            </Box>
+      </Box>
     )
 }
