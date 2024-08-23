@@ -67,7 +67,7 @@ export function SharesPage(props: {owner: string|null}) {
     shares &&
       <>
       <Box ta="center" mt="xl" mb="xl">
-      <SplitButton exposure={exposure} validity={validity} description={description} message={message} onChange={updateShareProperties} onClick={() => createShare()}>Create Share</SplitButton>
+      <SplitButton options={{exposure,validity,description,message}} onChange={updateShareProperties} onClick={() => createShare()}>Create Share</SplitButton>
       </Box>
       {
         shares.length == 0 ?
