@@ -1,7 +1,7 @@
-import { Button, Group, ActionIcon, rem, useMantineTheme, Popover} from '@mantine/core';
+import { Button, Group, ActionIcon, rem, useMantineTheme, Popover, Drawer} from '@mantine/core';
 import { IconChevronDown } from '@tabler/icons-react';
 import classes from './SplitButton.module.css';
-import { useDisclosure } from '@mantine/hooks';
+import { useDisclosure, useMediaQuery } from '@mantine/hooks';
 import { Share } from '@/hupload';
 import { ShareEditor } from './ShareEditor';
 
@@ -18,10 +18,13 @@ export function SplitButton(props: SplitButtonProps) {
 
   const [opened, { close, open }] = useDisclosure(false);
 
+  const matches = useMediaQuery('(min-width: +' + theme.breakpoints.xs + ')');
+
   return (
     <Group wrap="nowrap" gap={0} justify='center'>
       <Button onClick={onClick} className={classes.button}>{children}</Button>
-      <Popover opened={opened} onClose={close}>
+      {matches?
+      <Popover opened={opened} onClose={close} middlewares={{size: true}}>
         <Popover.Target>
           <ActionIcon
             variant="filled"
@@ -34,9 +37,25 @@ export function SplitButton(props: SplitButtonProps) {
           </ActionIcon>
         </Popover.Target>
         <Popover.Dropdown>
-          <ShareEditor onChange={onChange} onClick={onClick} options={options}/>
+          <ShareEditor onChange={onChange} onClick={() => {onClick();close();}} options={options}/>
         </Popover.Dropdown>
-        </Popover>
+      </Popover>
+      :
+      <>
+        <ActionIcon
+          variant="filled"
+          color={theme.primaryColor}
+          size={36}
+          className={classes.menuControl}
+          onClick={()=> {opened?close():open()}}
+        >
+          <IconChevronDown style={{ width: rem(16), height: rem(16) }} stroke={1.5} />
+        </ActionIcon>
+        <Drawer size="100%" opened={opened} onClose={close} title="Share Properties" position="top">
+          <ShareEditor onChange={onChange} onClick={() => {onClick();close();}} options={options}/>
+        </Drawer>
+      </>
+        }
     </Group>
   );
 }

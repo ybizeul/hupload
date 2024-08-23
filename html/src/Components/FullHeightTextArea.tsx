@@ -13,6 +13,8 @@ export function FullHeightTextArea(props: TextareaProps) {
     const [currentValue, setCurrentValue] = useState<string | number | readonly string[] | undefined>(value);
 
     return (
-        <Textarea classNames={{wrapper: classes.wrapper, input: classes.input}} w="30em" {...props} value={currentValue} onChange={(v) => {setCurrentValue(v.target.value); onChange&&onChange(v)}}/>
+        <Textarea resize="vertical" classNames={{wrapper: classes.wrapper, input: classes.input}} {...props} 
+            value={currentValue} 
+            onChange={(v) => {setCurrentValue(v.target.value); onChange&&onChange(v)}}/>
     )
 }

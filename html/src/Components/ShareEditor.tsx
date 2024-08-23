@@ -1,13 +1,20 @@
 import { Share } from "@/hupload";
-import { ActionIcon, Box, Button, Group, Input, InputWrapper, NumberInput, rem, SegmentedControl, Stack, TextInput } from "@mantine/core";
+import { ActionIcon, Box, BoxComponentProps, Button, Flex, Input, InputWrapper, NumberInput, rem, SegmentedControl, Stack, TextInput, useMantineTheme } from "@mantine/core";
 import { IconChevronLeft, IconChevronRight, IconEye } from "@tabler/icons-react";
 import { Message } from "./Message";
-import { useDisclosure } from "@mantine/hooks";
+import { useDisclosure, useMediaQuery } from "@mantine/hooks";
 import { FullHeightTextArea } from "./FullHeightTextArea";
 import { useState } from "react";
 import classes from './ShareEditor.module.css';
 
-export function ShareEditor(props: { onChange: (options: Share["options"]) => void, onClick: () => void, options: Share["options"] }) {
+interface ShareEditorProps {
+  onChange: (options: Share["options"]) => void;
+  onClick: () => void;
+  options: Share["options"];
+}
+
+export function ShareEditor(props: ShareEditorProps&BoxComponentProps) {
+  console.log(props)
     const { onChange, onClick, options } = props;
     const { exposure, validity, description, message } = options;
 
@@ -19,6 +26,9 @@ export function ShareEditor(props: { onChange: (options: Share["options"]) => vo
     const [mdPanel, mdPanelH ] = useDisclosure(false);
     const [preview, previewH] = useDisclosure(false);
 
+    const theme = useMantineTheme()
+    const matches = useMediaQuery('(min-width: +' + theme.breakpoints.xs + ')');
+
     const notifyChange = () => {
         onChange({
             exposure: _exposure as string,
@@ -28,34 +38,35 @@ export function ShareEditor(props: { onChange: (options: Share["options"]) => vo
         })
     }
     return (
-        <>
-        <Group align='stretch'>
-            <>
-            <Stack style={{position:"relative"}}>
-            <ActionIcon variant="light" radius="xl" onClick={mdPanelH.toggle} style={{position:"absolute", top: 0, right: 0}}>
-              {mdPanel?
-                <IconChevronLeft style={{ width: rem(16), height: rem(16) }} stroke={1.5} />
-                :
-                <IconChevronRight style={{ width: rem(16), height: rem(16) }} stroke={1.5} />
+      <Box miw={rem(200)} >
+      <Flex direction="column" gap="sm" justify={"space-between"}>
+        <Flex gap="sm" direction={{base: 'column', xs: 'row'}}>
+            <Stack style={{position:"relative"}} w={{base: '100%', xs: rem(250)}}>
+              {matches&&
+              <ActionIcon variant="light" radius="xl" onClick={mdPanelH.toggle} style={{position:"absolute", top: 0, right: 0}}>
+                {mdPanel?
+                  <IconChevronLeft style={{ width: rem(16), height: rem(16) }} stroke={1.5} />
+                  :
+                  <IconChevronRight style={{ width: rem(16), height: rem(16) }} stroke={1.5} />
+                }
+              </ActionIcon>
               }
-            </ActionIcon>
-            <Input.Wrapper label="Exposure" description="Guests users can :">
-                <SegmentedControl className={classes.segmented} value={_exposure} data={[{ label: 'Upload', value: 'upload' }, { label: 'Download', value: 'download' }, { label: 'Both', value: 'both' }]}
-                  onChange={(v) => { setExposure(v); notifyChange();}} transitionDuration={0} />
-            </Input.Wrapper>
-            <NumberInput
-              label="Validity"
-              description="Number of days the share is valid"
-              value={_validity}
-              min={0}
-              onChange={(v) => { setValidity(v as number); notifyChange(); }}
-              />
-            <TextInput label="Description" value={_description} onChange={(v) => {setDescription(v.target.value); notifyChange();}}/>
+              <Input.Wrapper label="Exposure" description="Guests users can :">
+                  <SegmentedControl className={classes.segmented} value={_exposure} data={[{ label: 'Upload', value: 'upload' }, { label: 'Download', value: 'download' }, { label: 'Both', value: 'both' }]}
+                    onChange={(v) => { setExposure(v); notifyChange();}} transitionDuration={0} />
+              </Input.Wrapper>
+              <NumberInput
+                label="Validity"
+                description="Number of days the share is valid"
+                value={_validity}
+                min={0}
+                onChange={(v) => { setValidity(v as number); notifyChange(); }}
+                />
+              <TextInput label="Description" value={_description} onChange={(v) => {setDescription(v.target.value); notifyChange();}}/>
             </Stack>
-            </>
-            {mdPanel&&
-            <Box pl="sm" w="30em" style={{borderLeft: "1px solid lightGray"}}>
-              <ActionIcon variant={preview?"filled":"subtle"} radius="xl" onClick={previewH.toggle} style={{position:"absolute", top: 5, right: 5}}>
+            {(mdPanel||!matches)&&
+            <Box flex="1" w={{base: '100%', xs: rem(400)}} pl={matches?"sm":"0"} style={{borderLeft: matches?"1px solid lightGray":""}} pos={"relative"}>
+              <ActionIcon size="xs" variant={preview?"filled":"subtle"} m={rem(3)} radius="xl" onClick={previewH.toggle} style={{position:"absolute", top: 0, right: 0}}>
                 <IconEye style={{ width: rem(16), height: rem(16) }} stroke={1.5} />
               </ActionIcon>
               {preview?
@@ -63,12 +74,13 @@ export function ShareEditor(props: { onChange: (options: Share["options"]) => vo
                 <Message value={_message?decodeURIComponent(_message):""} />
               </InputWrapper>
               :
-              <FullHeightTextArea label="Message" w="30em" h="90%" value={message} onChange={(v) => {setMessage(v.target.value); notifyChange();}}/>
-    }
+              <FullHeightTextArea flex="1" label="Message" h="90%" value={message} onChange={(v) => {setMessage(v.target.value); notifyChange();}}/>
+              }
             </Box>
             }
-            </Group>
-            <Button mt="sm" w="100%" onClick={() => {onClick(); close();}}>Create</Button>
-        </>
-        )
+        </Flex>
+        <Button mt="sm" w="100%" onClick={onClick}>Create</Button>
+        </Flex>
+            </Box>
+    )
 }
