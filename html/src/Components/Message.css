@@ -20,6 +20,5 @@ div.message > pre :where(code) {
 
 div.message {
     overflow: scroll;
-    height: 100%;
     font-size: var(--mantine-font-size-sm);
 }

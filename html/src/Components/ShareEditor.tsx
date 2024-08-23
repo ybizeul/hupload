@@ -70,17 +70,17 @@ export function ShareEditor(props: ShareEditorProps&BoxComponentProps) {
                 <IconEye style={{ width: rem(16), height: rem(16) }} stroke={1.5} />
               </ActionIcon>
               {preview?
-              <InputWrapper display="flex" style={{flexDirection:"column"}} label="Message" w="100%">
+              <InputWrapper display="flex" style={{flexDirection:"column"}} label="Message" description="This markdown will be displayed to the user" w="100%">
                 <Message value={_message?decodeURIComponent(_message):""} />
               </InputWrapper>
               :
-              <FullHeightTextArea w="100%" flex="1" label="Message" value={message} onChange={(v) => {setMessage(v.target.value); notifyChange();}}/>
+              <FullHeightTextArea w="100%" flex="1" label="Message" description="This markdown will be displayed to the user" value={message} onChange={(v) => {setMessage(v.target.value); notifyChange();}}/>
               }
             </Box>
             }
           </Flex>
           <Flex >
-            <Button mt="sm" w="100%" onClick={onClick}>Create</Button>
+            <Button w="100%" onClick={onClick}>Create</Button>
           </Flex>
         </Flex>
       </Box>
