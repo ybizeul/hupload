@@ -3,6 +3,7 @@ package main
 import (
 	"crypto/rand"
 	"encoding/base64"
+	"net/http"
 	"os"
 	"strconv"
 
@@ -60,6 +61,10 @@ func setup(api *apiws.APIWS) {
 	//api.AddRoute("PUT /api/v1/shares/{share}", authenticators, putShare)
 	api.AddRoute("GET /api/v1/shares", authenticators, getShares)
 	api.AddRoute("GET /api/v1/version", authenticators, getVersion)
+
+	api.AddRoute("GET /api/v1/*", authenticators, func(w http.ResponseWriter, r *http.Request) {
+		writeError(w, http.StatusBadRequest, "Error")
+	})
 
 	if os.Getenv("HTTP_PORT") != "" {
 		p, err := strconv.Atoi(os.Getenv("HTTP_PORT"))

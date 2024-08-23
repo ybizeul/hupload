@@ -1,3 +1,5 @@
+// Interfaces
+
 export interface ShareOptions {
   exposure?: string;
   validity?: number;
@@ -15,7 +17,6 @@ export interface Share {
   isvalid: boolean;
 }
 
-
 export interface Item {
   Path: string;
   ItemInfo: ItemInfo;
@@ -24,6 +25,9 @@ export interface Item {
 export interface ItemInfo {
     Size: number;
 }
+
+
+// Utilities
 
 export function humanFileSize(bytes: number, si=false, dp=1) {
     const thresh = si ? 1000 : 1024;

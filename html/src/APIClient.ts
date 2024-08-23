@@ -269,7 +269,7 @@ export class APIClient {
                         this.authFailed()
                         // Regular token failed, config for refresh token
                         //window.location.reload()
-                        reject({code: 401, message: "Authentication failed"})
+                        reject(ae)
                         return
                         //config.headers = {"Authorization": "Bearer " + window.localStorage.getItem('refresh')}
                     }
@@ -277,7 +277,7 @@ export class APIClient {
                         // It's not an authentication problem, handle the exception
                         if (ae.response.data && isAPIServerError(ae.response.data)) {
                             // There is data, and that's an exception
-                            reject({...ae.response.data, response: ae.response})
+                            reject(ae)
                         } else {
                             // It's a generic exception, return as-is
                             reject(ae)
@@ -286,71 +286,10 @@ export class APIClient {
                     }
                 } else {
                     // There is no data in the error, return as-is
+                    console.log(e)
                     reject(e)
                     return
                 }
-            })
-        })
-    }
-
-    upgradeLog(onData: (data: UpgradeStatusReply) => void, abort: AbortController|undefined) {
-        return new Promise((resolve) => {
-            let finished = false
-            if (! abort) {
-                abort = new AbortController();
-            }
-            fetch('/api/2.0/upgrade',{
-                method: "GET",
-                headers: {
-                    "Authorization": "Bearer " + window.localStorage.getItem('refresh')
-                },
-                signal: abort.signal,
-            })
-            .then((response) => {
-                if (response.status == 404 || response.status == 401 || response.status == 204) {
-                    resolve(false)
-                    return
-                }
-                if (response.status != 200) {
-                    resolve(finished == false)
-                    return
-                }
-                if (response.body) {
-                    const reader = response.body.getReader();
-                    reader.read()
-                        .then(function chunk({done,value}):(undefined|Promise<ReadableStreamReadResult<Uint8Array>|undefined>){
-                            if (done) {
-                                resolve(finished == false)
-                                return
-                            }
-                            const t = new TextDecoder().decode(value).trimEnd()
-                            const lines = t.split("\n")
-                            for (let i = 0; i < lines.length; i++) {
-                                try {
-                                    const j:UpgradeStatusReply = JSON.parse(lines[i])
-                                    onData(j)
-                                    if (j.finished === true ) {
-                                        finished = true
-                                        resolve(false)
-                                        return
-                                    }
-                                }
-                                catch(e) {
-                                    console.log(e)
-                                }
-                            }
-                            return reader.read().then(chunk)
-                        })
-                        .catch((e)=> {
-                            console.log(e)
-                            resolve(finished == false)
-                            return
-                        })
-                }
-            })
-            .catch(()=> {
-                resolve(finished == false)
-                return
             })
         })
     }
