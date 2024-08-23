@@ -148,7 +148,7 @@ export function SharePage() {
 
       
       {share?.options.message &&
-        <Message mb="sm" value={decodeURIComponent(share?.options.message)} />
+        <Message mb="sm" pb="sm" value={decodeURIComponent(share?.options.message)} />
       }
 
 
