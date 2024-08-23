@@ -14,34 +14,15 @@ export function SharesPage(props: {owner: string|null}) {
   const [shares, setShares] = useState<Share[]|undefined>(undefined)
 
   const [newShareOptions, setNewShareOptions] = useState<Share["options"]>({exposure: "upload", validity: 7, description: "", message: ""})
-
-  // const [exposure,setExposure] = useState<string>("upload")
-  // const [validity,setValidity] = useState<number>(7)
-  // const [description,setDescription] = useState<string>("")
-  // const [message,setMessage] = useState<string>("")
   
   // Initialize hooks
   const navigate = useNavigate();
 
   const updateShareProperties = (props: Share["options"]) => {
     setNewShareOptions(props)
-    // const { exposure, validity, description, message } = props
-    // console.log(props)
-    // exposure && setExposure(exposure)
-    // if (typeof validity === 'number') {
-    //   setValidity(validity)
-    // }
-    // description && setDescription(description)
-    // message && setMessage(message)
   }
 
   const createShare = () => {
-    // const data = {
-    //   exposure: exposure,
-    //   validity: validity,
-    //   description: description,
-    //   message: encodeURIComponent(message),
-    // }
     H.post('/shares', newShareOptions).then(
       () => {
         updateShares()

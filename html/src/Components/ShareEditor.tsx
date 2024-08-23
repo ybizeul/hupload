@@ -14,7 +14,6 @@ interface ShareEditorProps {
 }
 
 export function ShareEditor(props: ShareEditorProps&BoxComponentProps) {
-    console.log(props)
     const { onChange, onClick, options } = props;
     const { exposure, validity, description, message } = options;
 
@@ -29,7 +28,6 @@ export function ShareEditor(props: ShareEditorProps&BoxComponentProps) {
     const matches = useMediaQuery('(min-width: +' + theme.breakpoints.xs + ')');
 
     const notifyChange = () => {
-      console.log("notify change")
         onChange({
             exposure: _exposure as string,
             validity: _validity as number,
