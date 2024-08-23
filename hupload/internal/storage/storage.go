@@ -6,23 +6,47 @@ import (
 	"time"
 )
 
+type Options struct {
+	Validity    int    `json:"validity"`
+	Exposure    string `json:"exposure"`
+	Description string `json:"description"`
+	Message     string `json:"message"`
+}
+
+func DefaultOptions() Options {
+	return Options{
+		Validity: 7,
+		Exposure: "upload",
+	}
+}
+
 type Share struct {
+	Version     int       `json:"version"`
 	Name        string    `json:"name"`
-	DateCreated time.Time `json:"created"`
-	Owner       string    `json:"owner"`
-	Validity    int       `json:"validity"`
-	Exposure    string    `json:"exposure"`
+	DateCreated time.Time `json:"created,omitempty"`
+	Owner       string    `json:"owner,omitempty"`
+	Options     Options   `json:"options,omitempty"`
 
 	Size  int64 `json:"size"`
 	Count int64 `json:"count"`
 }
 
 func (s *Share) IsValid() bool {
-	if s.Validity == 0 {
+	if s.Options.Validity == 0 {
 		return true
 	}
-	validUntil := s.DateCreated.AddDate(0, 0, s.Validity)
+	validUntil := s.DateCreated.AddDate(0, 0, s.Options.Validity)
 	return validUntil.After(time.Now())
+}
+
+type PublicShare struct {
+	Name string `json:"name"`
+}
+
+func PublicShareForShare(share *Share) PublicShare {
+	return PublicShare{
+		Name: share.Name,
+	}
 }
 
 type Item struct {
@@ -37,8 +61,12 @@ type ItemInfo struct {
 
 // BackendInterface must be implemented by any backend
 type Storage interface {
+	// Migrate will be called at initialization to give an opportunity to
+	// the backend to migrate data from a previous version to the current one
+	Migrate() error
+
 	// CreateShare creates a new share
-	CreateShare(name, owner string, validity int, exposure string) (*Share, error)
+	CreateShare(name, owner string, options Options) (*Share, error)
 
 	// CreateItem creates a new item in a share
 	CreateItem(share, item string, reader *bufio.Reader) (*Item, error)

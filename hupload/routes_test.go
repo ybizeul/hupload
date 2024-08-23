@@ -40,8 +40,8 @@ func getAPIServer(t *testing.T) *apiws.APIWS {
 	return result
 }
 
-func makeShare(t *testing.T, name string, params ShareParameters) *storage.Share {
-	share, err := cfg.Storage.CreateShare(name, "admin", params.Validity, params.Exposure)
+func makeShare(t *testing.T, name string, params storage.Options) *storage.Share {
+	share, err := cfg.Storage.CreateShare(name, "admin", storage.Options{Validity: params.Validity, Exposure: params.Exposure})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -54,27 +54,6 @@ func makeItem(t *testing.T, shareName, fileName string, size int) {
 		t.Fatal(err)
 	}
 }
-
-// func createItem(t *testing.T, shareName, itemName string, size int) {
-// 	fileSize := 1 * 1024 * 1024
-
-// 	makeItem(t, shareName, itemName, fileSize)
-
-// 	pr, ct := multipartWriter(fileSize)
-
-// 	req := httptest.NewRequest("POST", path.Join("/api/v1/shares", "upload", "items", "newfile.txt"), pr)
-
-// 	req.Header.Set("Content-Type", ct)
-
-// 	w := httptest.NewRecorder()
-
-// 	api.Mux.ServeHTTP(w, req)
-
-// 	if w.Code != http.StatusOK {
-// 		t.Errorf("Expected status %d, got %d", http.StatusOK, w.Code)
-// 		return
-// 	}
-// }
 
 func TestCreateShare(t *testing.T) {
 	t.Cleanup(func() {
@@ -185,7 +164,7 @@ func TestCreateShare(t *testing.T) {
 			req *http.Request
 			w   *httptest.ResponseRecorder
 		)
-		req = httptest.NewRequest("PUT", path.Join("/api/v1/shares", share.Name), nil)
+		req = httptest.NewRequest("POST", path.Join("/api/v1/shares", share.Name), nil)
 
 		req.AddCookie(&http.Cookie{
 			Name:  "X-Token",
@@ -202,20 +181,13 @@ func TestCreateShare(t *testing.T) {
 		}
 	})
 
-	t.Run("Create a share with sepcific name should succeed", func(t *testing.T) {
-		if share == nil {
-			t.Fatal("No share created")
-		}
+	t.Run("Create a share with specific name should succeed", func(t *testing.T) {
 		var (
 			req *http.Request
 			w   *httptest.ResponseRecorder
 		)
-		req = httptest.NewRequest("PUT", path.Join("/api/v1/shares", "randomname"), nil)
-
-		req.AddCookie(&http.Cookie{
-			Name:  "X-Token",
-			Value: *token,
-		})
+		req = httptest.NewRequest("POST", path.Join("/api/v1/shares", "randomname"), nil)
+		req.SetBasicAuth("admin", "hupload")
 
 		w = httptest.NewRecorder()
 
@@ -234,19 +206,13 @@ func TestCreateShare(t *testing.T) {
 	})
 
 	t.Run("Create a share with invalid name should fail", func(t *testing.T) {
-		if share == nil {
-			t.Fatal("No share created")
-		}
 		var (
 			req *http.Request
 			w   *httptest.ResponseRecorder
 		)
-		req = httptest.NewRequest("PUT", path.Join("/api/v1/shares", url.QueryEscape("../test")), nil)
+		req = httptest.NewRequest("POST", path.Join("/api/v1/shares", url.QueryEscape("../test")), nil)
 
-		req.AddCookie(&http.Cookie{
-			Name:  "X-Token",
-			Value: *token,
-		})
+		req.SetBasicAuth("admin", "hupload")
 
 		w = httptest.NewRecorder()
 
@@ -266,12 +232,12 @@ func TestGetShare(t *testing.T) {
 
 	api := getAPIServer(t)
 
-	makeShare(t, "test", ShareParameters{
+	makeShare(t, "test", storage.Options{
 		Exposure: "upload",
 		Validity: 7,
 	})
 
-	makeShare(t, "test2", ShareParameters{
+	makeShare(t, "test2", storage.Options{
 		Exposure: "upload",
 		Validity: 7,
 	})
@@ -339,7 +305,7 @@ func TestGetShare(t *testing.T) {
 
 		_ = json.NewDecoder(w.Body).Decode(&share)
 
-		if share.Name != "test" || share.Validity != 7 {
+		if share.Name != "test" || share.Options.Validity != 7 || share.Count != 0 || share.Size != 0 {
 			t.Errorf("Share does not match created one")
 		}
 	})
@@ -364,7 +330,7 @@ func TestGetShare(t *testing.T) {
 
 		_ = json.NewDecoder(w.Body).Decode(&share)
 
-		if share.Name != "test" || share.Validity != 7 {
+		if share.Name != "test" || share.Options.Validity != 7 {
 			t.Errorf("Share does not match created one")
 		}
 	})
@@ -427,7 +393,7 @@ func TestGetShare(t *testing.T) {
 
 		shareName := "itemstest"
 
-		makeShare(t, shareName, ShareParameters{})
+		makeShare(t, shareName, storage.Options{})
 		makeItem(t, shareName, "newfile.txt", 1*1024*1024)
 		makeItem(t, shareName, "newfile2.txt", 2*1024*1024)
 
@@ -525,7 +491,7 @@ func TestDeleteShare(t *testing.T) {
 		)
 
 		shareName := "deleteshare"
-		makeShare(t, shareName, ShareParameters{Exposure: "download"})
+		makeShare(t, shareName, storage.Options{Exposure: "download"})
 
 		req = httptest.NewRequest("DELETE", path.Join("/api/v1/shares/", shareName), nil)
 		req.SetBasicAuth("admin", "hupload")
@@ -546,7 +512,7 @@ func TestDeleteShare(t *testing.T) {
 		)
 
 		shareName := "deleteshare"
-		makeShare(t, shareName, ShareParameters{Exposure: "download"})
+		makeShare(t, shareName, storage.Options{Exposure: "download"})
 
 		req = httptest.NewRequest("DELETE", path.Join("/api/v1/shares/", shareName), nil)
 		w = httptest.NewRecorder()
@@ -614,7 +580,7 @@ func TestGetItems(t *testing.T) {
 		for _, exp := range []string{"download", "both"} {
 			shareName := "getitem" + exp
 			fileSize := 1 * 1024 * 1024
-			makeShare(t, shareName, ShareParameters{Exposure: exp})
+			makeShare(t, shareName, storage.Options{Exposure: exp})
 			makeItem(t, shareName, "newfile.txt", fileSize)
 
 			req = httptest.NewRequest("GET", path.Join("/api/v1/shares/", shareName, "items", "newfile.txt"), nil)
@@ -663,7 +629,7 @@ func TestGetItems(t *testing.T) {
 
 		shareName := "invaliditem"
 
-		makeShare(t, shareName, ShareParameters{Exposure: "download"})
+		makeShare(t, shareName, storage.Options{Exposure: "download"})
 		makeItem(t, shareName, "newfile.txt", 1*1024*1024)
 
 		req = httptest.NewRequest("GET", path.Join("/api/v1/shares/", shareName, "items", url.QueryEscape(".metadata")), nil)
@@ -686,7 +652,7 @@ func TestGetItems(t *testing.T) {
 
 		shareName := "notexistitem"
 
-		makeShare(t, shareName, ShareParameters{Exposure: "download"})
+		makeShare(t, shareName, storage.Options{Exposure: "download"})
 
 		req = httptest.NewRequest("GET", path.Join("/api/v1/shares/", shareName, "items", "notexists"), nil)
 
@@ -708,7 +674,7 @@ func TestGetItems(t *testing.T) {
 
 		shareName := "uploadauth"
 
-		makeShare(t, shareName, ShareParameters{Exposure: "upload"})
+		makeShare(t, shareName, storage.Options{Exposure: "upload"})
 		makeItem(t, shareName, "newfile.txt", 1*1024*1024)
 
 		req = httptest.NewRequest("GET", path.Join("/api/v1/shares/", shareName, "items", "newfile.txt"), nil)
@@ -773,7 +739,7 @@ func TestUpload(t *testing.T) {
 
 	t.Run("Upload a file without authentication should work", func(t *testing.T) {
 		// Create upload share
-		makeShare(t, "upload", ShareParameters{
+		makeShare(t, "upload", storage.Options{
 			Exposure: "upload",
 			Validity: 7,
 		})
@@ -809,7 +775,7 @@ func TestUpload(t *testing.T) {
 	})
 
 	t.Run("Upload a file without authentication should not work (download share)", func(t *testing.T) {
-		makeShare(t, "download", ShareParameters{
+		makeShare(t, "download", storage.Options{
 			Exposure: "download",
 			Validity: 7,
 		})
@@ -839,7 +805,7 @@ func TestUpload(t *testing.T) {
 
 	t.Run("Upload a file without authentication should work authenticated (download share)", func(t *testing.T) {
 		shareName := "uploadondownloadwithauth"
-		makeShare(t, shareName, ShareParameters{
+		makeShare(t, shareName, storage.Options{
 			Exposure: "download",
 			Validity: 7,
 		})
@@ -870,7 +836,7 @@ func TestUpload(t *testing.T) {
 	})
 
 	t.Run("Upload a file too big should not work", func(t *testing.T) {
-		makeShare(t, "toobig", ShareParameters{
+		makeShare(t, "toobig", storage.Options{
 			Exposure: "upload",
 			Validity: 7,
 		})
@@ -903,7 +869,7 @@ func TestUpload(t *testing.T) {
 	})
 
 	t.Run("Upload too much data on a share shouldn't work", func(t *testing.T) {
-		makeShare(t, "sharetoobig", ShareParameters{
+		makeShare(t, "sharetoobig", storage.Options{
 			Exposure: "upload",
 			Validity: 7,
 		})
@@ -961,7 +927,7 @@ func TestDeleteItem(t *testing.T) {
 		})
 
 		// Create upload share
-		share := makeShare(t, "uploadadmin", ShareParameters{
+		share := makeShare(t, "uploadadmin", storage.Options{
 			Exposure: "upload",
 			Validity: 7,
 		})
@@ -986,7 +952,7 @@ func TestDeleteItem(t *testing.T) {
 			os.RemoveAll("tmptest/data/upload")
 		})
 		// Create upload share
-		share := makeShare(t, "upload", ShareParameters{
+		share := makeShare(t, "upload", storage.Options{
 			Exposure: "upload",
 			Validity: 7,
 		})
@@ -1010,7 +976,7 @@ func TestDeleteItem(t *testing.T) {
 			os.RemoveAll("tmptest/data/both")
 		})
 		// Create upload share
-		share := makeShare(t, "both", ShareParameters{
+		share := makeShare(t, "both", storage.Options{
 			Exposure: "both",
 			Validity: 7,
 		})
@@ -1034,7 +1000,7 @@ func TestDeleteItem(t *testing.T) {
 			os.RemoveAll("tmptest/data/download")
 		})
 		// Create upload share
-		share := makeShare(t, "download", ShareParameters{
+		share := makeShare(t, "download", storage.Options{
 			Exposure: "download",
 			Validity: 7,
 		})

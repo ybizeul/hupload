@@ -1,29 +1,30 @@
-import { Button, Group, ActionIcon, rem, useMantineTheme, Popover, NumberInput, SegmentedControl, Input, Stack } from '@mantine/core';
+import { Button, Group, ActionIcon, rem, useMantineTheme, Popover, Drawer, Flex} from '@mantine/core';
 import { IconChevronDown } from '@tabler/icons-react';
 import classes from './SplitButton.module.css';
-import { useState } from 'react';
-import { useDisclosure } from '@mantine/hooks';
+import { useDisclosure, useMediaQuery } from '@mantine/hooks';
+import { Share } from '@/hupload';
+import { ShareEditor } from './ShareEditor';
 
 interface SplitButtonProps {
     onClick: () => void;
-    onChange: (exposure: string, validity: number|string) => void;
-    exposure: string;
-    validity: number|string;
+    onChange: (props: Share["options"]) => void;
+    options: Share["options"];
     children: React.ReactNode;
 }
+
 export function SplitButton(props: SplitButtonProps) {
-  const { onClick, onChange, children } = props;
+  const { onClick, onChange, options, children } = props;
   const theme = useMantineTheme();
 
   const [opened, { close, open }] = useDisclosure(false);
 
-  const [exposure, setExposure] = useState<string>(props.exposure)
-  const [validity, setValidity] = useState<number|string>(props.validity)
+  const matches = useMediaQuery('(min-width: +' + theme.breakpoints.xs + ')');
 
   return (
     <Group wrap="nowrap" gap={0} justify='center'>
       <Button onClick={onClick} className={classes.button}>{children}</Button>
-      <Popover opened={opened} onClose={close}>
+      {matches?
+      <Popover opened={opened} onClose={close} middlewares={{size: true}}>
         <Popover.Target>
           <ActionIcon
             variant="filled"
@@ -36,21 +37,36 @@ export function SplitButton(props: SplitButtonProps) {
           </ActionIcon>
         </Popover.Target>
         <Popover.Dropdown>
-            <Stack>
-            <Input.Wrapper label="Exposure" description="Guests users can :">
-                <SegmentedControl className={classes.segmented} value={exposure} data={[{ label: 'Upload', value: 'upload' }, { label: 'Download', value: 'download' }, { label: 'Both', value: 'both' }]} onChange={(v) => { setExposure(v); onChange(v,validity)}} transitionDuration={0} />
-            </Input.Wrapper>
-                <NumberInput
-                label="Validity"
-                description="Number of days the share is valid"
-                value={validity}
-                min={0}
-                onChange={(v) => { setValidity(v); onChange(exposure,v)}}
-                />
-            </Stack>
-            <Button mt="sm" w="100%" onClick={() => {onClick(); close();}}>Create</Button>
+          <ShareEditor onChange={onChange} onClick={() => {onClick();close();}} options={options}/>
         </Popover.Dropdown>
-        </Popover>
+      </Popover>
+      :
+      <>
+        <ActionIcon
+          variant="filled"
+          color={theme.primaryColor}
+          size={36}
+          className={classes.menuControl}
+          onClick={()=> {opened?close():open()}}
+        >
+          <IconChevronDown style={{ width: rem(16), height: rem(16) }} stroke={1.5} />
+        </ActionIcon>
+        <Drawer.Root size="100%" opened={opened} onClose={close} position="top">
+          <Drawer.Overlay />
+          <Drawer.Content w="100%" style={{display: "flex", flexGrow: 1, flexDirection: "column", justifyContent: 'space-between'}}>
+            <Drawer.Header>
+              <Drawer.Title>Share Properties</Drawer.Title>
+              <Drawer.CloseButton />
+            </Drawer.Header>
+            <Flex flex="1" align={"stretch"}>
+              <Drawer.Body flex="1" pt="0">
+                <ShareEditor onChange={onChange} onClick={() => {onClick();close();}} options={options}/>
+              </Drawer.Body>
+            </Flex>
+          </Drawer.Content>
+        </Drawer.Root>
+      </>
+        }
     </Group>
   );
 }

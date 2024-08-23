@@ -1,0 +1,13 @@
+.wrapper{
+    display: flex;
+    flex-grow: 1;
+}
+
+.root {
+    display: flex;
+    flex-grow: 1;
+    flex-direction: column;
+}
+.input {
+    font-family: 'Menlo', 'Courier New', Courier, monospace;
+}

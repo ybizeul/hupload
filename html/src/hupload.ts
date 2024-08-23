@@ -1,13 +1,20 @@
+export interface ShareOptions {
+  exposure?: string;
+  validity?: number;
+  description?: string;
+  message?: string;
+}
+
 export interface Share {
   name: string;
   owner: string;
   count: number;
   size: number;
   created: Date;
-  validity: number;
-  exposure: string;
+  options: ShareOptions;
   isvalid: boolean;
 }
+
 
 export interface Item {
   Path: string;
