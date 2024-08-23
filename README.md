@@ -123,7 +123,7 @@ The following endpoints are available under `/api/v1`
 |----------|--------------------------------|--------------------------------------|
 | `GET`    | `/shares`                      | Get a list of all shares
 | `POST`   | `/shares`                      | Create a new share with a random name (See parameters)
-| `PUT`    | `/shares/{share}`              | Create a new share named `{share}` (See parameters)
+| `POST`   | `/shares/{share}`              | Create a new share named `{share}` (See parameters)
 | `DELETE` | `/shares/{share}`              | Delete a share and all its content
 | `GET`    | `/shares/{share}/items/{item}` | Get an `{item}` (file) content
 
@@ -138,7 +138,9 @@ The following endpoints are available under `/api/v1`
 
 When creating a new share, you can define optional parameters in the JSON body :
 
-| Key        | Type                               | Description                          |
-|------------|------------------------------------|--------------------------------------|
-| `validity` | `number`                           | Number of days the share is valid
-| `exposure` | `enum["upload","download","both"]` | Whether guest users can upload files, download files or do both
+| Key           | Type                               | Description                          |
+|------------   |------------------------------------|--------------------------------------|
+| `validity`    | `number`                           | Number of days the share is valid
+| `exposure`    | `enum["upload","download","both"]` | Whether guest users can upload files, download files or do both
+| `description` | `string`                           | A short description displayed in shares view
+| `message`     | `url encoded markdown`             | Instructions in markdown visible to the guest
