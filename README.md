@@ -29,6 +29,16 @@ SSL)
 ![Screenshot 2](readme_images/screenshot_2_dark.png#gh-dark-mode-only)
 ![Screenshot 2](readme_images/screenshot_2_light.png#gh-light-mode-only)
 
+**Advanced share settings**
+
+![Screenshot 2](readme_images/share_settings_1_dark.png#gh-dark-mode-only)
+![Screenshot 2](readme_images/share_settings_1_light.png#gh-light-mode-only)
+
+**Markdown preview**
+
+![Screenshot 2](readme_images/share_settings_2_dark.png#gh-dark-mode-only)
+![Screenshot 2](readme_images/share_settings_2_light.png#gh-light-mode-only)
+
 ## Environment variables
 
 | Variable    | Description |
