@@ -18,55 +18,54 @@ export function SplitButton(props: SplitButtonProps) {
 
   const [opened, { close, open }] = useDisclosure(false);
 
-  const matches = useMediaQuery('(min-width: +' + theme.breakpoints.xs + ')');
+  const isBrowser = useMediaQuery('(min-width: +' + theme.breakpoints.xs + ')');
 
-  return (
-    <Group wrap="nowrap" gap={0} justify='center'>
-      <Button onClick={onClick} className={classes.button}>{children}</Button>
-      {matches?
-      <Popover opened={opened} onClose={close} middlewares={{size: true}}>
+  const actionIcon = (
+    <ActionIcon
+      variant="filled"
+      color={theme.primaryColor}
+      size={36}
+      className={classes.menuControl}
+      onClick={()=> {opened?close():open()}}
+    >
+      <IconChevronDown style={{ width: rem(16), height: rem(16) }} stroke={1.5} />
+    </ActionIcon>
+  )
+
+  const popover = (
+    <Popover opened={opened} onClose={close} middlewares={{size: true}}>
         <Popover.Target>
-          <ActionIcon
-            variant="filled"
-            color={theme.primaryColor}
-            size={36}
-            className={classes.menuControl}
-            onClick={()=> {opened?close():open()}}
-          >
-            <IconChevronDown style={{ width: rem(16), height: rem(16) }} stroke={1.5} />
-          </ActionIcon>
+          {actionIcon}
         </Popover.Target>
         <Popover.Dropdown>
           <ShareEditor onChange={onChange} onClick={() => {onClick();close();}} options={options}/>
         </Popover.Dropdown>
       </Popover>
-      :
-      <>
-        <ActionIcon
-          variant="filled"
-          color={theme.primaryColor}
-          size={36}
-          className={classes.menuControl}
-          onClick={()=> {opened?close():open()}}
-        >
-          <IconChevronDown style={{ width: rem(16), height: rem(16) }} stroke={1.5} />
-        </ActionIcon>
-        <Drawer.Root size="100%" opened={opened} onClose={close} position="top">
-          <Drawer.Overlay />
-          <Drawer.Content w="100%" style={{display: "flex", flexGrow: 1, flexDirection: "column", justifyContent: 'space-between'}}>
-            <Drawer.Header>
-              <Drawer.Title>Share Properties</Drawer.Title>
-              <Drawer.CloseButton />
-            </Drawer.Header>
-            <Flex flex="1" align={"stretch"}>
-              <Drawer.Body flex="1" pt="0">
-                <ShareEditor onChange={onChange} onClick={() => {onClick();close();}} options={options}/>
-              </Drawer.Body>
-            </Flex>
-          </Drawer.Content>
-        </Drawer.Root>
-      </>
-        }
+  )
+
+  const drawer = (
+    <>
+      {actionIcon}
+      <Drawer.Root size="100%" opened={opened} onClose={close} position="top">
+        <Drawer.Overlay />
+        <Drawer.Content w="100%" style={{display: "flex", flexGrow: 1, flexDirection: "column", justifyContent: 'space-between'}}>
+          <Drawer.Header>
+            <Drawer.Title>Share Properties</Drawer.Title>
+            <Drawer.CloseButton />
+          </Drawer.Header>
+          <Flex flex="1" align={"stretch"}>
+            <Drawer.Body flex="1" pt="0">
+              <ShareEditor onChange={onChange} onClick={() => {onClick();close();}} options={options}/>
+            </Drawer.Body>
+          </Flex>
+        </Drawer.Content>
+      </Drawer.Root>
+    </>
+  )
+  return (
+    <Group wrap="nowrap" gap={0} justify='center'>
+      <Button onClick={onClick} className={classes.button}>{children}</Button>
+      {isBrowser?popover:drawer}
     </Group>
   );
 }
