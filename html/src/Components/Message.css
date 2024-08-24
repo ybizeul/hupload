@@ -1,6 +1,6 @@
 div.message > pre {
     @mixin where-light {
-        background-color: lightgray
+        background-color: lightgray;
     }
     @mixin where-dark {
         background-color: var(--mantine-color-dark-5);
@@ -8,6 +8,7 @@ div.message > pre {
 }
 div.message > pre :where(code) {
     padding: 0;
+
     background-color: transparent;
     border: none;
     @mixin where-light {
@@ -19,6 +20,5 @@ div.message > pre :where(code) {
 }
 
 div.message {
-    overflow: scroll;
     font-size: var(--mantine-font-size-sm);
 }
