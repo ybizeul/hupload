@@ -53,6 +53,7 @@ SSL)
 - Easy to use drag and drop interface for uploads,
 - Configurable max share size and max file size,
 - Basic share informations listed (number of items, total size),
+- Add instructions in Markdown for your users,
 - Automatic dark mode following OS settings,
 - Multi user (all admins see all shares, but see their own listed separately first),
 - API first, everything can be done through REST calls,
