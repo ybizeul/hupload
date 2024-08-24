@@ -484,38 +484,68 @@ func TestMigrate(t *testing.T) {
 		t.Errorf("Expected no error, got %v", err)
 	}
 
-	share, _ := f.GetShare("test")
-
 	parsedTime, _ := time.Parse("2006-01-02T15:04:05.99-07:00", "2024-08-08T16:20:25.231034+02:00")
 
-	expect := Share{
-		Version:     1,
-		Name:        "test",
-		Owner:       "admin",
-		Options:     Options{Validity: 10},
-		Size:        4,
-		Count:       1,
-		DateCreated: parsedTime,
+	tests := []struct {
+		name string
+		want Share
+	}{
+		// Migration of a v0 share
+		{
+			name: "test",
+			want: Share{
+				Version:     1,
+				Name:        "test",
+				Owner:       "admin",
+				Options:     Options{Validity: 10},
+				Size:        4,
+				Count:       1,
+				DateCreated: parsedTime,
+			},
+		},
+
+		// Migration of a v1 share
+		{
+			name: "test2",
+			want: Share{
+				Version:     1,
+				Name:        "test2",
+				Owner:       "admin",
+				Options:     Options{Validity: 10},
+				Size:        4,
+				Count:       1,
+				DateCreated: parsedTime,
+			},
+		},
+
+		// Migration of a v0 share that is actually a v1 share
+		{
+			name: "test3",
+			want: Share{
+				Version: 1,
+				Name:    "test3",
+				Owner:   "admin",
+				Options: Options{
+					Validity:    10,
+					Exposure:    "both",
+					Description: "desc",
+					Message:     "message",
+				},
+				Size:        4,
+				Count:       1,
+				DateCreated: parsedTime,
+			},
+		},
 	}
 
-	if !reflect.DeepEqual(*share, expect) {
-		t.Errorf("Expected %v, got %v", expect, share)
-	}
+	for _, test := range tests {
+		t.Run(fmt.Sprintf("Get share %s", test.name), func(t *testing.T) {
+			share, _ := f.GetShare(test.name)
 
-	share, _ = f.GetShare("test2")
-
-	expect = Share{
-		Version:     1,
-		Name:        "test2",
-		Owner:       "admin",
-		Options:     Options{Validity: 10},
-		Size:        4,
-		Count:       1,
-		DateCreated: parsedTime,
-	}
-
-	if !reflect.DeepEqual(*share, expect) {
-		t.Errorf("Expected %v, got %v", expect, share)
+			if !reflect.DeepEqual(*share, test.want) {
+				t.Errorf("Expected %v, got %v", test.want, share)
+			}
+		})
 	}
 }
 
