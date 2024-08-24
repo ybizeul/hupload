@@ -375,7 +375,7 @@ func TestGetShare(t *testing.T) {
 	want := Share{
 		Name:        "test",
 		Owner:       "admin",
-		Options:     Options{Validity: 10, Exposure: "upload"},
+		Options:     Options{Validity: 10, Exposure: "upload", Description: "description", Message: "message"},
 		Size:        4,
 		Count:       1,
 		DateCreated: parsedTime,
@@ -440,7 +440,7 @@ func TestListShares(t *testing.T) {
 		{
 			Name:        "test",
 			Owner:       "admin",
-			Options:     Options{Validity: 10, Exposure: "upload"},
+			Options:     Options{Validity: 10, Exposure: "upload", Description: "description", Message: "message"},
 			Size:        4,
 			Count:       1,
 			DateCreated: parsedTime,

@@ -1,1 +1,1 @@
-{"name":"test","created":"2024-08-08T16:20:25.231034+02:00","owner":"admin","options":{"Validity":10, "Exposure":"upload"},"size":4,"count":1}
+{"name":"test","created":"2024-08-08T16:20:25.231034+02:00","owner":"admin","options":{"Validity":10, "Exposure":"upload", "description":"description", "message":"message"},"size":4,"count":1}

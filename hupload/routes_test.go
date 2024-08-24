@@ -12,7 +12,9 @@ import (
 	"net/url"
 	"os"
 	"path"
+	"reflect"
 	"testing"
+	"time"
 
 	"github.com/ybizeul/hupload/internal/config"
 	"github.com/ybizeul/hupload/internal/storage"
@@ -41,7 +43,7 @@ func getAPIServer(t *testing.T) *apiws.APIWS {
 }
 
 func makeShare(t *testing.T, name string, params storage.Options) *storage.Share {
-	share, err := cfg.Storage.CreateShare(name, "admin", storage.Options{Validity: params.Validity, Exposure: params.Exposure})
+	share, err := cfg.Storage.CreateShare(name, "admin", params)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -233,13 +235,17 @@ func TestGetShare(t *testing.T) {
 	api := getAPIServer(t)
 
 	makeShare(t, "test", storage.Options{
-		Exposure: "upload",
-		Validity: 7,
+		Exposure:    "upload",
+		Validity:    7,
+		Description: "description",
+		Message:     "message",
 	})
 
 	makeShare(t, "test2", storage.Options{
-		Exposure: "upload",
-		Validity: 7,
+		Exposure:    "upload",
+		Validity:    7,
+		Description: "description",
+		Message:     "message",
 	})
 
 	t.Run("Get shares should succeed", func(t *testing.T) {
@@ -304,13 +310,28 @@ func TestGetShare(t *testing.T) {
 		var share *storage.Share
 
 		_ = json.NewDecoder(w.Body).Decode(&share)
+		share.DateCreated = time.Time{}
 
-		if share.Name != "test" || share.Options.Validity != 7 || share.Count != 0 || share.Size != 0 {
-			t.Errorf("Share does not match created one")
+		want := &storage.Share{
+			Version: 1,
+			Name:    "test",
+			Owner:   "admin",
+			Options: storage.Options{
+				Validity:    7,
+				Exposure:    "upload",
+				Description: "description",
+				Message:     "message",
+			},
+			Count: 0,
+			Size:  0,
+		}
+
+		if !reflect.DeepEqual(share, want) {
+			t.Errorf("Want %v, got %v", want, share)
 		}
 	})
 
-	t.Run("Get share without authentication should succeed", func(t *testing.T) {
+	t.Run("Get share without authentication should succeed with filtered properties", func(t *testing.T) {
 		var (
 			req *http.Request
 			w   *httptest.ResponseRecorder
@@ -330,8 +351,18 @@ func TestGetShare(t *testing.T) {
 
 		_ = json.NewDecoder(w.Body).Decode(&share)
 
-		if share.Name != "test" || share.Options.Validity != 7 {
-			t.Errorf("Share does not match created one")
+		share.DateCreated = time.Time{}
+
+		want := &storage.Share{
+			Name: "test",
+			Options: storage.Options{
+				Exposure: "upload",
+				Message:  "message",
+			},
+		}
+
+		if !reflect.DeepEqual(share, want) {
+			t.Errorf("Want %v, got %v", want, share)
 		}
 	})
 

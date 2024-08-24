@@ -52,7 +52,7 @@ export function humanFileSize(bytes: number, si=false, dp=1) {
   }
 
   export function prettyfiedCount(count: number|null, singular: string, plural: string, empty: string|null) {
-    if (count === 0 || count === null) {
+    if (count === 0 || count === null|| count === undefined) {
       return empty
     } else if (count === 1) {
       return count.toFixed() + ' ' + singular

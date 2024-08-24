@@ -232,6 +232,9 @@ func getShare(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if auth.UserForRequest(r) == "" {
+		RemovePrivateData(share)
+	}
 	writeSuccessJSON(w, share)
 }
 

@@ -7,9 +7,9 @@ import (
 )
 
 type Options struct {
-	Validity    int    `json:"validity"`
+	Validity    int    `json:"validity,omitempty" scope:"private"`
 	Exposure    string `json:"exposure"`
-	Description string `json:"description"`
+	Description string `json:"description,omitempty" scope:"private"`
 	Message     string `json:"message"`
 }
 
@@ -21,14 +21,14 @@ func DefaultOptions() Options {
 }
 
 type Share struct {
-	Version     int       `json:"version"`
+	Version     int       `json:"version,omitempty" scope:"private"`
 	Name        string    `json:"name"`
-	DateCreated time.Time `json:"created,omitempty"`
-	Owner       string    `json:"owner,omitempty"`
+	DateCreated time.Time `json:"created,omitempty" scope:"private"`
+	Owner       string    `json:"owner,omitempty" scope:"private"`
 	Options     Options   `json:"options,omitempty"`
 
-	Size  int64 `json:"size"`
-	Count int64 `json:"count"`
+	Size  int64 `json:"size,omitempty" scope:"private"`
+	Count int64 `json:"count,omitempty" scope:"private"`
 }
 
 func (s *Share) IsValid() bool {
