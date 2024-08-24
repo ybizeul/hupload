@@ -13,13 +13,20 @@ func RemovePrivateData(s any) {
 		typeField := val.Type().Field(i) // get field i-th of type(val)
 
 		if f.Kind() == reflect.Struct {
-			RemovePrivateData(val.Field(i).Addr().Interface())
+			RemovePrivateData(f.Addr().Interface())
 			continue
 		}
-
+		if f.Kind() == reflect.Pointer {
+			if !f.IsNil() {
+				RemovePrivateData(f.Elem().Addr().Interface())
+			}
+			continue
+		}
 		tag := typeField.Tag.Get("scope")
 		if tag == "private" {
-			val.Field(i).Set(reflect.Zero(val.Field(i).Type()))
+			if f.CanSet() {
+				f.Set(reflect.Zero(val.Field(i).Type()))
+			}
 		}
 
 		continue
