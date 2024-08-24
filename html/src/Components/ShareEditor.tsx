@@ -15,26 +15,18 @@ interface ShareEditorProps {
 
 export function ShareEditor(props: ShareEditorProps&BoxComponentProps) {
     const { onChange, onClick, options } = props;
-    const { exposure, validity, description, message } = options;
 
-    const [_exposure, setExposure] = useState<string|undefined>(exposure)
-    const [_validity, setValidity] = useState<number|undefined>(validity)
-    const [_description, setDescription] = useState<string|undefined>(description)
-    const [_message, setMessage] = useState<string|undefined>(message)
+    const [_options, setOptions] = useState<Share["options"]>(options)
 
     const [mdPanel, mdPanelH ] = useDisclosure(false);
 
     const theme = useMantineTheme()
     const matches = useMediaQuery('(min-width: +' + theme.breakpoints.xs + ')');
 
-    const notifyChange = () => {
-        onChange({
-            exposure: _exposure as string,
-            validity: _validity as number,
-            description: _description as string,
-            message: _message as string
-        })
+    const notifyChange = (o: Share["options"]) => {
+      onChange(o)
     }
+    
     return (
       <Box miw={rem(200)} h="100%" w="100%" display={"flex"}>
         <Flex direction="column" gap="sm" w="100%" justify={"space-between"}>
@@ -50,24 +42,24 @@ export function ShareEditor(props: ShareEditorProps&BoxComponentProps) {
               </ActionIcon>
               }
               <Input.Wrapper label="Exposure" description="Guests users can :">
-                  <SegmentedControl className={classes.segmented} value={_exposure} data={[{ label: 'Upload', value: 'upload' }, { label: 'Download', value: 'download' }, { label: 'Both', value: 'both' }]}
-                    onChange={(v) => { setExposure(v); notifyChange();}} transitionDuration={0} />
+                  <SegmentedControl className={classes.segmented} value={_options.exposure} data={[{ label: 'Upload', value: 'upload' }, { label: 'Download', value: 'download' }, { label: 'Both', value: 'both' }]}
+                    onChange={(v) => { setOptions({..._options, exposure:v}); notifyChange({..._options, exposure:v}); }} transitionDuration={0} />
               </Input.Wrapper>
               <NumberInput
                 label="Validity"
                 description="Number of days the share is valid"
-                value={_validity}
+                value={_options.validity}
                 min={0}
-                onChange={(v) => { setValidity(v as number); notifyChange(); }}
+                onChange={(v) => { setOptions({..._options, validity:v as number}); notifyChange({..._options, validity:v as number}); }}
                 />
-              <TextInput label="Description" value={_description} onChange={(v) => {setDescription(v.target.value); notifyChange();}}/>
+              <TextInput label="Description" value={_options.description} onChange={(v) => {setOptions({..._options, description:v.target.value}); notifyChange({..._options, description:v.target.value});}}/>
             </Stack>
             {(mdPanel||!matches)&&
             <MarkDownEditor 
               pl={matches?"sm":"0"} 
               style={{borderLeft: matches?"1px solid lightGray":""}} 
-              onChange={(v) => {setMessage(v); notifyChange();}}
-              message={message}/>
+              onChange={(v) => { setOptions({..._options, message:v}); notifyChange({..._options, message:v}); }}
+              message={_options.message}/>
             }
           </Flex>
           <Flex >
