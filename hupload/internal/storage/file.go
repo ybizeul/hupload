@@ -79,9 +79,9 @@ func (b *FileBackend) Migrate() error {
 		Owner       string    `json:"owner,omitempty"`
 		Validity    int       `json:"validity"`
 		Exposure    string    `json:"exposure"`
-
-		Size  int64 `json:"size,omitempty"`
-		Count int64 `json:"count,omitempty"`
+		Options     Options   `json:"options,omitempty"`
+		Size        int64     `json:"size,omitempty"`
+		Count       int64     `json:"count,omitempty"`
 	}
 
 	d, err := os.ReadDir(b.Options.Path)
@@ -105,17 +105,24 @@ func (b *FileBackend) Migrate() error {
 		}
 		fm.Close()
 
+		o := Options{}
+		if m.Options != o {
+			o = m.Options
+		} else {
+			o = Options{
+				Validity: m.Validity,
+				Exposure: m.Exposure,
+			}
+		}
+
 		nm := Share{
 			Version:     1,
 			Name:        m.Name,
 			DateCreated: m.DateCreated,
 			Owner:       m.Owner,
-			Options: Options{
-				Validity: m.Validity,
-				Exposure: m.Exposure,
-			},
-			Size:  m.Size,
-			Count: m.Count,
+			Options:     o,
+			Size:        m.Size,
+			Count:       m.Count,
 		}
 
 		fm, err = os.Create(path.Join(b.Options.Path, d.Name(), ".metadata"))
