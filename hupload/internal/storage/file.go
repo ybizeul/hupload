@@ -154,6 +154,7 @@ func (b *FileBackend) CreateShare(name, owner string, options Options) (*Share, 
 	}
 
 	m := Share{
+		Version:     1,
 		Name:        name,
 		Owner:       owner,
 		DateCreated: time.Now(),

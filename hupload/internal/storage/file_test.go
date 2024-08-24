@@ -47,6 +47,7 @@ func TestCreateShare(t *testing.T) {
 				return f.CreateShare("test", "admin", Options{Validity: 10, Exposure: "upload"})
 			},
 			Share{
+				Version: 1,
 				Name:    "test",
 				Owner:   "admin",
 				Options: Options{Validity: 10, Exposure: "upload"},
@@ -57,6 +58,7 @@ func TestCreateShare(t *testing.T) {
 				return f.CreateShare("test", "admin", Options{Validity: 10, Exposure: "both"})
 			},
 			Share{
+				Version: 1,
 				Name:    "test",
 				Owner:   "admin",
 				Options: Options{Validity: 10, Exposure: "both"},
@@ -67,6 +69,7 @@ func TestCreateShare(t *testing.T) {
 				return f.CreateShare("test", "admin", Options{Validity: 10, Exposure: "download"})
 			},
 			Share{
+				Version: 1,
 				Name:    "test",
 				Owner:   "admin",
 				Options: Options{Validity: 10, Exposure: "download"},
