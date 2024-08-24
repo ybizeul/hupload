@@ -24,9 +24,10 @@ export function ShareEditor(props: ShareEditorProps&BoxComponentProps) {
     const matches = useMediaQuery('(min-width: +' + theme.breakpoints.xs + ')');
 
     const notifyChange = (o: Share["options"]) => {
+      setOptions(o)
       onChange(o)
     }
-    
+
     return (
       <Box miw={rem(200)} h="100%" w="100%" display={"flex"}>
         <Flex direction="column" gap="sm" w="100%" justify={"space-between"}>
@@ -43,22 +44,22 @@ export function ShareEditor(props: ShareEditorProps&BoxComponentProps) {
               }
               <Input.Wrapper label="Exposure" description="Guests users can :">
                   <SegmentedControl className={classes.segmented} value={_options.exposure} data={[{ label: 'Upload', value: 'upload' }, { label: 'Download', value: 'download' }, { label: 'Both', value: 'both' }]}
-                    onChange={(v) => { setOptions({..._options, exposure:v}); notifyChange({..._options, exposure:v}); }} transitionDuration={0} />
+                    onChange={(v) => { notifyChange({..._options, exposure:v}); }} transitionDuration={0} />
               </Input.Wrapper>
               <NumberInput
                 label="Validity"
                 description="Number of days the share is valid"
                 value={_options.validity}
                 min={0}
-                onChange={(v) => { setOptions({..._options, validity:v as number}); notifyChange({..._options, validity:v as number}); }}
+                onChange={(v) => { notifyChange({..._options, validity:v as number}); }}
                 />
-              <TextInput label="Description" value={_options.description} onChange={(v) => {setOptions({..._options, description:v.target.value}); notifyChange({..._options, description:v.target.value});}}/>
+              <TextInput label="Description" value={_options.description} onChange={(v) => { notifyChange({..._options, description:v.target.value}); }}/>
             </Stack>
             {(mdPanel||!matches)&&
             <MarkDownEditor 
               pl={matches?"sm":"0"} 
               style={{borderLeft: matches?"1px solid lightGray":""}} 
-              onChange={(v) => { setOptions({..._options, message:v}); notifyChange({..._options, message:v}); }}
+              onChange={(v) => { notifyChange({..._options, message:v}); }}
               message={_options.message}/>
             }
           </Flex>
