@@ -14,15 +14,18 @@ interface ShareEditorProps {
 }
 
 export function ShareEditor(props: ShareEditorProps&BoxComponentProps) {
+    // Initialize props
     const { onChange, onClick, options } = props;
 
+    // Initialize state
     const [_options, setOptions] = useState<Share["options"]>(options)
 
+    // Initialize hooks
     const [mdPanel, mdPanelH ] = useDisclosure(false);
-
     const theme = useMantineTheme()
     const matches = useMediaQuery('(min-width: +' + theme.breakpoints.xs + ')');
 
+    // Functions
     const notifyChange = (o: Share["options"]) => {
       setOptions(o)
       onChange(o)
@@ -77,8 +80,19 @@ interface MarkDownEditorProps {
 }
 
 function MarkDownEditor(props: MarkDownEditorProps&BoxComponentProps) {
-  const [message, setMessage] = useState<string|undefined>(props.message);
+  // Initialize props
+  const { onChange, message } = props;
+
+  // Initialize state
+  const [_message, setMessage] = useState<string|undefined>(message);
   const [preview, previewH] = useDisclosure(false);
+
+  // Functions
+  const notifyChange = (m: string) => {
+    setMessage(m)
+    onChange(m)
+  }
+
   return(
     <Box display="flex" flex="1" w={{base: '100%', xs: rem(500)}} pl={props.pl} style={props.style} pos={"relative"}>
       <ActionIcon size="xs" variant={preview?"filled":"subtle"} m={rem(3)} radius="xl" onClick={previewH.toggle} style={{position:"absolute", top: 0, right: 0}}>
@@ -86,10 +100,10 @@ function MarkDownEditor(props: MarkDownEditorProps&BoxComponentProps) {
       </ActionIcon>
       {preview?
       <InputWrapper display="flex" style={{flexDirection:"column"}} label="Message" description="This markdown will be displayed to the user" w="100%">
-        <Message mt="5" value={message?decodeURIComponent(message):""} />
+        <Message mt="5" value={_message?decodeURIComponent(_message):""} />
       </InputWrapper>
       :
-      <FullHeightTextArea w="100%" flex="1" label="Message" description="This markdown will be displayed to the user" value={message} onChange={(v) => {setMessage(v.target.value); props.onChange(v.target.value);}}/>
+      <FullHeightTextArea w="100%" flex="1" label="Message" description="This markdown will be displayed to the user" value={message} onChange={(v) => { notifyChange(v.target.value); }}/>
       }
     </Box>
   )
