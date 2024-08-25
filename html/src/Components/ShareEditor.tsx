@@ -84,7 +84,7 @@ export function ShareEditor(props: ShareEditorProps&BoxComponentProps) {
                     pl={isInBrowser?"sm":"0"} 
                     style={{borderLeft: isInBrowser?"1px solid lightGray":""}} 
                     onChange={(v) => { notifyChange({..._options, message:v}); }}
-                    markdown={_options.message}
+                    markdown={_options.message?_options.message:""}
                 />
                 }
                 </Flex>

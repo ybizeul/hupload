@@ -1,6 +1,6 @@
-import { Anchor, Box, Button, Center, CopyButton, Group, rem, Stack, Text, Tooltip } from "@mantine/core";
+import { Anchor, Box, Button, Center, CopyButton, Group, Paper, rem, Stack, Text, Tooltip } from "@mantine/core";
 import { Dropzone } from "@mantine/dropzone";
-import { IconClock, IconFileZip, IconLink, IconMoodSad, IconUpload, IconX } from "@tabler/icons-react";
+import { IconClock, IconFileZip, IconHelpHexagon, IconLink, IconMoodSad, IconUpload, IconX } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
 import { H } from "../APIClient";
 import { UploadQueue, QueueItem } from "../UploadQueue";
@@ -21,6 +21,72 @@ export function SharePage() {
   // Initialize hooks
   const { loggedIn } = useLoggedInContext()
   const [share, shareError] = useShare();
+
+  // useEffects
+
+  useEffect(() => {
+    // If share is expired, set expired to true
+    if (shareError?.response?.status === 410) {
+      setExpired(true)
+    }
+
+    shareError && setError(shareError)
+
+    // Get items from share
+    if (share) {
+      H.get('/shares/' + share.name + '/items').then((res) => {
+          setItems(res as Item[])
+      })
+      .catch((e) => {
+        setError(e)
+      })
+    }
+  },[shareError, share])
+
+  // Catch any errors
+
+  if (expired) {
+    return (
+      <Center h="100vh">
+        <Stack align="center" pb="10em">
+          <IconClock style={{ width: '10%', height: '10%' }} stroke={1.5}/>
+          <Text size="xl" fw="700">Sorry, this share has expired</Text>
+        </Stack>
+      </Center>
+    )
+  }
+
+  if (error) {
+    if (error.response?.status === 404) {
+      return (
+        <Center h="100vh">
+          <Stack align="center" pb="10em">
+            <IconHelpHexagon style={{ width: '10%', height: '10%' }} stroke={1.5}/>
+            <Text size="xl" fw="700">Share does not exists</Text>
+            <Text>Please check the link used to access this page.</Text>
+          </Stack>
+        </Center>
+      )
+    }
+
+    return (
+      <Center h="100vh">
+        <Stack align="center" pb="10em">
+          <IconMoodSad style={{ width: '10%', height: '10%' }} stroke={1.5}/>
+          <Text size="xl" fw="700">{error.message}</Text>
+          <Anchor onClick={() => { window.location.reload()}}>Reload</Anchor>
+        </Stack>
+      </Center>
+    )
+  }
+
+  if (!share) {
+    return
+  }
+
+  if (!items) {
+    return
+  }
 
   // Functions
 
@@ -77,78 +143,32 @@ export function SharePage() {
 
   // deleteItem deletes an item from the share.
   const deleteItem = (item: string) => {
-    H.delete('/shares/' + share?.name + '/items/' + item).then(() => {
-      setItems(items?.filter((i) => i.Path !== share?.name + "/" + item))
+    H.delete('/shares/' + share.name + '/items/' + item).then(() => {
+      setItems(items?.filter((i) => i.Path !== share.name + "/" + item))
     })
     .catch((e) => {
       console.log(e)
     })
   }
 
-  // useEffects
-
-  useEffect(() => {
-    // If share is expired, set expired to true
-    if (shareError?.response?.status === 410) {
-      setExpired(true)
-    }
-
-    shareError && setError(shareError)
-
-    // Get items from share
-    if (share) {
-      H.get('/shares/' + share.name + '/items').then((res) => {
-          setItems(res as Item[])
-      })
-      .catch((e) => {
-        setError(e)
-      })
-    }
-  },[shareError, share])
-
-  if (expired) {
-    return (
-      <Center h="100vh">
-        <Stack align="center" pb="10em">
-          <IconClock style={{ width: '10%', height: '10%' }} stroke={1.5}/>
-          <Text size="xl" fw="700">Sorry, this share has expired</Text>
-        </Stack>
-      </Center>
-    )
-  }
-
-  if (error) {
-    return (
-      <Center h="100vh">
-        <Stack align="center" pb="10em">
-          <IconMoodSad style={{ width: '10%', height: '10%' }} stroke={1.5}/>
-          <Text size="xl" fw="700">{error.message}</Text>
-          <Anchor onClick={() => { window.location.reload()}}>Reload</Anchor>
-        </Stack>
-      </Center>
-    )
-  }
-
-  if (!items) {
-    return
-  }
-
   return (
     <>
       {/* Top of page copy button */}
       <Box w="100%" ta="center">
-          <CopyButton value={window.location.protocol + '//' + window.location.host + '/' + share?.name}>
+          <CopyButton value={window.location.protocol + '//' + window.location.host + '/' + share.name}>
             {({ copied, copy }) => (
               <Tooltip withArrow arrowOffset={10} arrowSize={4} label={copied?"Copied!":"Copy URL"}>
-                <Button mb="sm" justify="center" variant="outline" color={copied ? 'teal' : 'gray'} size="xs" onClick={copy}><IconLink style={{ width: '70%', height: '70%' }} stroke={1.5}/>{share?.name}</Button>
+                <Button mb="sm" justify="center" variant="outline" color={copied ? 'teal' : 'gray'} size="xs" onClick={copy}><IconLink style={{ width: '70%', height: '70%' }} stroke={1.5}/>{share.name}</Button>
               </Tooltip>
             )}
           </CopyButton>
       </Box>
 
-      
-      {share?.options.message &&
-        <Message mb="sm" pb="sm" value={decodeURIComponent(share?.options.message)} />
+      {/* Message */}
+      {share.options.message &&
+        <Paper withBorder p="sm" mb="sm">
+          <Message value={share.options.message} />
+        </Paper>
       }
 
 
@@ -157,7 +177,7 @@ export function SharePage() {
       <>
         <Dropzone
           onDrop={(files) => {
-            const U = new UploadQueue(H,"/shares/"+share?.name, setQueue)
+            const U = new UploadQueue(H,"/shares/"+share.name, setQueue)
             const newItems = items.filter((i) => {
               return !files.some((f) => f.name === i.Path.split("/")[1])
             })
@@ -166,7 +186,7 @@ export function SharePage() {
             .then((r) => {
               const finishedItems = r as Item[]
               setQueue([])
-              setItems([...finishedItems,...newItems])
+              setItems([...finishedItems, ...newItems])
             })
             .catch((e) => {
               console.log(e)
@@ -194,7 +214,6 @@ export function SharePage() {
                 stroke={1.5}
               />
             </Dropzone.Idle>
-
             <div>
               <Text size="xl" inline>
                 Drag files here or click to select files
@@ -205,7 +224,8 @@ export function SharePage() {
       </>}
 
       {
-        // Display upload queue items
+        // Display upload queue items (queue items uploading or finished 
+        // uploading)
         queue.map((q) => (
           <ItemComponent  download={false} canDelete={false} key={'up_' + q.file.name} queueItem={q} />
         ))

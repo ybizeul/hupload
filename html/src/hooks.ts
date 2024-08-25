@@ -3,8 +3,8 @@ import { Share } from "./hupload"
 import { H } from "./APIClient"
 import { AxiosError } from "axios"
 
-export function useShare() : [Share|undefined, AxiosError|null] {
-    const [share, setShare] = useState<Share|undefined>(undefined)
+export function useShare() : [Share|undefined|null, AxiosError|null] {
+    const [share, setShare] = useState<Share|undefined|null>(undefined)
     const [error, setError] = useState<null|AxiosError>(null)
 
     useEffect(() => {
@@ -16,6 +16,7 @@ export function useShare() : [Share|undefined, AxiosError|null] {
             })
             .catch((e: AxiosError) => {
                 console.log(e)
+                setShare(null)
                 setError(e)
             })
         }

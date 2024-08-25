@@ -1,4 +1,4 @@
-import { ActionIcon, Box, BoxComponentProps, InputWrapper, rem } from "@mantine/core";
+import { ActionIcon, Box, BoxComponentProps, InputWrapper, Paper, rem } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconEye } from "@tabler/icons-react";
 import { useState } from "react";
@@ -7,7 +7,7 @@ import { FullHeightTextArea } from "./FullHeightTextArea";
 
 interface MarkDownEditorProps {
     onChange: (message: string) => void;
-    markdown: string|undefined;
+    markdown: string;
   }
   
   export function MarkDownEditor(props: MarkDownEditorProps&BoxComponentProps) {
@@ -15,7 +15,7 @@ interface MarkDownEditorProps {
     const { onChange, markdown } = props;
   
     // Initialize state
-    const [_markdown, setMarkdown] = useState<string|undefined>(markdown);
+    const [_markdown, setMarkdown] = useState<string>(markdown);
     const [preview, previewH] = useDisclosure(false);
   
     // Functions
@@ -30,9 +30,11 @@ interface MarkDownEditorProps {
                 <IconEye style={{ width: rem(16), height: rem(16) }} stroke={1.5} />
             </ActionIcon>
             {preview?
-            <InputWrapper display="flex" style={{flexDirection:"column"}} label="Message" description="This markdown will be displayed to the user" w="100%">
-                <Message mt="5" value={_markdown?decodeURIComponent(_markdown):""} />
-            </InputWrapper>
+                <InputWrapper display="flex" style={{flexDirection:"column"}} label="Message" description="This markdown will be displayed to the user" w="100%">
+                    <Paper flex="1" withBorder mt="5" pt="5.5" px="12" display="flex">
+                        <Message value={_markdown} />
+                    </Paper>
+                </InputWrapper>
             :
             <FullHeightTextArea w="100%" flex="1" label="Message" description="This markdown will be displayed to the user" value={markdown} onChange={(v) => { notifyChange(v.target.value); }}/>
             }
