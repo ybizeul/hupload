@@ -67,7 +67,7 @@ export function ShareEditor(props: ShareEditorProps&BoxComponentProps) {
                         {/* Share validity */}
                         <NumberInput
                             label="Validity"
-                            description={"Number of days the share is valid.</div><div>0 is unlimited."}
+                            description={"Number of days the share is valid. 0 is unlimited."}
                             value={_options.validity}
                             min={0}
                             classNames={{wrapper: classes.numberInput}}

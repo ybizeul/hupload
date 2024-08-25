@@ -9,49 +9,47 @@ interface ResponsivePopoverProps {
 }
 
 export function ResponsivePopover(props: ResponsivePopoverProps) {
-  const { children } = props;
-  const [_actionIcon, child] = children;
+    const { children } = props;
+    const [_actionIcon, child] = children;
 
-  const [opened, { close, open }] = useDisclosure(false);
+    const [opened, { close, open }] = useDisclosure(false);
 
-  const actionIcon = React.cloneElement(_actionIcon, {onClick: () => {opened?close():open()}})
+    const actionIcon = React.cloneElement(_actionIcon, {onClick: () => {opened?close():open()}})
 
-  // Share properties is displayed as a Popover if screen size > xs
-  const popover = (
-    <Popover opened={opened} onClose={close} middlewares={{size: true}}>
-        <Popover.Target>
-          {actionIcon}
-        </Popover.Target>
-        <Popover.Dropdown>
-            {child&&React.cloneElement(child, {close: close})}
-          {/* <ShareEditor onChange={onChange} onClick={() => {onClick();close();}} options={options}/> */}
-        </Popover.Dropdown>
-      </Popover>
-  )
+    // Share properties is displayed as a Popover if withDrawer is false
+    const popover = (
+        <Popover opened={opened} onClose={close} middlewares={{size: true}} withArrow>
+            <Popover.Target>
+                {actionIcon}
+            </Popover.Target>
+            <Popover.Dropdown>
+                {child && React.cloneElement(child, {close: close})}
+            </Popover.Dropdown>
+        </Popover>
+    )
 
-  // Share properties is displayed as a full screen Drawer if screen size < xs
-  const drawer = (
-    <>
-        {actionIcon}
-        <Drawer.Root size="100%" opened={opened} onClose={close} position="top">
-                <Drawer.Overlay />
-                <Drawer.Content w="100%" style={{display: "flex", flexGrow: 1, flexDirection: "column", justifyContent: 'space-between'}}>
-                <Drawer.Header>
-                    <Drawer.Title>Share Properties</Drawer.Title>
-                    <Drawer.CloseButton />
-                </Drawer.Header>
-                <Flex flex="1" align={"stretch"}>
-                    <Drawer.Body flex="1" pt="0">
-                    {child&&React.cloneElement(child, {close: close})}
-                    {/* <ShareEditor onChange={onChange} onClick={() => {onClick();close();}} options={options}/> */}
-                    </Drawer.Body>
-                </Flex>
-                </Drawer.Content>
-        </Drawer.Root>
-    </>
-  )
+    // Share properties is displayed as a full screen Drawer if withDrawer is true
+    const drawer = (
+        <>
+            {actionIcon}
+            <Drawer.Root size="100%" opened={opened} onClose={close} position="top">
+                    <Drawer.Overlay />
+                    <Drawer.Content w="100%" style={{display: "flex", flexGrow: 1, flexDirection: "column", justifyContent: 'space-between'}}>
+                    <Drawer.Header>
+                        <Drawer.Title>Share Properties</Drawer.Title>
+                        <Drawer.CloseButton />
+                    </Drawer.Header>
+                    <Flex flex="1" align={"stretch"}>
+                        <Drawer.Body flex="1" pt="0">
+                            {child&&React.cloneElement(child, {close: close})}
+                        </Drawer.Body>
+                    </Flex>
+                    </Drawer.Content>
+            </Drawer.Root>
+        </>
+    )
 
-  return (
-    props.withDrawer?drawer:popover
-  );
+    return (
+        props.withDrawer?drawer:popover
+    );
 }
