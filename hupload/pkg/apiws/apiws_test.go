@@ -29,10 +29,6 @@ func writeSuccessJSON(w http.ResponseWriter, body any) {
 	}
 }
 
-func writeSuccess(w http.ResponseWriter, message string) {
-	writeSuccessJSON(w, APIResult{Status: "success", Message: message})
-}
-
 func makeAPI(staticUI fs.FS, templateData any) *APIWS {
 	api, err := New(staticUI, templateData)
 	if err != nil {

@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"bytes"
 	"crypto/rand"
 	"encoding/json"
 	"fmt"
@@ -222,6 +223,70 @@ func TestCreateShare(t *testing.T) {
 
 		if w.Code != http.StatusBadRequest {
 			t.Errorf("Expected status %d, got %d", http.StatusBadRequest, w.Code)
+			return
+		}
+	})
+}
+
+func TestUpdateShare(t *testing.T) {
+	t.Cleanup(func() {
+		os.RemoveAll("tmptest")
+	})
+
+	api := getAPIServer(t)
+
+	makeShare(t, "testupdate", storage.Options{
+		Exposure:    "upload",
+		Validity:    7,
+		Description: "description",
+		Message:     "message",
+	})
+
+	t.Run("Update share should succeed", func(t *testing.T) {
+		var (
+			req *http.Request
+			w   *httptest.ResponseRecorder
+		)
+
+		j := `{"exposure":"download","validity":10,"description":"new description","message":"new message"}`
+
+		req = httptest.NewRequest("PATCH", path.Join("/api/v1/shares", "testupdate"), bytes.NewBufferString(j))
+		req.SetBasicAuth("admin", "hupload")
+
+		w = httptest.NewRecorder()
+
+		api.Mux.ServeHTTP(w, req)
+
+		if w.Code != http.StatusOK {
+			t.Errorf("Expected status %d, got %d", http.StatusOK, w.Code)
+			return
+		}
+
+		var got, want map[string]any
+
+		_ = json.NewDecoder(w.Body).Decode(&got)
+		_ = json.NewDecoder(bytes.NewBufferString(j)).Decode(&want)
+
+		if !reflect.DeepEqual(got, want) {
+			t.Errorf("Want %v, got %v", want, got)
+		}
+	})
+	t.Run("Update share should fail without auth", func(t *testing.T) {
+		var (
+			req *http.Request
+			w   *httptest.ResponseRecorder
+		)
+
+		j := `{"exposure":"download","validity":10,"description":"new description","message":"new message"}`
+
+		req = httptest.NewRequest("PATCH", path.Join("/api/v1/shares", "testupdate"), bytes.NewBufferString(j))
+
+		w = httptest.NewRecorder()
+
+		api.Mux.ServeHTTP(w, req)
+
+		if w.Code != http.StatusUnauthorized {
+			t.Errorf("Expected status %d, got %d", http.StatusOK, w.Code)
 			return
 		}
 	})
