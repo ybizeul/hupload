@@ -329,6 +329,11 @@ func TestGetShare(t *testing.T) {
 		if !reflect.DeepEqual(share, want) {
 			t.Errorf("Want %v, got %v", want, share)
 		}
+
+		if share.Options.Description != "description" {
+			t.Errorf("Expected description to be 'description', got %s", share.Options.Description)
+			return
+		}
 	})
 
 	t.Run("Get share without authentication should succeed with filtered properties", func(t *testing.T) {

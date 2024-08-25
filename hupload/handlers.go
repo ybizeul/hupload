@@ -206,7 +206,11 @@ func getShares(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	writeSuccessJSON(w, shares)
+	if auth.UserForRequest(r) == "" {
+		writeSuccessJSON(w, storage.PublicShares(shares))
+	} else {
+		writeSuccessJSON(w, shares)
+	}
 }
 
 // getShareItems returns the share identified by the request parameter
@@ -233,9 +237,10 @@ func getShare(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if auth.UserForRequest(r) == "" {
-		RemovePrivateData(share)
+		writeSuccessJSON(w, share.PublicShare())
+	} else {
+		writeSuccessJSON(w, share)
 	}
-	writeSuccessJSON(w, share)
 }
 
 // getShareItems returns the share content identified by the request parameter

@@ -7,9 +7,9 @@ import (
 )
 
 type Options struct {
-	Validity    int    `json:"validity,omitempty" scope:"private"`
+	Validity    int    `json:"validity,omitempty"`
 	Exposure    string `json:"exposure"`
-	Description string `json:"description,omitempty" scope:"private"`
+	Description string `json:"description,omitempty"`
 	Message     string `json:"message"`
 }
 
@@ -21,14 +21,14 @@ func DefaultOptions() Options {
 }
 
 type Share struct {
-	Version     int       `json:"version,omitempty" scope:"private"`
+	Version     int       `json:"version,omitempty"`
 	Name        string    `json:"name"`
-	DateCreated time.Time `json:"created,omitempty" scope:"private"`
-	Owner       string    `json:"owner,omitempty" scope:"private"`
+	DateCreated time.Time `json:"created,omitempty"`
+	Owner       string    `json:"owner,omitempty"`
 	Options     Options   `json:"options,omitempty"`
 
-	Size  int64 `json:"size,omitempty" scope:"private"`
-	Count int64 `json:"count,omitempty" scope:"private"`
+	Size  int64 `json:"size,omitempty"`
+	Count int64 `json:"count,omitempty"`
 }
 
 func (s *Share) IsValid() bool {
@@ -41,15 +41,35 @@ func (s *Share) IsValid() bool {
 	return validUntil.After(time.Now())
 }
 
-// type PublicShare struct {
-// 	Name string `json:"name"`
-// }
+type PublicShare struct {
+	Name    string        `json:"name"`
+	Options PublicOptions `json:"options,omitempty"`
+}
 
-// func PublicShareForShare(share *Share) PublicShare {
-// 	return PublicShare{
-// 		Name: share.Name,
-// 	}
-// }
+type PublicOptions struct {
+	Exposure string `json:"exposure"`
+	Message  string `json:"message"`
+}
+
+func (s *Share) PublicShare() *PublicShare {
+	return &PublicShare{
+		Name: s.Name,
+		Options: PublicOptions{
+			Exposure: s.Options.Exposure,
+			Message:  s.Options.Message,
+		},
+	}
+}
+
+func PublicShares(shares []Share) []PublicShare {
+	publicShares := make([]PublicShare, 0)
+
+	for _, s := range shares {
+		publicShares = append(publicShares, *s.PublicShare())
+	}
+
+	return publicShares
+}
 
 type Item struct {
 	Path     string

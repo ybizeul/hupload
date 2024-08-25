@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"reflect"
 	"testing"
 	"time"
 )
@@ -34,5 +35,32 @@ func TestShouldBeInvalid(t *testing.T) {
 
 	if share.IsValid() == true {
 		t.Errorf("Expected share to be invalid")
+	}
+}
+
+func TestPublicShare(t *testing.T) {
+	share := Share{
+		Name:  "test",
+		Owner: "admin",
+		Options: Options{
+			Validity:    10,
+			Exposure:    "upload",
+			Description: "test",
+			Message:     "test",
+		},
+		DateCreated: time.Now(),
+	}
+
+	publicShare := share.PublicShare()
+
+	want := &PublicShare{
+		Name: "test",
+		Options: PublicOptions{
+			Exposure: "upload",
+			Message:  "test",
+		},
+	}
+	if reflect.DeepEqual(publicShare, want) == false {
+		t.Errorf("Expected public share to be %v, got %v", want, publicShare)
 	}
 }
