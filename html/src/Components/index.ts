@@ -1,5 +1,5 @@
 export * from './CenteredTextInput'
 export * from './ItemComponent'
 export * from './ShareComponent'
-export * from './SplitButton'
+export * from './ResponsivePopover'
 export * from './VersionComponent'

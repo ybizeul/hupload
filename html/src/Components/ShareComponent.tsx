@@ -1,17 +1,21 @@
-import { ActionIcon, Anchor, Box, Button, CopyButton, Flex, Group, Paper, Popover, Stack, Text, Tooltip } from "@mantine/core";
+import { ActionIcon, Anchor, Box, Button, CopyButton, Flex, Group, Paper, Popover, Stack, Text, Tooltip, useMantineTheme } from "@mantine/core";
 import { humanFileSize, prettyfiedCount, Share } from "../hupload";
 import { Link } from "react-router-dom";
 import classes from './ShareComponent.module.css';
-import { IconClock, IconLink, IconTrash } from "@tabler/icons-react";
+import { IconClock, IconDots, IconLink, IconTrash } from "@tabler/icons-react";
 import { useState } from "react";
 import { H } from "@/APIClient";
+import { ResponsivePopover } from "./ResponsivePopover";
+import { useMediaQuery } from "@mantine/hooks";
+import { ShareEditor } from "./ShareEditor";
 
 export function ShareComponent(props: {share: Share}) {
-    // Initialize props
-    const { share } = props
-
     // Initialize States
+    const [share,setShare] = useState(props.share)
     const [deleted,setDeleted] = useState(false)
+    const [newOptions, setNewOptions] = useState<Share["options"]>(share.options)
+    const theme = useMantineTheme();
+    const isBrowser = useMediaQuery('(min-width: +' + theme.breakpoints.xs + ')');
 
     // Other initializations
     const key = share.name
@@ -25,6 +29,12 @@ export function ShareComponent(props: {share: Share}) {
     const deleteShare = () => {
         H.delete('/shares/'+name).then(() => {
             setDeleted(true)
+        })
+    }
+
+    const updateShare = () => {
+        H.patch('/shares/'+name, newOptions).then(() => {
+            setShare({...share, options: newOptions})
         })
     }
 
@@ -91,7 +101,14 @@ export function ShareComponent(props: {share: Share}) {
                                     <Button aria-description="delete" w="100%" variant='default' c='red' size="xs" onClick={deleteShare}>Delete</Button>
                                 </Popover.Dropdown>
                             </Popover>
-
+                            
+                            {/* Edit share properties button */}
+                            <ResponsivePopover withDrawer={!isBrowser}>
+                                <ActionIcon variant="light" color="blue" >
+                                    <IconDots style={{ width: '70%', height: '70%' }} stroke={1.5}/>
+                                </ActionIcon>
+                                <ShareEditor buttonTitle="Update" onChange={setNewOptions} onClick={updateShare} options={newOptions}/>
+                            </ResponsivePopover>
                         </Group>
                     </Flex>
                     {share.options.description && <Text w="100%" size="xs" c="gray">{share.options.description}</Text>}</Stack>

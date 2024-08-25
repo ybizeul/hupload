@@ -90,6 +90,9 @@ type Storage interface {
 	// CreateShare creates a new share
 	CreateShare(name, owner string, options Options) (*Share, error)
 
+	// UpdateShare updates an existing share
+	UpdateShare(name string, options *Options) (*Options, error)
+
 	// CreateItem creates a new item in a share
 	CreateItem(share, item string, reader *bufio.Reader) (*Item, error)
 

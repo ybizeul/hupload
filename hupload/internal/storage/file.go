@@ -182,6 +182,35 @@ func (b *FileBackend) CreateShare(name, owner string, options Options) (*Share, 
 	return &m, nil
 }
 
+// UpdateShare updates the metadata of a share with the provided name. It returns
+// an error if the share does not exist or if the name is invalid.
+
+func (b *FileBackend) UpdateShare(name string, options *Options) (*Options, error) {
+	if !isShareNameSafe(name) {
+		return nil, ErrInvalidShareName
+	}
+
+	m, err := b.GetShare(name)
+	if err != nil {
+		return nil, err
+	}
+
+	m.Options = *options
+
+	f, err := os.Create(path.Join(b.Options.Path, name, ".metadata"))
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+
+	err = json.NewEncoder(f).Encode(m)
+	if err != nil {
+		return nil, err
+	}
+
+	return &m.Options, nil
+}
+
 // CreateItem creates a new item in the provided share with the provided name
 // and content. It returns an error if the share does not exist, or if the item
 // doesn't fit in the share or if the share is full. The content is read from

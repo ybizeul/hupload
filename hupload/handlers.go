@@ -61,6 +61,39 @@ func postShare(w http.ResponseWriter, r *http.Request) {
 	writeSuccessJSON(w, share)
 }
 
+// patchShare updates an existing share
+func patchShare(w http.ResponseWriter, r *http.Request) {
+	user := auth.UserForRequest(r)
+	if user == "" {
+		slog.Error("patchShare", slog.String("error", "no user in context"))
+		http.Error(w, "no user in context", http.StatusBadRequest)
+		return
+	}
+
+	// Parse the request body
+	options := &storage.Options{}
+
+	// We ignore unmarshalling of JSON body as it is optional.
+	_ = json.NewDecoder(r.Body).Decode(&options)
+
+	result, err := cfg.Storage.UpdateShare(r.PathValue("share"), options)
+	if err != nil {
+		slog.Error("patchShare", slog.String("error", err.Error()))
+		switch {
+		case errors.Is(err, storage.ErrInvalidShareName):
+			writeError(w, http.StatusBadRequest, "invalid share name")
+			return
+		case errors.Is(err, storage.ErrShareNotFound):
+			writeError(w, http.StatusNotFound, "share does not exists")
+			return
+		}
+
+		writeError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	writeSuccessJSON(w, result)
+}
+
 // putShare creates a new share with name from the request parameter
 // func putShare(w http.ResponseWriter, r *http.Request) {
 // 	user := auth.UserForRequest(r)

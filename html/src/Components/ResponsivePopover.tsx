@@ -1,36 +1,20 @@
-import { Button, Group, ActionIcon, rem, useMantineTheme, Popover, Drawer, Flex} from '@mantine/core';
-import { IconChevronDown } from '@tabler/icons-react';
-import classes from './SplitButton.module.css';
+import { Popover, Drawer, Flex} from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 
 import React from 'react';
 
-interface SplitButtonProps {
-    onClick: () => void;
-    value: string;
-    children: React.ReactNode;
+interface ResponsivePopoverProps {
+    children: React.ReactElement[];
     withDrawer?: boolean;
 }
 
-export function SplitButton(props: SplitButtonProps) {
-  const { onClick, value, children } = props;
-  const child = children as React.ReactElement;
-
-  const theme = useMantineTheme();
+export function ResponsivePopover(props: ResponsivePopoverProps) {
+  const { children } = props;
+  const [_actionIcon, child] = children;
 
   const [opened, { close, open }] = useDisclosure(false);
 
-  const actionIcon = (
-    <ActionIcon
-      variant="filled"
-      color={theme.primaryColor}
-      size={36}
-      className={classes.menuControl}
-      onClick={()=> {opened?close():open()}}
-    >
-      <IconChevronDown style={{ width: rem(16), height: rem(16) }} stroke={1.5} />
-    </ActionIcon>
-  )
+  const actionIcon = React.cloneElement(_actionIcon, {onClick: () => {opened?close():open()}})
 
   // Share properties is displayed as a Popover if screen size > xs
   const popover = (
@@ -68,9 +52,6 @@ export function SplitButton(props: SplitButtonProps) {
   )
 
   return (
-    <Group wrap="nowrap" gap={0} justify='center'>
-        <Button onClick={onClick} className={classes.button}>{value}</Button>
-        {props.withDrawer?drawer:popover}
-    </Group>
+    props.withDrawer?drawer:popover
   );
 }
