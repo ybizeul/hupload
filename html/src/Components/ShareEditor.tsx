@@ -1,29 +1,29 @@
 import { Share } from "@/hupload";
-import { ActionIcon, Box, BoxComponentProps, Button, Flex, Input, InputWrapper, NumberInput, rem, SegmentedControl, Stack, TextInput, useMantineTheme } from "@mantine/core";
-import { IconChevronLeft, IconChevronRight, IconEye } from "@tabler/icons-react";
-import { Message } from "./Message";
+import { ActionIcon, Box, BoxComponentProps, Button, Flex, Input, NumberInput, rem, SegmentedControl, Stack, TextInput, useMantineTheme } from "@mantine/core";
+import { IconChevronLeft, IconChevronRight } from "@tabler/icons-react";
 import { useDisclosure, useMediaQuery } from "@mantine/hooks";
-import { FullHeightTextArea } from "./FullHeightTextArea";
 import { useState } from "react";
 import classes from './ShareEditor.module.css';
+import { MarkDownEditor } from "./MarkdownEditor";
 
 interface ShareEditorProps {
   onChange: (options: Share["options"]) => void;
   onClick: () => void;
+  close?: () => void;
   options: Share["options"];
 }
 
 export function ShareEditor(props: ShareEditorProps&BoxComponentProps) {
     // Initialize props
-    const { onChange, onClick, options } = props;
+    const { onChange, onClick, close, options } = props;
 
     // Initialize state
     const [_options, setOptions] = useState<Share["options"]>(options)
 
     // Initialize hooks
-    const [mdPanel, mdPanelH ] = useDisclosure(false);
+    const [showMessage, showMessageH ] = useDisclosure(false);
     const theme = useMantineTheme()
-    const matches = useMediaQuery('(min-width: +' + theme.breakpoints.xs + ')');
+    const isInBrowser = useMediaQuery('(min-width: +' + theme.breakpoints.xs + ')');
 
     // Functions
     const notifyChange = (o: Share["options"]) => {
@@ -32,79 +32,66 @@ export function ShareEditor(props: ShareEditorProps&BoxComponentProps) {
     }
 
     return (
-      <Box miw={rem(200)} h="100%" w="100%" display={"flex"}>
-        <Flex direction="column" gap="sm" w="100%" justify={"space-between"}>
-          <Flex gap="sm" w="100%" flex="1" direction={{base: 'column', xs: 'row'}}>
-            <Stack display= "flex" style={{position:"relative"}} w={{base: '100%', xs: rem(250)}}>
-              {matches&&
-              <ActionIcon variant="light" radius="xl" onClick={mdPanelH.toggle} style={{position:"absolute", top: 0, right: 0}}>
-                {mdPanel?
-                  <IconChevronLeft style={{ width: rem(16), height: rem(16) }} stroke={1.5} />
-                  :
-                  <IconChevronRight style={{ width: rem(16), height: rem(16) }} stroke={1.5} />
-                }
-              </ActionIcon>
-              }
-              <Input.Wrapper label="Exposure" description="Guests users can :">
-                  <SegmentedControl className={classes.segmented} value={_options.exposure} data={[{ label: 'Upload', value: 'upload' }, { label: 'Download', value: 'download' }, { label: 'Both', value: 'both' }]}
-                    onChange={(v) => { notifyChange({..._options, exposure:v}); }} transitionDuration={0} />
-              </Input.Wrapper>
-              <NumberInput
-                label="Validity"
-                description="Number of days the share is valid"
-                value={_options.validity}
-                min={0}
-                onChange={(v) => { notifyChange({..._options, validity:v as number}); }}
+        <Box miw={rem(200)} h="100%" w="100%" display={"flex"}>
+            <Flex direction="column" gap="sm" w="100%" justify={"space-between"}>
+                
+                {/* Left section */}
+                <Flex gap="sm" w="100%" flex="1" direction={{base: 'column', xs: 'row'}}>
+                    <Stack display= "flex" style={{position:"relative"}} w={{base: '100%', xs: rem(250)}}>
+
+                        {/* Action icon to show message editor */}
+                        {isInBrowser&&
+                        <ActionIcon variant="light" radius="xl" onClick={showMessageH.toggle} style={{position:"absolute", top: 0, right: 0}}>
+                            {showMessage?
+                            <IconChevronLeft style={{ width: rem(16), height: rem(16) }} stroke={1.5} />
+                            :
+                            <IconChevronRight style={{ width: rem(16), height: rem(16) }} stroke={1.5} />
+                            }
+                        </ActionIcon>
+                        }
+
+                        {/* Share exposure */}
+                        <Input.Wrapper label="Exposure" description="Guests users can :">
+                            <SegmentedControl 
+                                className={classes.segmented} 
+                                value={_options.exposure} 
+                                data={[ { label: 'Upload', value: 'upload' }, 
+                                        { label: 'Download', value: 'download' }, 
+                                        { label: 'Both', value: 'both' },
+                                    ]}
+                                onChange={(v) => { notifyChange({..._options, exposure:v}); }} transitionDuration={0} 
+                            />
+                        </Input.Wrapper>
+
+                        {/* Share validity */}
+                        <NumberInput
+                            label="Validity"
+                            description="Number of days the share is valid"
+                            value={_options.validity}
+                            min={0}
+                            onChange={(v) => { notifyChange({..._options, validity:v as number}); }}
+                        />
+
+                        {/* Share description */}
+                        <TextInput label="Description" value={_options.description}
+                            onChange={(v) => { notifyChange({..._options, description:v.target.value}); }}
+                        />
+                    </Stack>
+
+                {/* Right section */}
+                {(showMessage||!isInBrowser)&&
+                <MarkDownEditor 
+                    pl={isInBrowser?"sm":"0"} 
+                    style={{borderLeft: isInBrowser?"1px solid lightGray":""}} 
+                    onChange={(v) => { notifyChange({..._options, message:v}); }}
+                    markdown={_options.message}
                 />
-              <TextInput label="Description" value={_options.description} onChange={(v) => { notifyChange({..._options, description:v.target.value}); }}/>
-            </Stack>
-            {(mdPanel||!matches)&&
-            <MarkDownEditor 
-              pl={matches?"sm":"0"} 
-              style={{borderLeft: matches?"1px solid lightGray":""}} 
-              onChange={(v) => { notifyChange({..._options, message:v}); }}
-              message={_options.message}/>
-            }
-          </Flex>
-          <Flex >
-            <Button w="100%" onClick={onClick}>Create</Button>
-          </Flex>
-        </Flex>
-      </Box>
+                }
+                </Flex>
+                <Flex >
+                    <Button w="100%" onClick={() => {onClick(); close && close();}}>Create</Button>
+                </Flex>
+            </Flex>
+        </Box>
     )
-}
-
-interface MarkDownEditorProps {
-  onChange: (message: string) => void;
-  message: string|undefined;
-}
-
-function MarkDownEditor(props: MarkDownEditorProps&BoxComponentProps) {
-  // Initialize props
-  const { onChange, message } = props;
-
-  // Initialize state
-  const [_message, setMessage] = useState<string|undefined>(message);
-  const [preview, previewH] = useDisclosure(false);
-
-  // Functions
-  const notifyChange = (m: string) => {
-    setMessage(m)
-    onChange(m)
-  }
-
-  return(
-    <Box display="flex" flex="1" w={{base: '100%', xs: rem(500)}} pl={props.pl} style={props.style} pos={"relative"}>
-      <ActionIcon size="xs" variant={preview?"filled":"subtle"} m={rem(3)} radius="xl" onClick={previewH.toggle} style={{position:"absolute", top: 0, right: 0}}>
-        <IconEye style={{ width: rem(16), height: rem(16) }} stroke={1.5} />
-      </ActionIcon>
-      {preview?
-      <InputWrapper display="flex" style={{flexDirection:"column"}} label="Message" description="This markdown will be displayed to the user" w="100%">
-        <Message mt="5" value={_message?decodeURIComponent(_message):""} />
-      </InputWrapper>
-      :
-      <FullHeightTextArea w="100%" flex="1" label="Message" description="This markdown will be displayed to the user" value={message} onChange={(v) => { notifyChange(v.target.value); }}/>
-      }
-    </Box>
-  )
 }

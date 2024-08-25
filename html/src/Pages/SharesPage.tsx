@@ -4,9 +4,11 @@ import { H } from "../APIClient";
 import { useNavigate } from "react-router-dom";
 import { Share } from "../hupload";
 import {ShareComponent, SplitButton} from "@/Components";
-import { Anchor, Box, Center, Stack, Text } from "@mantine/core";
+import { Anchor, Box, Center, Stack, Text, useMantineTheme } from "@mantine/core";
 import { IconMoodSad } from "@tabler/icons-react";
 import { AxiosError } from "axios";
+import { ShareEditor } from "@/Components/ShareEditor";
+import { useMediaQuery } from "@mantine/hooks";
 
 export function SharesPage(props: {owner: string|null}) {
   // Initialize props
@@ -19,6 +21,8 @@ export function SharesPage(props: {owner: string|null}) {
   
   // Initialize hooks
   const navigate = useNavigate();
+  const theme = useMantineTheme();
+  const isBrowser = useMediaQuery('(min-width: +' + theme.breakpoints.xs + ')');
 
   const updateShareProperties = (props: Share["options"]) => {
     setNewShareOptions(props)
@@ -73,39 +77,45 @@ export function SharesPage(props: {owner: string|null}) {
   }
 
   return (
-      <>
-      {/* Create share button */}
-      <Box ta="center" mt="xl" mb="xl">
-        <SplitButton options={newShareOptions} onChange={updateShareProperties} onClick={() => createShare()}>Create Share</SplitButton>
-      </Box>
+    <>
+        {/* Create share button */}
+        <Box ta="center" mt="xl" mb="xl">
+            <SplitButton value="Create Share" 
+                onClick={() => {createShare()}}
+                withDrawer={!isBrowser}>
+                <ShareEditor onChange={updateShareProperties}
+                    onClick={() => {createShare()}} 
+                    options={newShareOptions}/>
+            </SplitButton>
+        </Box>
 
-      { shares.length == 0 ?
-        <Text ta="center" mt="xl">There are currently no shares</Text>
-        :
-        <>
-          {/* Currently logged in user shares */}
-          {shares.some((s) => s.owner === owner) &&
+        { shares.length == 0 ?
+            <Text ta="center" mt="xl">There are currently no shares</Text>
+            :
             <>
-            <Text size="xl" fw="700">Your Shares</Text>
-            {shares.map((s) => (
-              s.owner === owner &&
-              <ShareComponent key={s.name} share={s} />
-            ))}
-            </>
-          }
+            {/* Currently logged in user shares */}
+            {shares.some((s) => s.owner === owner) &&
+                <>
+                <Text size="xl" fw="700">Your Shares</Text>
+                {shares.map((s) => (
+                s.owner === owner &&
+                <ShareComponent key={s.name} share={s} />
+                ))}
+                </>
+            }
 
-          {/* Other users shares */}
-          {shares.some((s) => s.owner !== owner) &&
-            <>
-            <Text mt="md" size="xl" fw="700">Other Shares</Text>
-            {shares.map((s) => (
-              s.owner === owner ||
-              <ShareComponent key={s.name} share={s} />
-            ))}
+            {/* Other users shares */}
+            {shares.some((s) => s.owner !== owner) &&
+                <>
+                <Text mt="md" size="xl" fw="700">Other Shares</Text>
+                {shares.map((s) => (
+                s.owner === owner ||
+                <ShareComponent key={s.name} share={s} />
+                ))}
+                </>
+            }
             </>
-          }
-        </>
-      }
+        }
     </>
   )
 }

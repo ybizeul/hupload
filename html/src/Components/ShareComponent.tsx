@@ -28,10 +28,14 @@ export function ShareComponent(props: {share: Share}) {
         })
     }
 
+    if (deleted) {
+        return
+    }
+
     return (
         <>
-        {!deleted &&
         <Paper key={key} withBorder shadow="xs" radius="md" mt={10} pos="relative" className={classes.paper}>
+
             {/* Share component footer */}
             <Group wrap="nowrap" flex={1} w="100%" pos="absolute" bottom="0.1em" style={{justifyContent:"center"}} align="center" gap="0.2em">
                 <IconClock color={(remaining===null || remaining > 0 )?"gray":"red"} size="0.8em"  width={"1em"}/>
@@ -45,9 +49,12 @@ export function ShareComponent(props: {share: Share}) {
                     prettyfiedCount(remaining,"day","days",null) + " left"} | {share.options.exposure==="download"?"Guests can download":(share.options.exposure==="both"?"Guests can upload & download":"Guests can upload")}
                 </Text>
             </Group>
+
+            {/* Share informations */}
             <Box p="lg">
                 <Stack gap="0">
                     <Flex align={"center"}>
+
                         {/* Share name */}
                         <Group flex="1" gap="0" align="baseline">
                             <Anchor style={{ whiteSpace: "nowrap"}} flex={"1"} component={Link} to={'/'+name}><Text>{name}</Text></Anchor>
@@ -55,8 +62,10 @@ export function ShareComponent(props: {share: Share}) {
                                 <Text mr="xs" size="xs" c="gray">{countString + (size?(' | ' + humanFileSize(size)):'')}</Text>
                             </Stack>
                         </Group>
-                        {/* Share component tail */}
+
+                        {/* Share component tail with actions */}
                         <Group justify="flex-end" gap="xs" wrap="nowrap" align="baseline">
+
                             {/* Copy button */}
                             <CopyButton value={window.location.protocol + '//' + window.location.host + '/' + name}>
                             {({ copied, copy }) => (
@@ -67,6 +76,7 @@ export function ShareComponent(props: {share: Share}) {
                                 </Tooltip>
                             )}
                             </CopyButton>
+
                             {/* Delete button with confirmation Popover */}
                             <Popover width={200} position="bottom" withArrow shadow="md">
                                 <Popover.Target>
@@ -81,11 +91,11 @@ export function ShareComponent(props: {share: Share}) {
                                     <Button aria-description="delete" w="100%" variant='default' c='red' size="xs" onClick={deleteShare}>Delete</Button>
                                 </Popover.Dropdown>
                             </Popover>
+
                         </Group>
                     </Flex>
                     {share.options.description && <Text w="100%" size="xs" c="gray">{share.options.description}</Text>}</Stack>
             </Box>
         </Paper>
-        }
         </>
 )}
