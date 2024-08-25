@@ -111,6 +111,46 @@ func TestCreateShare(t *testing.T) {
 	}
 }
 
+func TestUpdateShare(t *testing.T) {
+	t.Cleanup(func() {
+		os.RemoveAll("data")
+	})
+
+	f := createFileBackend(t)
+
+	share, _ := f.CreateShare("test", "admin", Options{Validity: 10, Exposure: "upload", Description: "description", Message: "message"})
+
+	newOptions := &Options{
+		Validity:    20,
+		Exposure:    "both",
+		Description: "new description",
+		Message:     "new message",
+	}
+
+	o, err := f.UpdateShare(share.Name, newOptions)
+
+	if err != nil {
+		t.Errorf("Expected no error, got %v", err)
+	}
+
+	if reflect.DeepEqual(o, newOptions) == false {
+		t.Errorf("Expected %v, got %v", newOptions, o)
+	}
+
+	share.Options = *newOptions
+	share2, _ := f.GetShare(share.Name)
+
+	if !share.DateCreated.Equal(share2.DateCreated) {
+		t.Errorf("Expected %v, got %v", share.DateCreated, share2.DateCreated)
+	}
+
+	share.DateCreated = time.Time{}
+	share2.DateCreated = time.Time{}
+
+	if reflect.DeepEqual(share, share2) == false {
+		t.Errorf("Expected %+v, got %+v", share, share2)
+	}
+}
 func TestCreateItem(t *testing.T) {
 	t.Cleanup(func() {
 		os.RemoveAll("data")

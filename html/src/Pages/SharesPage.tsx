@@ -3,12 +3,13 @@ import { useCallback, useEffect, useState } from "react";
 import { H } from "../APIClient";
 import { useNavigate } from "react-router-dom";
 import { Share } from "../hupload";
-import {ShareComponent, SplitButton} from "@/Components";
-import { Anchor, Box, Center, Stack, Text, useMantineTheme } from "@mantine/core";
-import { IconMoodSad } from "@tabler/icons-react";
+import {ShareComponent, ResponsivePopover} from "@/Components";
+import { ActionIcon, Anchor, Box, Button, Center, Group, rem, Stack, Text, useMantineTheme } from "@mantine/core";
+import { IconChevronDown, IconMoodSad } from "@tabler/icons-react";
 import { AxiosError } from "axios";
 import { ShareEditor } from "@/Components/ShareEditor";
 import { useMediaQuery } from "@mantine/hooks";
+import classes from './SharesPage.module.css';
 
 export function SharesPage(props: {owner: string|null}) {
   // Initialize props
@@ -80,13 +81,23 @@ export function SharesPage(props: {owner: string|null}) {
     <>
         {/* Create share button */}
         <Box ta="center" mt="xl" mb="xl">
-            <SplitButton value="Create Share" 
-                onClick={() => {createShare()}}
-                withDrawer={!isBrowser}>
-                <ShareEditor onChange={updateShareProperties}
-                    onClick={() => {createShare()}} 
-                    options={newShareOptions}/>
-            </SplitButton>
+            <Group wrap="nowrap" gap={0} justify='center'>
+                <Button onClick={() => {createShare()}} className={classes.button}>Create Share </Button>
+                <ResponsivePopover withDrawer={!isBrowser} >
+                    <ActionIcon
+                        variant="filled"
+                        color={theme.primaryColor}
+                        size={36}
+                        className={classes.menuControl}
+                    >
+                        <IconChevronDown style={{ width: rem(16), height: rem(16) }} stroke={1.5} />
+                    </ActionIcon>
+                    <ShareEditor buttonTitle="Create" onChange={updateShareProperties}
+                        onClick={() => {createShare()}} 
+                        options={newShareOptions}
+                    />
+                </ResponsivePopover>
+            </Group>
         </Box>
 
         { shares.length == 0 ?

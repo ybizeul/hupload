@@ -135,6 +135,7 @@ The following endpoints are available under `/api/v1`
 | `GET`    | `/shares`                      | Get a list of all shares
 | `POST`   | `/shares`                      | Create a new share with a random name (See parameters)
 | `POST`   | `/shares/{share}`              | Create a new share named `{share}` (See parameters)
+| `PATCH`  | `/shares/{share}`              | Update share parameters (See parameters)
 | `DELETE` | `/shares/{share}`              | Delete a share and all its content
 | `GET`    | `/shares/{share}/items/{item}` | Get an `{item}` (file) content
 
@@ -147,7 +148,7 @@ The following endpoints are available under `/api/v1`
 
 **Parameters**
 
-When creating a new share, you can define optional parameters in the JSON body :
+When creating or updateing a new share, you can define parameters in the JSON body :
 
 | Key           | Type                               | Description                          |
 |------------   |------------------------------------|--------------------------------------|

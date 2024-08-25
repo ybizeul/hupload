@@ -9,7 +9,3 @@
     border: 0;
     border-left: rem(1px) solid var(--mantine-color-body);
 }
-
-.segmented {
-    margin-top: calc(var(--mantine-spacing-xs) / 2)
-}

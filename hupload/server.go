@@ -57,6 +57,7 @@ func setup(api *apiws.APIWS) {
 	api.AddRoute("POST   /api/v1/login", authenticators, postLogin)
 	api.AddRoute("POST   /api/v1/shares", authenticators, postShare)
 	api.AddRoute("POST   /api/v1/shares/{share}", authenticators, postShare)
+	api.AddRoute("PATCH  /api/v1/shares/{share}", authenticators, patchShare)
 	api.AddRoute("DELETE /api/v1/shares/{share}", authenticators, deleteShare)
 	api.AddRoute("GET    /api/v1/shares", authenticators, getShares)
 	api.AddRoute("GET    /api/v1/version", authenticators, getVersion)

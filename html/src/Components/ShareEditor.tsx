@@ -11,11 +11,12 @@ interface ShareEditorProps {
   onClick: () => void;
   close?: () => void;
   options: Share["options"];
+  buttonTitle: string;
 }
 
 export function ShareEditor(props: ShareEditorProps&BoxComponentProps) {
     // Initialize props
-    const { onChange, onClick, close, options } = props;
+    const { onChange, onClick, close, options, buttonTitle } = props;
 
     // Initialize state
     const [_options, setOptions] = useState<Share["options"]>(options)
@@ -66,7 +67,7 @@ export function ShareEditor(props: ShareEditorProps&BoxComponentProps) {
                         {/* Share validity */}
                         <NumberInput
                             label="Validity"
-                            description={<><div>Number of days the share is valid.</div><div>0 is unlimited.</div></>}
+                            description={"Number of days the share is valid. 0 is unlimited."}
                             value={_options.validity}
                             min={0}
                             classNames={{wrapper: classes.numberInput}}
@@ -90,7 +91,7 @@ export function ShareEditor(props: ShareEditorProps&BoxComponentProps) {
                 }
                 </Flex>
                 <Flex >
-                    <Button w="100%" onClick={() => {onClick(); close && close();}}>Create</Button>
+                    <Button w="100%" onClick={() => {onClick(); close && close();}}>{buttonTitle}</Button>
                 </Flex>
             </Flex>
         </Box>
