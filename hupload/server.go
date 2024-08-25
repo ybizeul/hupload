@@ -47,22 +47,21 @@ func setup(api *apiws.APIWS) {
 	// That's Hupload principle, the security is based on the share name
 	// which is usually a random string.
 
-	api.AddRoute("POST /api/v1/shares/{share}/items/{item}", authenticatorsOpen, postItem)
-	api.AddRoute("GET /api/v1/shares/{share}/items", authenticatorsOpen, getShareItems)
-	api.AddRoute("GET /api/v1/shares/{share}", authenticatorsOpen, getShare)
-	api.AddRoute("GET /api/v1/shares/{share}/items/{item}", authenticatorsOpen, getItem)
+	api.AddRoute("POST   /api/v1/shares/{share}/items/{item}", authenticatorsOpen, postItem)
+	api.AddRoute("GET    /api/v1/shares/{share}/items", authenticatorsOpen, getShareItems)
+	api.AddRoute("GET    /api/v1/shares/{share}", authenticatorsOpen, getShare)
+	api.AddRoute("GET    /api/v1/shares/{share}/items/{item}", authenticatorsOpen, getItem)
 	api.AddRoute("DELETE /api/v1/shares/{share}/items/{item}", authenticatorsOpen, deleteItem)
 
 	// Protected routes
-	api.AddRoute("POST /api/v1/login", authenticators, postLogin)
-	api.AddRoute("POST /api/v1/shares", authenticators, postShare)
-	api.AddRoute("POST /api/v1/shares/{share}", authenticators, postShare)
+	api.AddRoute("POST   /api/v1/login", authenticators, postLogin)
+	api.AddRoute("POST   /api/v1/shares", authenticators, postShare)
+	api.AddRoute("POST   /api/v1/shares/{share}", authenticators, postShare)
 	api.AddRoute("DELETE /api/v1/shares/{share}", authenticators, deleteShare)
-	//api.AddRoute("PUT /api/v1/shares/{share}", authenticators, putShare)
-	api.AddRoute("GET /api/v1/shares", authenticators, getShares)
-	api.AddRoute("GET /api/v1/version", authenticators, getVersion)
+	api.AddRoute("GET    /api/v1/shares", authenticators, getShares)
+	api.AddRoute("GET    /api/v1/version", authenticators, getVersion)
 
-	api.AddRoute("GET /api/v1/*", authenticators, func(w http.ResponseWriter, r *http.Request) {
+	api.AddRoute("GET    /api/v1/*", authenticators, func(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadRequest, "Error")
 	})
 

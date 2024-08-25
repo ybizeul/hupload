@@ -24,7 +24,7 @@ import (
 func getAPIServer(t *testing.T) *apiws.APIWS {
 
 	cfg = config.Config{
-		Path: "routes_testdata/config.yml",
+		Path: "handlers_testdata/config.yml",
 	}
 
 	_, err := cfg.Load()

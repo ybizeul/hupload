@@ -35,19 +35,21 @@ func (s *Share) IsValid() bool {
 	if s.Options.Validity == 0 {
 		return true
 	}
+
 	validUntil := s.DateCreated.AddDate(0, 0, s.Options.Validity)
+
 	return validUntil.After(time.Now())
 }
 
-type PublicShare struct {
-	Name string `json:"name"`
-}
+// type PublicShare struct {
+// 	Name string `json:"name"`
+// }
 
-func PublicShareForShare(share *Share) PublicShare {
-	return PublicShare{
-		Name: share.Name,
-	}
-}
+// func PublicShareForShare(share *Share) PublicShare {
+// 	return PublicShare{
+// 		Name: share.Name,
+// 	}
+// }
 
 type Item struct {
 	Path     string

@@ -8,4 +8,4 @@ storage:
 auth:
   type: file
   options:
-    path: routes_testdata/users.yml
+    path: handlers_testdata/users.yml
