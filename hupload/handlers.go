@@ -8,6 +8,7 @@ import (
 	"io"
 	"log/slog"
 	"net/http"
+	"strconv"
 
 	"github.com/ybizeul/hupload/internal/storage"
 	"github.com/ybizeul/hupload/pkg/apiws/middleware/auth"
@@ -163,8 +164,18 @@ func postItem(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
+
+	cl := 0
+	if r.Header.Get("FileSize") != "" {
+		cl, err = strconv.Atoi(r.Header.Get("FileSize"))
+		if err != nil {
+			writeError(w, http.StatusBadRequest, "invalid content length")
+			return
+		}
+	}
+
 	b := bufio.NewReader(np)
-	item, err := cfg.Storage.CreateItem(r.PathValue("share"), r.PathValue("item"), b)
+	item, err := cfg.Storage.CreateItem(r.PathValue("share"), r.PathValue("item"), int64(cl), b)
 	if err != nil {
 		switch {
 		case errors.Is(err, storage.ErrInvalidShareName):

@@ -164,7 +164,7 @@ func TestCreateItem(t *testing.T) {
 	}
 
 	reader := bufio.NewReader(bytes.NewReader([]byte("test")))
-	item, err := f.CreateItem(share.Name, "test.txt", reader)
+	item, err := f.CreateItem(share.Name, "test.txt", 0, reader)
 
 	if err != nil {
 		t.Errorf("Expected no error, got %v", err)
@@ -202,7 +202,7 @@ func TestDeleteItem(t *testing.T) {
 	})
 
 	reader := bufio.NewReader(bytes.NewReader([]byte("test")))
-	_, _ = f.CreateItem(share.Name, "test.txt", reader)
+	_, _ = f.CreateItem(share.Name, "test.txt", 0, reader)
 
 	err := f.DeleteItem(share.Name, "test.txt")
 	if err != nil {
@@ -273,7 +273,7 @@ func TestFileOverflow(t *testing.T) {
 
 	r, _ := os.Open("2mb")
 	reader := bufio.NewReader(r)
-	_, err = f.CreateItem(share.Name, "test.txt", reader)
+	_, err = f.CreateItem(share.Name, "test.txt", 0, reader)
 	defer r.Close()
 
 	if !errors.Is(err, ErrMaxShareSizeReached) {
@@ -311,7 +311,7 @@ func TestShareOverflow(t *testing.T) {
 	defer r.Close()
 
 	reader := bufio.NewReader(r)
-	_, err = f.CreateItem(share.Name, "test.txt", reader)
+	_, err = f.CreateItem(share.Name, "test.txt", 0, reader)
 
 	if err != nil {
 		t.Errorf("Expected no error, got %v", err)
@@ -321,7 +321,7 @@ func TestShareOverflow(t *testing.T) {
 	defer s.Close()
 
 	reader = bufio.NewReader(s)
-	_, err = f.CreateItem(share.Name, "test2.txt", reader)
+	_, err = f.CreateItem(share.Name, "test2.txt", 0, reader)
 
 	if err == nil {
 		t.Errorf("Expected error, got nil")

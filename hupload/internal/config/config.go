@@ -132,6 +132,20 @@ func (c *Config) storage() (storage.Storage, error) {
 		}
 
 		return storage.NewFileStorage(options), nil
+
+	case "s3":
+		var options storage.S3StorageConfig
+		b, err := yaml.Marshal(s.Options)
+		if err != nil {
+			return nil, err
+		}
+
+		err = yaml.Unmarshal(b, &options)
+		if err != nil {
+			return nil, err
+		}
+
+		return storage.NewS3Storage(options), nil
 	}
 
 	return nil, ErrUnknownStorageBackend
