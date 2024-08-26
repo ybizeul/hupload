@@ -145,6 +145,31 @@ func (c *Config) storage() (storage.Storage, error) {
 			return nil, err
 		}
 
+		if options.Bucket == "" {
+			panic("missing bucket parameter for s3 config !")
+		}
+
+		if options.Region == "" {
+			if os.Getenv("AWS_DEFAULT_REGION") == "" {
+				panic("missing region parameter or AWS_DEFAULT_REGION environment for s3 config !")
+			}
+			options.Region = os.Getenv("AWS_DEFAULT_REGION")
+		}
+
+		if options.AWSKey == "" {
+			if os.Getenv("AWS_ACCESS_KEY_ID") == "" {
+				panic("missing aws_key parameter or AWS_ACCESS_KEY_ID environment for s3 config !")
+			}
+			options.Region = os.Getenv("AWS_ACCESS_KEY_ID")
+		}
+
+		if options.AWSSecret == "" {
+			if os.Getenv("AWS_SECRET_ACCESS_KEY") == "" {
+				panic("missing aws_secret parameter or AWS_SECRET_ACCESS_KEY environment for s3 config !")
+			}
+			options.Region = os.Getenv("AWS_SECRET_ACCESS_KEY")
+		}
+
 		return storage.NewS3Storage(options), nil
 	}
 

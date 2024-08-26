@@ -25,6 +25,7 @@ type S3StorageConfig struct {
 	AWSKey    string `yaml:"aws_key"`
 	AWSSecret string `yaml:"aws_secret"`
 	Bucket    string `yaml:"bucket"`
+	Region    string `yaml:"region"`
 
 	MaxFileSize  int64 `yaml:"max_file_mb"`
 	MaxShareSize int64 `yaml:"max_share_mb"`
