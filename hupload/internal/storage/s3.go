@@ -57,7 +57,7 @@ func NewS3Storage(o S3StorageConfig) *S3Backend {
 
 func (b *S3Backend) initialize() error {
 	c, err := config.LoadDefaultConfig(
-		context.TODO(),
+		context.Background(),
 		config.WithRegion("us-west-2"),
 		config.WithCredentialsProvider(credentials.NewStaticCredentialsProvider(b.Options.AWSKey, b.Options.AWSSecret, "")),
 	)
@@ -69,7 +69,7 @@ func (b *S3Backend) initialize() error {
 		o.UsePathStyle = true
 	})
 
-	_, err = b.Client.CreateBucket(context.TODO(), &s3.CreateBucketInput{
+	_, err = b.Client.CreateBucket(context.Background(), &s3.CreateBucketInput{
 		Bucket: &b.Options.Bucket,
 	})
 	if err != nil {
@@ -112,7 +112,7 @@ func (b *S3Backend) CreateShare(name, owner string, options Options) (*Share, er
 		return nil, err
 	}
 
-	_, err = b.Client.PutObject(context.TODO(), &s3.PutObjectInput{
+	_, err = b.Client.PutObject(context.Background(), &s3.PutObjectInput{
 		Bucket: &b.Options.Bucket,
 		Key:    &path,
 		Body:   j,
@@ -150,7 +150,7 @@ func (b *S3Backend) UpdateShare(name string, options *Options) (*Options, error)
 		return nil, err
 	}
 
-	_, err = b.Client.PutObject(context.TODO(), &s3.PutObjectInput{
+	_, err = b.Client.PutObject(context.Background(), &s3.PutObjectInput{
 		Bucket: &b.Options.Bucket,
 		Key:    &path,
 		Body:   j,
@@ -219,7 +219,7 @@ func (b *S3Backend) CreateItem(name, item string, size int64, r io.Reader) (*Ite
 	}
 
 	path := path.Join(name, item)
-	_, err = b.Client.PutObject(context.TODO(), &s3.PutObjectInput{
+	_, err = b.Client.PutObject(context.Background(), &s3.PutObjectInput{
 		Bucket:        &b.Options.Bucket,
 		Key:           &path,
 		Body:          src,
@@ -253,7 +253,7 @@ func (b *S3Backend) DeleteItem(share, item string) error {
 
 	path := path.Join(share, item)
 
-	_, err := b.Client.DeleteObject(context.TODO(), &s3.DeleteObjectInput{
+	_, err := b.Client.DeleteObject(context.Background(), &s3.DeleteObjectInput{
 		Bucket: &b.Options.Bucket,
 		Key:    &path,
 	})
@@ -275,7 +275,7 @@ func (b *S3Backend) GetShare(name string) (*Share, error) {
 		return nil, ErrInvalidShareName
 	}
 	path := path.Join("shares", name, ".metadata")
-	output, err := b.Client.GetObject(context.TODO(), &s3.GetObjectInput{
+	output, err := b.Client.GetObject(context.Background(), &s3.GetObjectInput{
 		Bucket: &b.Options.Bucket,
 		Key:    &path,
 	})
@@ -295,7 +295,7 @@ func (b *S3Backend) GetShare(name string) (*Share, error) {
 // ListShares returns the list of shares available
 func (b *S3Backend) ListShares() ([]Share, error) {
 	prefix := "shares/"
-	output, err := b.Client.ListObjectsV2(context.TODO(), &s3.ListObjectsV2Input{
+	output, err := b.Client.ListObjectsV2(context.Background(), &s3.ListObjectsV2Input{
 		Bucket: &b.Options.Bucket,
 		Prefix: &prefix,
 	})
@@ -305,7 +305,7 @@ func (b *S3Backend) ListShares() ([]Share, error) {
 
 	result := []Share{}
 	for _, item := range output.Contents {
-		gOutput, err := b.Client.GetObject(context.TODO(), &s3.GetObjectInput{
+		gOutput, err := b.Client.GetObject(context.Background(), &s3.GetObjectInput{
 			Bucket: &b.Options.Bucket,
 			Key:    item.Key,
 		})
@@ -327,7 +327,7 @@ func (b *S3Backend) ListShare(name string) ([]Item, error) {
 	if !isShareNameSafe(name) {
 		return nil, ErrInvalidShareName
 	}
-	output, err := b.Client.ListObjectsV2(context.TODO(), &s3.ListObjectsV2Input{
+	output, err := b.Client.ListObjectsV2(context.Background(), &s3.ListObjectsV2Input{
 		Bucket: &b.Options.Bucket,
 		Prefix: &name,
 	})
@@ -345,7 +345,7 @@ func (b *S3Backend) ListShare(name string) ([]Item, error) {
 			// 	types.ObjectAttributesObjectSize,
 			// },
 		}
-		gOutput, err := b.Client.HeadObject(context.TODO(), &inputs)
+		gOutput, err := b.Client.HeadObject(context.Background(), &inputs)
 		if err != nil {
 			return nil, err
 		}
@@ -385,7 +385,7 @@ func (b *S3Backend) DeleteShare(name string) error {
 
 	path := path.Join("shares", name, ".metadata")
 
-	_, err = b.Client.DeleteObject(context.TODO(), &s3.DeleteObjectInput{
+	_, err = b.Client.DeleteObject(context.Background(), &s3.DeleteObjectInput{
 		Bucket: &b.Options.Bucket,
 		Key:    &path,
 	})
@@ -408,7 +408,7 @@ func (b *S3Backend) GetItem(share, item string) (*Item, error) {
 
 	path := path.Join(share, item)
 
-	aOutput, err := b.Client.GetObjectAttributes(context.TODO(), &s3.GetObjectAttributesInput{
+	aOutput, err := b.Client.GetObjectAttributes(context.Background(), &s3.GetObjectAttributesInput{
 		Bucket: &b.Options.Bucket,
 		Key:    &path,
 		ObjectAttributes: []types.ObjectAttributes{
@@ -447,7 +447,7 @@ func (b *S3Backend) GetItemData(share, item string) (io.ReadCloser, error) {
 
 	path := path.Join(share, item)
 
-	aOutput, err := b.Client.GetObject(context.TODO(), &s3.GetObjectInput{
+	aOutput, err := b.Client.GetObject(context.Background(), &s3.GetObjectInput{
 		Bucket: &b.Options.Bucket,
 		Key:    &path,
 	})
@@ -491,7 +491,7 @@ func (b *S3Backend) updateMetadata(s string) error {
 
 	path := path.Join("shares", s, ".metadata")
 
-	_, err = b.Client.PutObject(context.TODO(), &s3.PutObjectInput{
+	_, err = b.Client.PutObject(context.Background(), &s3.PutObjectInput{
 		Bucket: &b.Options.Bucket,
 		Key:    &path,
 		Body:   j,
