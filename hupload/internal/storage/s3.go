@@ -22,6 +22,7 @@ import (
 // MaxFileSize is the maximum size in MB for an item
 // MaxShareSize is the maximum size in MB for a share
 type S3StorageConfig struct {
+	Endpoint  string `yaml:"endpoint,omitempty"`
 	AWSKey    string `yaml:"aws_key"`
 	AWSSecret string `yaml:"aws_secret"`
 	Bucket    string `yaml:"bucket"`
@@ -59,7 +60,7 @@ func NewS3Storage(o S3StorageConfig) *S3Backend {
 func (b *S3Backend) initialize() error {
 	c, err := config.LoadDefaultConfig(
 		context.Background(),
-		config.WithRegion("us-west-2"),
+		config.WithRegion(b.Options.Region),
 		config.WithCredentialsProvider(credentials.NewStaticCredentialsProvider(b.Options.AWSKey, b.Options.AWSSecret, "")),
 	)
 	if err != nil {
@@ -68,6 +69,9 @@ func (b *S3Backend) initialize() error {
 
 	b.Client = s3.NewFromConfig(c, func(o *s3.Options) {
 		o.UsePathStyle = true
+		if b.Options.Endpoint != "" {
+			o.BaseEndpoint = &b.Options.Endpoint
+		}
 	})
 
 	_, err = b.Client.CreateBucket(context.Background(), &s3.CreateBucketInput{

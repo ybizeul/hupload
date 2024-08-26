@@ -11,6 +11,8 @@ import (
 
 func createS3Backend(t *testing.T) *S3Backend {
 	c := S3StorageConfig{
+		Endpoint:     os.Getenv("AWS_ENDPOINT_URL"),
+		Region:       os.Getenv("AWS_DEFAULT_REGION"),
 		AWSKey:       os.Getenv("AWS_ACCESS_KEY_ID"),
 		AWSSecret:    os.Getenv("AWS_SECRET_ACCESS_KEY"),
 		Bucket:       os.Getenv("BUCKET"),
