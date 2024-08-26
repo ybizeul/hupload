@@ -5,11 +5,13 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"io"
 	"path"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 )
@@ -45,13 +47,20 @@ func NewS3Storage(o S3StorageConfig) *S3Backend {
 		Options: o,
 	}
 
-	r.initialize()
+	err := r.initialize()
+	if err != nil {
+		return nil
+	}
 
 	return &r
 }
 
 func (b *S3Backend) initialize() error {
-	c, err := config.LoadDefaultConfig(context.TODO())
+	c, err := config.LoadDefaultConfig(
+		context.TODO(),
+		config.WithRegion("us-west-2"),
+		config.WithCredentialsProvider(credentials.NewStaticCredentialsProvider(b.Options.AWSKey, b.Options.AWSSecret, "")),
+	)
 	if err != nil {
 		return err
 	}
@@ -59,6 +68,17 @@ func (b *S3Backend) initialize() error {
 	b.Client = s3.NewFromConfig(c, func(o *s3.Options) {
 		o.UsePathStyle = true
 	})
+
+	_, err = b.Client.CreateBucket(context.TODO(), &s3.CreateBucketInput{
+		Bucket: &b.Options.Bucket,
+	})
+	if err != nil {
+		var bne *types.BucketAlreadyOwnedByYou
+		if errors.As(err, &bne) {
+			return nil
+		}
+	}
+
 	return nil
 }
 
@@ -310,6 +330,9 @@ func (b *S3Backend) DeleteShare(name string) error {
 	}
 	for _, item := range content {
 		err = b.DeleteItem(name, item.Path)
+		if err != nil {
+			return err
+		}
 	}
 
 	path := path.Join("shares", name, ".metadata")

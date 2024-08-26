@@ -3,6 +3,7 @@ package storage
 import (
 	"bufio"
 	"bytes"
+	"os"
 	"reflect"
 	"testing"
 	"time"
@@ -10,17 +11,15 @@ import (
 
 func createS3Backend(t *testing.T) *S3Backend {
 	c := S3StorageConfig{
-		AWSKey:    "SJdTNdqZZgb2pOj84Xka",
-		AWSSecret: "IeVcaEdKMY6SSh1conEA1eyqVX5PzgI0GIbqkxco",
-		Bucket:    "hupload",
+		AWSKey:    os.Getenv("AWS_ACCESS_KEY_ID"),
+		AWSSecret: os.Getenv("AWS_SECRET_ACCESS_KEY"),
+		Bucket:    os.Getenv("BUCKET"),
 	}
 
 	f := NewS3Storage(c)
 	if f == nil {
-		t.Errorf("Expected FileStorage to be created")
+		t.Errorf("Expected S3 Storage to be created")
 	}
-
-	//f.initialize()
 
 	return f
 }
