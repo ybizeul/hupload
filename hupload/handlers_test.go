@@ -52,7 +52,7 @@ func makeShare(t *testing.T, name string, params storage.Options) *storage.Share
 }
 
 func makeItem(t *testing.T, shareName, fileName string, size int) {
-	_, err := cfg.Storage.CreateItem(shareName, fileName, bufio.NewReader(io.LimitReader(rand.Reader, int64(size))))
+	_, err := cfg.Storage.CreateItem(shareName, fileName, int64(size), bufio.NewReader(io.LimitReader(rand.Reader, int64(size))))
 	if err != nil {
 		t.Fatal(err)
 	}

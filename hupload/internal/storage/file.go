@@ -216,7 +216,7 @@ func (b *FileBackend) UpdateShare(name string, options *Options) (*Options, erro
 // doesn't fit in the share or if the share is full. The content is read from
 // the provided bufio.Reader.
 
-func (b *FileBackend) CreateItem(s string, i string, r *bufio.Reader) (*Item, error) {
+func (b *FileBackend) CreateItem(s string, i string, size int64, r io.Reader) (*Item, error) {
 	if !isShareNameSafe(s) {
 		return nil, ErrInvalidShareName
 	}
@@ -240,6 +240,9 @@ func (b *FileBackend) CreateItem(s string, i string, r *bufio.Reader) (*Item, er
 
 	maxItem := b.Options.MaxFileSize * 1024 * 1024
 	if maxItem > 0 {
+		if size > 0 && maxItem < size {
+			return nil, ErrMaxFileSizeReached
+		}
 		if maxWrite > maxItem || maxWrite == 0 {
 			maxWrite = maxItem
 		}
@@ -249,6 +252,10 @@ func (b *FileBackend) CreateItem(s string, i string, r *bufio.Reader) (*Item, er
 	// to one more byte
 	if maxWrite > 0 {
 		maxWrite++
+
+		if size > 0 && maxWrite < size {
+			return nil, ErrMaxShareSizeReached
+		}
 	}
 
 	// path.Join("/", i) is used to avoid path traversal

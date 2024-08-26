@@ -99,7 +99,7 @@ export class APIClient {
         })
     }
 
-    upload(path: string, file: string|Blob, onUploadProgress?: (progressEvent: AxiosProgressEvent) => void, signal?: GenericAbortSignal): Promise<AxiosResponse|APIServerError> {
+    upload(path: string, file: File, onUploadProgress?: (progressEvent: AxiosProgressEvent) => void, signal?: GenericAbortSignal): Promise<AxiosResponse|APIServerError> {
         return new Promise<AxiosResponse|APIServerError>((resolve, reject) => {
             const formData = new FormData();
             formData.append("file", file);
@@ -109,7 +109,8 @@ export class APIClient {
                 method: 'POST',
                 data: formData,
                 headers: {
-                    'Content-Type': 'multipart/form-data'
+                    'Content-Type': 'multipart/form-data',
+                    'FileSize': file.size.toString(),
                 },
                 onUploadProgress,
                 signal,

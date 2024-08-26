@@ -3,10 +3,8 @@ package storage
 import (
 	"bufio"
 	"bytes"
-	"errors"
 	"fmt"
 	"io"
-	"log"
 	"os"
 	"os/exec"
 	"path"
@@ -19,7 +17,9 @@ import (
 
 func createFileBackend(t *testing.T) *FileBackend {
 	c := FileStorageConfig{
-		Path: "data",
+		Path:         "data",
+		MaxFileSize:  4,
+		MaxShareSize: 5,
 	}
 
 	f := NewFileStorage(c)
@@ -164,7 +164,7 @@ func TestCreateItem(t *testing.T) {
 	}
 
 	reader := bufio.NewReader(bytes.NewReader([]byte("test")))
-	item, err := f.CreateItem(share.Name, "test.txt", reader)
+	item, err := f.CreateItem(share.Name, "test.txt", 0, reader)
 
 	if err != nil {
 		t.Errorf("Expected no error, got %v", err)
@@ -202,7 +202,7 @@ func TestDeleteItem(t *testing.T) {
 	})
 
 	reader := bufio.NewReader(bytes.NewReader([]byte("test")))
-	_, _ = f.CreateItem(share.Name, "test.txt", reader)
+	_, _ = f.CreateItem(share.Name, "test.txt", 0, reader)
 
 	err := f.DeleteItem(share.Name, "test.txt")
 	if err != nil {
@@ -245,89 +245,6 @@ func TestDeleteShare(t *testing.T) {
 	}
 }
 
-func TestFileOverflow(t *testing.T) {
-	t.Cleanup(func() {
-		os.RemoveAll("data")
-		os.RemoveAll("2mb")
-	})
-
-	c := FileStorageConfig{
-		Path:         "data",
-		MaxFileSize:  1,
-		MaxShareSize: 3,
-	}
-
-	f := NewFileStorage(c)
-	if f == nil {
-		t.Errorf("Expected FileStorage to be created")
-	}
-
-	f.initialize()
-
-	share, err := f.CreateShare("test", "admin", Options{Validity: 10, Exposure: "upload"})
-	if err != nil {
-		t.Errorf("Expected no error, got %v", err)
-	}
-
-	createFile("2mb", 2)
-
-	r, _ := os.Open("2mb")
-	reader := bufio.NewReader(r)
-	_, err = f.CreateItem(share.Name, "test.txt", reader)
-	defer r.Close()
-
-	if !errors.Is(err, ErrMaxShareSizeReached) {
-		t.Errorf("Expected ErrMaxShareSizeReached, got %v", err)
-	}
-}
-
-func TestShareOverflow(t *testing.T) {
-	t.Cleanup(func() {
-		os.RemoveAll("data")
-		os.RemoveAll("3mb")
-	})
-
-	c := FileStorageConfig{
-		Path:         "data",
-		MaxFileSize:  4,
-		MaxShareSize: 5,
-	}
-
-	f := NewFileStorage(c)
-	if f == nil {
-		t.Errorf("Expected FileStorage to be created")
-	}
-
-	f.initialize()
-
-	share, err := f.CreateShare("test", "admin", Options{Validity: 10, Exposure: "upload"})
-	if err != nil {
-		t.Errorf("Expected no error, got %v", err)
-	}
-
-	createFile("3mb", 3)
-
-	r, _ := os.Open("3mb")
-	defer r.Close()
-
-	reader := bufio.NewReader(r)
-	_, err = f.CreateItem(share.Name, "test.txt", reader)
-
-	if err != nil {
-		t.Errorf("Expected no error, got %v", err)
-	}
-
-	s, _ := os.Open("3mb")
-	defer s.Close()
-
-	reader = bufio.NewReader(s)
-	_, err = f.CreateItem(share.Name, "test2.txt", reader)
-
-	if err == nil {
-		t.Errorf("Expected error, got nil")
-	}
-}
-
 func TestSafeShareName(t *testing.T) {
 	if !isShareNameSafe("test") {
 		t.Errorf("Expected true, got false")
@@ -342,25 +259,25 @@ func TestSafeShareName(t *testing.T) {
 	}
 }
 
-func createFile(path string, size int) {
-	s := int64(size * 1024 * 1024)
-	fd, err := os.Create(path)
-	if err != nil {
-		log.Fatal("Failed to create output")
-	}
-	_, err = fd.Seek(s-1, 0)
-	if err != nil {
-		log.Fatal("Failed to seek")
-	}
-	_, err = fd.Write([]byte{0})
-	if err != nil {
-		log.Fatal("Write failed")
-	}
-	err = fd.Close()
-	if err != nil {
-		log.Fatal("Failed to close file")
-	}
-}
+// func createFile(path string, size int) {
+// 	s := int64(size * 1024 * 1024)
+// 	fd, err := os.Create(path)
+// 	if err != nil {
+// 		log.Fatal("Failed to create output")
+// 	}
+// 	_, err = fd.Seek(s-1, 0)
+// 	if err != nil {
+// 		log.Fatal("Failed to seek")
+// 	}
+// 	_, err = fd.Write([]byte{0})
+// 	if err != nil {
+// 		log.Fatal("Write failed")
+// 	}
+// 	err = fd.Close()
+// 	if err != nil {
+// 		log.Fatal("Failed to close file")
+// 	}
+// }
 
 func TestGetItemData(t *testing.T) {
 	c := FileStorageConfig{

@@ -84,8 +84,28 @@ storage:
     max_share_mb: 2048
 ```
 
-Currently, there is only one authentication backend `file` and one storage
-backend `file`
+Currently, there is only one authentication backend `file` and you can use
+either local file storage `file` or `s3` with the following configuration :
+
+```
+storage:
+  type: s3
+  options:
+    region: us-east-1
+    endpoint: my.s3server.com
+    use_path_style: true
+    aws_key: <aws_key>
+    aws_secret: <aws_secret>
+    bucket: hupload
+    max_file_mb: 512
+    max_share_mb: 2048
+```
+
+S3 options can also be set in environment using `AWS_DEFAULT_REGION`,
+`AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_ENDPOINT_URL`.
+
+Note that `region` is mendatory for AWS API to work correctly even if you
+are using your own S3 server like minio.
 
 For authentication, users are defined in a yaml file :
 
