@@ -22,11 +22,12 @@ import (
 // MaxFileSize is the maximum size in MB for an item
 // MaxShareSize is the maximum size in MB for a share
 type S3StorageConfig struct {
-	Endpoint  string `yaml:"endpoint,omitempty"`
-	AWSKey    string `yaml:"aws_key"`
-	AWSSecret string `yaml:"aws_secret"`
-	Bucket    string `yaml:"bucket"`
-	Region    string `yaml:"region"`
+	Endpoint       string `yaml:"endpoint,omitempty"`
+	ForcePathStyle bool   `yaml:"force_path_style,omitempty"`
+	AWSKey         string `yaml:"aws_key"`
+	AWSSecret      string `yaml:"aws_secret"`
+	Bucket         string `yaml:"bucket"`
+	Region         string `yaml:"region"`
 
 	MaxFileSize  int64 `yaml:"max_file_mb"`
 	MaxShareSize int64 `yaml:"max_share_mb"`
@@ -68,7 +69,9 @@ func (b *S3Backend) initialize() error {
 	}
 
 	b.Client = s3.NewFromConfig(c, func(o *s3.Options) {
-		o.UsePathStyle = true
+		if b.Options.ForcePathStyle {
+			o.UsePathStyle = true
+		}
 		if b.Options.Endpoint != "" {
 			o.BaseEndpoint = &b.Options.Endpoint
 		}
