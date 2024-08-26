@@ -51,6 +51,7 @@ SSL)
 
 - Quickly create random links and share with users,
 - Easy to use drag and drop interface for uploads,
+- S3 or filesystem storage,
 - Configurable max share size and max file size,
 - Basic share informations listed (number of items, total size),
 - Add instructions in Markdown for your users,
@@ -102,9 +103,10 @@ storage:
 ```
 
 S3 options can also be set in environment using `AWS_DEFAULT_REGION`,
-`AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_ENDPOINT_URL`.
+`AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_ENDPOINT_URL`. Options set
+in configuration file have precedence.
 
-Note that `region` is mendatory for AWS API to work correctly even if you
+Note that `region` is mandatory for AWS API to work correctly even if you
 are using your own S3 server like minio.
 
 For authentication, users are defined in a yaml file :
