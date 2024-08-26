@@ -84,8 +84,17 @@ storage:
     max_share_mb: 2048
 ```
 
-Currently, there is only one authentication backend `file` and one storage
-backend `file`
+Currently, there is only one authentication backend `file` and you can use
+either local file storage `file` or `s3` with the following configuration :
+
+```
+storage:
+  type: s3
+  options:
+    bucket: hupload
+    max_file_mb: 512
+    max_share_mb: 2048
+```
 
 For authentication, users are defined in a yaml file :
 
