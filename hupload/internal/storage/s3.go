@@ -164,7 +164,7 @@ func (b *S3Backend) UpdateShare(name string, options *Options) (*Options, error)
 }
 
 // CreateItem creates a new item in a share
-func (b *S3Backend) CreateItem(name, item string, size int64, r *bufio.Reader) (*Item, error) {
+func (b *S3Backend) CreateItem(name, item string, size int64, r io.Reader) (*Item, error) {
 	if !isShareNameSafe(name) {
 		return nil, ErrInvalidShareName
 	}
@@ -377,7 +377,7 @@ func (b *S3Backend) DeleteShare(name string) error {
 		return err
 	}
 	for _, item := range content {
-		err = b.DeleteItem(name, item.Path)
+		err = b.DeleteItem(name, path.Base(item.Path))
 		if err != nil {
 			return err
 		}

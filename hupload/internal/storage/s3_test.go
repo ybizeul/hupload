@@ -11,9 +11,11 @@ import (
 
 func createS3Backend(t *testing.T) *S3Backend {
 	c := S3StorageConfig{
-		AWSKey:    os.Getenv("AWS_ACCESS_KEY_ID"),
-		AWSSecret: os.Getenv("AWS_SECRET_ACCESS_KEY"),
-		Bucket:    os.Getenv("BUCKET"),
+		AWSKey:       os.Getenv("AWS_ACCESS_KEY_ID"),
+		AWSSecret:    os.Getenv("AWS_SECRET_ACCESS_KEY"),
+		Bucket:       os.Getenv("BUCKET"),
+		MaxFileSize:  4,
+		MaxShareSize: 5,
 	}
 
 	f := NewS3Storage(c)

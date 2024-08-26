@@ -1,7 +1,6 @@
 package storage
 
 import (
-	"bufio"
 	"io"
 	"time"
 )
@@ -94,7 +93,7 @@ type Storage interface {
 	UpdateShare(name string, options *Options) (*Options, error)
 
 	// CreateItem creates a new item in a share
-	CreateItem(share, item string, size int64, reader *bufio.Reader) (*Item, error)
+	CreateItem(share, item string, size int64, reader io.Reader) (*Item, error)
 
 	// CreateItem creates a new item in a share
 	DeleteItem(share, item string) error

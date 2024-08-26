@@ -216,7 +216,7 @@ func (b *FileBackend) UpdateShare(name string, options *Options) (*Options, erro
 // doesn't fit in the share or if the share is full. The content is read from
 // the provided bufio.Reader.
 
-func (b *FileBackend) CreateItem(s string, i string, size int64, r *bufio.Reader) (*Item, error) {
+func (b *FileBackend) CreateItem(s string, i string, size int64, r io.Reader) (*Item, error) {
 	if !isShareNameSafe(s) {
 		return nil, ErrInvalidShareName
 	}
