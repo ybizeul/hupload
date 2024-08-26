@@ -192,6 +192,11 @@ func (b *S3Backend) CreateItem(share, item string, size int64, reader *bufio.Rea
 		return nil, err
 	}
 
+	err = b.updateMetadata(share)
+	if err != nil {
+		return nil, err
+	}
+
 	result, err := b.GetItem(share, item)
 	if err != nil {
 		return nil, err
@@ -218,6 +223,12 @@ func (b *S3Backend) DeleteItem(share, item string) error {
 	if err != nil {
 		return err
 	}
+
+	err = b.updateMetadata(share)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -409,4 +420,49 @@ func (b *S3Backend) GetItemData(share, item string) (io.ReadCloser, error) {
 	}
 
 	return aOutput.Body, err
+}
+
+func (b *S3Backend) updateMetadata(s string) error {
+	if !isShareNameSafe(s) {
+		return ErrInvalidShareName
+	}
+
+	c, err := b.ListShare(s)
+	if err != nil {
+		return err
+	}
+
+	count := 0
+	capacity := int64(0)
+	for _, i := range c {
+		count += 1
+		capacity += i.ItemInfo.Size
+	}
+
+	share, err := b.GetShare(s)
+	if err != nil {
+		return err
+	}
+	share.Count = int64(count)
+	share.Size = capacity
+
+	j := bytes.NewBuffer([]byte{})
+	err = json.NewEncoder(j).Encode(share)
+	if err != nil {
+		return err
+	}
+
+	path := path.Join("shares", s, ".metadata")
+
+	_, err = b.Client.PutObject(context.TODO(), &s3.PutObjectInput{
+		Bucket: &b.Options.Bucket,
+		Key:    &path,
+		Body:   j,
+	})
+
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
