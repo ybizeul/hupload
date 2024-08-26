@@ -164,15 +164,15 @@ func (b *S3Backend) UpdateShare(name string, options *Options) (*Options, error)
 }
 
 // CreateItem creates a new item in a share
-func (b *S3Backend) CreateItem(share, item string, size int64, reader *bufio.Reader) (*Item, error) {
-	if !isShareNameSafe(share) {
+func (b *S3Backend) CreateItem(name, item string, size int64, r *bufio.Reader) (*Item, error) {
+	if !isShareNameSafe(name) {
 		return nil, ErrInvalidShareName
 	}
 	if !isItemNameSafe(item) {
 		return nil, ErrInvalidItemName
 	}
 
-	_, err := b.GetShare(share)
+	share, err := b.GetShare(name)
 	if err != nil {
 		return nil, err
 	}
@@ -181,23 +181,60 @@ func (b *S3Backend) CreateItem(share, item string, size int64, reader *bufio.Rea
 		return nil, ErrEmptyFile
 	}
 
-	path := path.Join(share, item)
+	// Check amount of free capacity in share according to current limits
+	maxWrite := int64(0)
+
+	maxShare := b.Options.MaxShareSize * 1024 * 1024
+	if maxShare > 0 {
+		maxWrite = maxShare - share.Size
+		if maxWrite <= 0 {
+			return nil, ErrMaxShareSizeReached
+		}
+	}
+
+	maxItem := b.Options.MaxFileSize * 1024 * 1024
+	if maxItem > 0 {
+		if maxItem < size {
+			return nil, ErrMaxFileSizeReached
+		}
+		if maxWrite > maxItem || maxWrite == 0 {
+			maxWrite = maxItem
+		}
+	}
+
+	// maxWrite is the actual allowed size for the item, so we fix the limit
+	// to one more byte
+	if maxWrite > 0 {
+		maxWrite++
+
+		if maxWrite < size {
+			return nil, ErrMaxShareSizeReached
+		}
+	}
+	src := r
+
+	// Substitute bufio.Reader with a limited reader
+	if maxWrite != 0 {
+		src = bufio.NewReader(io.LimitReader(r, maxWrite))
+	}
+
+	path := path.Join(name, item)
 	_, err = b.Client.PutObject(context.TODO(), &s3.PutObjectInput{
 		Bucket:        &b.Options.Bucket,
 		Key:           &path,
-		Body:          reader,
+		Body:          src,
 		ContentLength: &size,
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	err = b.updateMetadata(share)
+	err = b.updateMetadata(name)
 	if err != nil {
 		return nil, err
 	}
 
-	result, err := b.GetItem(share, item)
+	result, err := b.GetItem(name, item)
 	if err != nil {
 		return nil, err
 	}

@@ -240,6 +240,9 @@ func (b *FileBackend) CreateItem(s string, i string, size int64, r *bufio.Reader
 
 	maxItem := b.Options.MaxFileSize * 1024 * 1024
 	if maxItem > 0 {
+		if size > 0 && maxItem < size {
+			return nil, ErrMaxFileSizeReached
+		}
 		if maxWrite > maxItem || maxWrite == 0 {
 			maxWrite = maxItem
 		}
@@ -249,6 +252,10 @@ func (b *FileBackend) CreateItem(s string, i string, size int64, r *bufio.Reader
 	// to one more byte
 	if maxWrite > 0 {
 		maxWrite++
+
+		if size > 0 && maxWrite < size {
+			return nil, ErrMaxShareSizeReached
+		}
 	}
 
 	// path.Join("/", i) is used to avoid path traversal
