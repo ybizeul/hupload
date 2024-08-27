@@ -17,6 +17,6 @@ export function VersionComponent() {
     })
 
     return (
-                <Text w="100%" mt="lg" mb="lg" size="xs" c="darkgray" ta="center" >{version}</Text>
+        <Text w="100%" mt="lg" mb="lg" size="xs" c="darkgray" ta="center" >{version}</Text>
     )
 }
