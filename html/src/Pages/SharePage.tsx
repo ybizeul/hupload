@@ -1,7 +1,7 @@
 import { Anchor, Box, Button, Center, CopyButton, Group, Paper, rem, Stack, Text, Tooltip } from "@mantine/core";
 import { Dropzone } from "@mantine/dropzone";
 import { IconClock, IconFileZip, IconHelpHexagon, IconLink, IconMoodSad, IconUpload, IconX } from "@tabler/icons-react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { H } from "../APIClient";
 import { UploadQueue, QueueItem } from "../UploadQueue";
 import {ItemComponent} from "@/Components";
@@ -24,6 +24,15 @@ export function SharePage() {
 
     // Check if share is expired
     const expired = (shareError?.response?.status === 410)
+
+    const updateProgress = useCallback((progress: QueueItem[]) => {
+        setQueueItems((i) => {
+            const j = i.filter((q) => !progress.some((p) => p.file.name === q.file.name))
+            return [...j, ...progress]
+    })
+    },[])
+
+    const queue = new UploadQueue(H,"/shares/"+share?.name, updateProgress)
 
     // useEffects
 
@@ -147,8 +156,6 @@ export function SharePage() {
         })
     }
 
-    const queue = new UploadQueue(H,"/shares/"+share.name, setQueueItems)
-
     return (
         <>
             {/* Top of page copy button */}
@@ -183,11 +190,13 @@ export function SharePage() {
                     setItems(newItems)
 
                     queue.addFiles(files)
-                        .then((r) => {
-                            const finishedItems = r as Item[]
-                            setQueueItems([])
-                            setItems([...finishedItems, ...newItems])
-                        })
+                        // .then((r) => {
+                            
+                        //     //const finishedItems = r as Item[]
+
+                        //     //setQueueItems([])
+                        //     setItems([...finishedItems, ...newItems])
+                        // })
                         .catch((e) => {
                             console.log(e)
                         })
