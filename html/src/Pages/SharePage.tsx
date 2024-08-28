@@ -28,7 +28,7 @@ export function SharePage() {
     const updateProgress = useCallback((progress: QueueItem[]) => {
         setQueueItems((i) => {
             const j = i.filter((q) => !progress.some((p) => p.file.name === q.file.name))
-            return [...j, ...progress]
+            return [...progress, ...j]
     })
     },[])
 
