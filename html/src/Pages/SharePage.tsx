@@ -26,15 +26,16 @@ export function SharePage() {
     const expired = (shareError?.response?.status === 410)
 
     const updateProgress = useCallback((progress: QueueItem[]) => {
-        setQueueItems((i) => {
-            const j = i.map((q) => {
-                const p = progress.find((p) => p.file.name === q.file.name)
+        setQueueItems((currentQueue) => {
+            const j = currentQueue.map((currentItem) => {
+                const p = progress.find((p) => p.file.name === currentItem.file.name)
                 if (p) {
                     return p
                 }
-                return q
+                return currentItem
             })
-            return j
+            const k = progress.filter((p) => !j.some((i) => i.file.name === p.file.name))
+            return [...k, ...j]
     })
     },[])
 
