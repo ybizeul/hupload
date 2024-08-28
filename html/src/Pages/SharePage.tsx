@@ -27,8 +27,14 @@ export function SharePage() {
 
     const updateProgress = useCallback((progress: QueueItem[]) => {
         setQueueItems((i) => {
-            const j = i.filter((q) => !progress.some((p) => p.file.name === q.file.name))
-            return [...progress, ...j]
+            const j = i.map((q) => {
+                const p = progress.find((p) => p.file.name === q.file.name)
+                if (p) {
+                    return p
+                }
+                return q
+            })
+            return j
     })
     },[])
 
