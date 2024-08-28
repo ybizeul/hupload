@@ -14,7 +14,7 @@ import { AxiosError } from "axios";
 export function SharePage() {
 
     const [items, setItems] = useState<Item[]|undefined>(undefined)
-    const [queue, setQueue] = useState<QueueItem[]>([])
+    const [queueItems, setQueueItems] = useState<QueueItem[]>([])
     //const [expired,setExpired] = useState(false)
     const [error, setError] = useState<undefined|AxiosError>(undefined)
 
@@ -147,6 +147,8 @@ export function SharePage() {
         })
     }
 
+    const queue = new UploadQueue(H,"/shares/"+share.name, setQueueItems)
+
     return (
         <>
             {/* Top of page copy button */}
@@ -173,20 +175,22 @@ export function SharePage() {
             <>
                 <Dropzone
                 onDrop={(files) => {
-                    const U = new UploadQueue(H,"/shares/"+share.name, setQueue)
+                    // Filter out files that are already uploaded
                     const newItems = items.filter((i) => {
-                    return !files.some((f) => f.name === i.Path.split("/")[1])
+                        return !files.some((f) => f.name === i.Path.split("/")[1])
                     })
+
                     setItems(newItems)
-                    U.addFiles(files)
-                    .then((r) => {
-                    const finishedItems = r as Item[]
-                    setQueue([])
-                    setItems([...finishedItems, ...newItems])
-                    })
-                    .catch((e) => {
-                    console.log(e)
-                    })
+
+                    queue.addFiles(files)
+                        .then((r) => {
+                            const finishedItems = r as Item[]
+                            setQueueItems([])
+                            setItems([...finishedItems, ...newItems])
+                        })
+                        .catch((e) => {
+                            console.log(e)
+                        })
                 }}
 
                 onReject={(files) => console.log('rejected files', files)}
@@ -222,7 +226,7 @@ export function SharePage() {
             {
                 // Display upload queue items (queue items uploading or finished 
                 // uploading)
-                queue.map((q) => (
+                queueItems.map((q) => (
                 <ItemComponent  download={false} canDelete={false} key={'up_' + q.file.name} queueItem={q} />
                 ))
             }
