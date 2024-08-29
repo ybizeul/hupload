@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
+	"net/http"
 	"path"
 	"time"
 
@@ -63,6 +64,9 @@ func (b *S3Backend) initialize() error {
 		context.Background(),
 		config.WithRegion(b.Options.Region),
 		config.WithCredentialsProvider(credentials.NewStaticCredentialsProvider(b.Options.AWSKey, b.Options.AWSSecret, "")),
+		config.WithHTTPClient(&http.Client{
+			Timeout: 0,
+		}),
 	)
 	if err != nil {
 		return err
