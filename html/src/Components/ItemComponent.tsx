@@ -48,14 +48,14 @@ export function ItemComponent(props: {download: boolean, onDelete?: (item:string
                 (queueItem.failed)?
                 (<Center>
                     <ActionIcon color="red" variant="light" radius="xl" size="xl">
-                        <IconX style={{ width: rem(22), height: rem(22) }} />
+                        <IconX style={{ width: rem(20), height: rem(20) }} />
                     </ActionIcon>
                 </Center>) // queueItem.failed
                 :
                 ((queueItem.finished)?
                 (<Center>
                     <ActionIcon color="teal" variant="light" radius="xl" size="xl">
-                        <IconCheck style={{ width: rem(22), height: rem(22) }} />
+                        <IconCheck style={{ width: rem(20), height: rem(20) }} />
                     </ActionIcon>
                 </Center>) // queueItem.finished
                 :
