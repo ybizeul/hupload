@@ -9,6 +9,7 @@ import (
 	"io"
 	"net/http"
 	"path"
+	"sort"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/config"
@@ -331,6 +332,11 @@ func (b *S3Backend) ListShares() ([]Share, error) {
 		}
 		result = append(result, *share)
 	}
+
+	sort.Slice(result, func(i, j int) bool {
+		return result[i].DateCreated.After(result[j].DateCreated)
+	})
+
 	return result, nil
 }
 
