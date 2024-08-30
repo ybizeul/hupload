@@ -96,6 +96,7 @@ func (h *Hupload) setup() {
 	api.AddRoute("GET    /api/v1/shares/{share}/items", authenticatorsOpen, h.getShareItems)
 	api.AddRoute("GET    /api/v1/shares/{share}", authenticatorsOpen, h.getShare)
 	api.AddRoute("GET    /api/v1/shares/{share}/items/{item}", authenticatorsOpen, h.getItem)
+	api.AddRoute("GET    /d/{share}/{item}", authenticatorsOpen, h.getItem)
 	api.AddRoute("DELETE /api/v1/shares/{share}/items/{item}", authenticatorsOpen, h.deleteItem)
 
 	// Protected routes

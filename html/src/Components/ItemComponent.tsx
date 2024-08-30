@@ -83,7 +83,7 @@ export function ItemComponent(props: {download: boolean, onDelete?: (item:string
                     </Popover>
                 }
                 {download &&
-                <ActionIcon ml="sm" component="a" href={'/api/v1/shares/'+item?.Path.split("/")[0]+'/items/'+item?.Path.split("/")[1]} aria-label="Download" variant="light" color="blue">
+                <ActionIcon ml="sm" component="a" href={'/d/'+item?.Path.split("/")[0]+'/'+item?.Path.split("/")[1]} aria-label="Download" variant="light" color="blue">
                     <IconDownload style={{ width: '70%', height: '70%' }} stroke={1.5} />
                 </ActionIcon>
                 }
