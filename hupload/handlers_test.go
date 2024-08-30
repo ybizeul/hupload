@@ -110,10 +110,14 @@ func TestCreateShare(t *testing.T) {
 
 				var share storage.Share
 
-				json.NewDecoder(w.Body).Decode(&share)
+				err := json.NewDecoder(w.Body).Decode(&share)
+				if err != nil {
+					t.Errorf("Expected no error, got %v", err)
+					return
+				}
 
 				t.Cleanup(func() {
-					h.Config.Storage.DeleteShare(share.Name)
+					_ = h.Config.Storage.DeleteShare(share.Name)
 				})
 			})
 
@@ -141,10 +145,14 @@ func TestCreateShare(t *testing.T) {
 
 				_ = json.NewDecoder(w.Body).Decode(&share)
 
-				json.NewDecoder(w.Body).Decode(&share)
+				err := json.NewDecoder(w.Body).Decode(&share)
+				if err != nil {
+					t.Errorf("Expected no error, got %v", err)
+					return
+				}
 
 				t.Cleanup(func() {
-					h.Config.Storage.DeleteShare(share.Name)
+					_ = h.Config.Storage.DeleteShare(share.Name)
 				})
 
 				token = &w.Result().Cookies()[0].Value
@@ -180,10 +188,15 @@ func TestCreateShare(t *testing.T) {
 
 				var share storage.Share
 
-				json.NewDecoder(w.Body).Decode(&share)
+				err := json.NewDecoder(w.Body).Decode(&share)
+
+				if err != nil {
+					t.Errorf("Expected no error, got %v", err)
+					return
+				}
 
 				t.Cleanup(func() {
-					h.Config.Storage.DeleteShare(share.Name)
+					_ = h.Config.Storage.DeleteShare(share.Name)
 				})
 
 				// _, err := os.Stat(path.Join("tmptest/data/", share.Name))
@@ -217,7 +230,7 @@ func TestCreateShare(t *testing.T) {
 				}
 
 				t.Cleanup(func() {
-					h.Config.Storage.DeleteShare("samename")
+					_ = h.Config.Storage.DeleteShare("samename")
 				})
 			})
 
@@ -239,7 +252,7 @@ func TestCreateShare(t *testing.T) {
 				}
 
 				t.Cleanup(func() {
-					h.Config.Storage.DeleteShare("randomname")
+					_ = h.Config.Storage.DeleteShare("randomname")
 				})
 			})
 
@@ -282,7 +295,7 @@ func TestUpdateShare(t *testing.T) {
 				Message:     "message",
 			})
 			t.Cleanup(func() {
-				h.Config.Storage.DeleteShare("testupdate")
+				_ = h.Config.Storage.DeleteShare("testupdate")
 			})
 			t.Run("Update share should succeed", func(t *testing.T) {
 				var (
@@ -361,8 +374,8 @@ func TestGetShare(t *testing.T) {
 			})
 
 			t.Cleanup(func() {
-				h.Config.Storage.DeleteShare("test")
-				h.Config.Storage.DeleteShare("test2")
+				_ = h.Config.Storage.DeleteShare("test")
+				_ = h.Config.Storage.DeleteShare("test2")
 			})
 
 			t.Run("Get shares should succeed", func(t *testing.T) {
@@ -548,7 +561,7 @@ func TestGetShare(t *testing.T) {
 
 				makeShare(t, h, shareName, storage.Options{})
 				t.Cleanup(func() {
-					h.Config.Storage.DeleteShare(shareName)
+					_ = h.Config.Storage.DeleteShare(shareName)
 				})
 				makeItem(t, h, shareName, "newfile.txt", 1*1024*1024)
 				time.Sleep(1 * time.Second)
@@ -655,7 +668,7 @@ func TestDeleteShare(t *testing.T) {
 				shareName := "deleteshare"
 				makeShare(t, h, shareName, storage.Options{Exposure: "download"})
 				t.Cleanup(func() {
-					h.Config.Storage.DeleteShare(shareName)
+					_ = h.Config.Storage.DeleteShare(shareName)
 				})
 				req = httptest.NewRequest("DELETE", path.Join("/api/v1/shares/", shareName), nil)
 				req.SetBasicAuth("admin", "hupload")
@@ -689,7 +702,7 @@ func TestDeleteShare(t *testing.T) {
 					return
 				}
 				t.Cleanup(func() {
-					h.Config.Storage.DeleteShare("deleteshare")
+					_ = h.Config.Storage.DeleteShare("deleteshare")
 				})
 			})
 
@@ -755,13 +768,13 @@ func TestGetItems(t *testing.T) {
 					fileSize := 1 * 1024 * 1024
 					makeShare(t, h, shareName, storage.Options{Exposure: exp})
 					t.Cleanup(func() {
-						h.Config.Storage.DeleteShare(shareName)
+						_ = h.Config.Storage.DeleteShare(shareName)
 					})
 
 					makeItem(t, h, shareName, "newfile.txt", fileSize)
 
 					t.Cleanup(func() {
-						h.Config.Storage.DeleteShare(shareName)
+						_ = h.Config.Storage.DeleteShare(shareName)
 					})
 
 					req = httptest.NewRequest("GET", path.Join("/api/v1/shares/", shareName, "items", "newfile.txt"), nil)
@@ -812,7 +825,7 @@ func TestGetItems(t *testing.T) {
 
 				makeShare(t, h, shareName, storage.Options{Exposure: "download"})
 				t.Cleanup(func() {
-					h.Config.Storage.DeleteShare(shareName)
+					_ = h.Config.Storage.DeleteShare(shareName)
 				})
 
 				makeItem(t, h, shareName, "newfile.txt", 1*1024*1024)
@@ -839,7 +852,7 @@ func TestGetItems(t *testing.T) {
 
 				makeShare(t, h, shareName, storage.Options{Exposure: "download"})
 				t.Cleanup(func() {
-					h.Config.Storage.DeleteShare(shareName)
+					_ = h.Config.Storage.DeleteShare(shareName)
 				})
 
 				req = httptest.NewRequest("GET", path.Join("/api/v1/shares/", shareName, "items", "notexists"), nil)
@@ -864,7 +877,7 @@ func TestGetItems(t *testing.T) {
 
 				makeShare(t, h, shareName, storage.Options{Exposure: "upload"})
 				t.Cleanup(func() {
-					h.Config.Storage.DeleteShare(shareName)
+					_ = h.Config.Storage.DeleteShare(shareName)
 				})
 
 				makeItem(t, h, shareName, "newfile.txt", 1*1024*1024)
@@ -885,23 +898,23 @@ func TestGetItems(t *testing.T) {
 	}
 }
 
-func readerForCapacity(capacity int) io.ReadCloser {
-	pr, pw := io.Pipe()
-	go func() {
-		defer pw.Close()
-		b := 1024
-		w := 0
-		for w < capacity {
-			if w+b > capacity {
-				b = capacity - w
-			}
-			_, _ = pw.Write(make([]byte, b))
-			w += b
-		}
-	}()
+// func readerForCapacity(capacity int) io.ReadCloser {
+// 	pr, pw := io.Pipe()
+// 	go func() {
+// 		defer pw.Close()
+// 		b := 1024
+// 		w := 0
+// 		for w < capacity {
+// 			if w+b > capacity {
+// 				b = capacity - w
+// 			}
+// 			_, _ = pw.Write(make([]byte, b))
+// 			w += b
+// 		}
+// 	}()
 
-	return pr
-}
+// 	return pr
+// }
 
 // multipartWriter returns a reader and a multipart.Writer for a body with one
 // attachment of size size.
@@ -959,7 +972,7 @@ func TestUpload(t *testing.T) {
 				})
 
 				t.Cleanup(func() {
-					h.Config.Storage.DeleteShare("upload")
+					_ = h.Config.Storage.DeleteShare("upload")
 				})
 
 				makeItem(t, h, "upload", "newfile.txt", 1*1024*1024)
@@ -1000,7 +1013,7 @@ func TestUpload(t *testing.T) {
 				})
 
 				t.Cleanup(func() {
-					h.Config.Storage.DeleteShare("download")
+					_ = h.Config.Storage.DeleteShare("download")
 				})
 
 				fileSize := 3 * 1024 * 1024
@@ -1034,7 +1047,7 @@ func TestUpload(t *testing.T) {
 				})
 
 				t.Cleanup(func() {
-					h.Config.Storage.DeleteShare(shareName)
+					_ = h.Config.Storage.DeleteShare(shareName)
 				})
 
 				fileSize := 3 * 1024 * 1024
@@ -1070,7 +1083,7 @@ func TestUpload(t *testing.T) {
 				})
 
 				t.Cleanup(func() {
-					h.Config.Storage.DeleteShare("toobig")
+					_ = h.Config.Storage.DeleteShare("toobig")
 				})
 
 				// writer := multipart.NewWriter(body)
@@ -1108,7 +1121,7 @@ func TestUpload(t *testing.T) {
 				})
 
 				t.Cleanup(func() {
-					h.Config.Storage.DeleteShare("sharetoobig")
+					_ = h.Config.Storage.DeleteShare("sharetoobig")
 				})
 
 				fileSize := 3 * 1024 * 1024
@@ -1172,7 +1185,7 @@ func TestDeleteItem(t *testing.T) {
 					Validity: 7,
 				})
 				t.Cleanup(func() {
-					h.Config.Storage.DeleteShare("uploadadmin")
+					_ = h.Config.Storage.DeleteShare("uploadadmin")
 				})
 
 				makeItem(t, h, share.Name, "newfile.txt", 1*1024*1024)
@@ -1197,7 +1210,7 @@ func TestDeleteItem(t *testing.T) {
 					Validity: 7,
 				})
 				t.Cleanup(func() {
-					h.Config.Storage.DeleteShare("upload")
+					_ = h.Config.Storage.DeleteShare("upload")
 				})
 				makeItem(t, h, share.Name, "newfile.txt", 1*1024*1024)
 
@@ -1220,7 +1233,7 @@ func TestDeleteItem(t *testing.T) {
 					Validity: 7,
 				})
 				t.Cleanup(func() {
-					h.Config.Storage.DeleteShare("both")
+					_ = h.Config.Storage.DeleteShare("both")
 				})
 
 				makeItem(t, h, share.Name, "newfile.txt", 1*1024*1024)
@@ -1244,7 +1257,7 @@ func TestDeleteItem(t *testing.T) {
 					Validity: 7,
 				})
 				t.Cleanup(func() {
-					h.Config.Storage.DeleteShare("download")
+					_ = h.Config.Storage.DeleteShare("download")
 				})
 				makeItem(t, h, share.Name, "newfile.txt", 1*1024*1024)
 

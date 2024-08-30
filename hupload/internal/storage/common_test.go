@@ -34,7 +34,7 @@ func TestFileOverflow(t *testing.T) {
 	}
 
 	t.Cleanup(func() {
-		for i, _ := range storages {
+		for i := range storages {
 			_ = storages[i].DeleteShare("test")
 		}
 	})
