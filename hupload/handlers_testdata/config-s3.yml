@@ -1,0 +1,11 @@
+Title: Hupload Test
+storage:
+  type: s3
+  options:
+    max_file_mb: 3
+    max_share_mb: 5
+    use_path_style: true
+auth:
+  type: file
+  options:
+    path: handlers_testdata/users.yml

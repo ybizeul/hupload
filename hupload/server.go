@@ -9,12 +9,57 @@ import (
 
 	"log/slog"
 
+	"github.com/ybizeul/hupload/internal/config"
 	"github.com/ybizeul/hupload/pkg/apiws"
 	"github.com/ybizeul/hupload/pkg/apiws/middleware/auth"
 )
 
-func setup(api *apiws.APIWS) {
+type Hupload struct {
+	Config *config.Config
+	API    *apiws.APIWS
+}
 
+func NewHupload(c *config.Config) (*Hupload, error) {
+
+	// Load configuration
+	found, err := c.Load()
+	if !found {
+		slog.Warn("No configuration file found, using default values", slog.String("path", c.Path))
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	// Run migration
+	err = c.Storage.Migrate()
+	if err != nil {
+		return nil, err
+	}
+
+	// Create API web service with the embedded UI
+	api, err := apiws.New(uiFS, c.Values)
+	if err != nil {
+		return nil, err
+	}
+
+	api.SetAuthentication(c.Authentication)
+	result := &Hupload{
+		Config: c,
+		API:    api,
+	}
+
+	result.setup()
+
+	return result, nil
+}
+
+func (h *Hupload) Start() {
+	h.API.Start()
+}
+
+func (h *Hupload) setup() {
+
+	api := h.API
 	// Get JWT_SECRET
 	hmac := os.Getenv("JWT_SECRET")
 	if len(hmac) == 0 {
@@ -47,20 +92,20 @@ func setup(api *apiws.APIWS) {
 	// That's Hupload principle, the security is based on the share name
 	// which is usually a random string.
 
-	api.AddRoute("POST   /api/v1/shares/{share}/items/{item}", authenticatorsOpen, postItem)
-	api.AddRoute("GET    /api/v1/shares/{share}/items", authenticatorsOpen, getShareItems)
-	api.AddRoute("GET    /api/v1/shares/{share}", authenticatorsOpen, getShare)
-	api.AddRoute("GET    /api/v1/shares/{share}/items/{item}", authenticatorsOpen, getItem)
-	api.AddRoute("DELETE /api/v1/shares/{share}/items/{item}", authenticatorsOpen, deleteItem)
+	api.AddRoute("POST   /api/v1/shares/{share}/items/{item}", authenticatorsOpen, h.postItem)
+	api.AddRoute("GET    /api/v1/shares/{share}/items", authenticatorsOpen, h.getShareItems)
+	api.AddRoute("GET    /api/v1/shares/{share}", authenticatorsOpen, h.getShare)
+	api.AddRoute("GET    /api/v1/shares/{share}/items/{item}", authenticatorsOpen, h.getItem)
+	api.AddRoute("DELETE /api/v1/shares/{share}/items/{item}", authenticatorsOpen, h.deleteItem)
 
 	// Protected routes
-	api.AddRoute("POST   /api/v1/login", authenticators, postLogin)
-	api.AddRoute("POST   /api/v1/shares", authenticators, postShare)
-	api.AddRoute("POST   /api/v1/shares/{share}", authenticators, postShare)
-	api.AddRoute("PATCH  /api/v1/shares/{share}", authenticators, patchShare)
-	api.AddRoute("DELETE /api/v1/shares/{share}", authenticators, deleteShare)
-	api.AddRoute("GET    /api/v1/shares", authenticators, getShares)
-	api.AddRoute("GET    /api/v1/version", authenticators, getVersion)
+	api.AddRoute("POST   /api/v1/login", authenticators, h.postLogin)
+	api.AddRoute("POST   /api/v1/shares", authenticators, h.postShare)
+	api.AddRoute("POST   /api/v1/shares/{share}", authenticators, h.postShare)
+	api.AddRoute("PATCH  /api/v1/shares/{share}", authenticators, h.patchShare)
+	api.AddRoute("DELETE /api/v1/shares/{share}", authenticators, h.deleteShare)
+	api.AddRoute("GET    /api/v1/shares", authenticators, h.getShares)
+	api.AddRoute("GET    /api/v1/version", authenticators, h.getVersion)
 
 	api.AddRoute("GET    /api/v1/*", authenticators, func(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadRequest, "Error")

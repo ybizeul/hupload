@@ -113,6 +113,7 @@ func (b *S3Backend) CreateShare(name, owner string, options Options) (*Share, er
 	}
 
 	share := &Share{
+		Version:     1,
 		Name:        name,
 		Owner:       owner,
 		Options:     options,
@@ -293,6 +294,10 @@ func (b *S3Backend) GetShare(name string) (*Share, error) {
 		Key:    &path,
 	})
 	if err != nil {
+		var bne *types.NoSuchKey
+		if errors.As(err, &bne) {
+			return nil, ErrShareNotFound
+		}
 		return nil, err
 	}
 
@@ -350,6 +355,10 @@ func (b *S3Backend) ListShare(name string) ([]Item, error) {
 		Prefix: &name,
 	})
 	if err != nil {
+		var bne *types.NoSuchKey
+		if errors.As(err, &bne) {
+			return nil, ErrShareNotFound
+		}
 		return nil, err
 	}
 
@@ -376,6 +385,12 @@ func (b *S3Backend) ListShare(name string) ([]Item, error) {
 		}
 		result = append(result, *item)
 	}
+
+	// Sort items by modification date, newest first
+	sort.Slice(result, func(i, j int) bool {
+		return result[i].ItemInfo.DateModified.After(result[j].ItemInfo.DateModified)
+	})
+
 	return result, nil
 }
 
@@ -435,6 +450,10 @@ func (b *S3Backend) GetItem(share, item string) (*Item, error) {
 	})
 
 	if err != nil {
+		var bne *types.NoSuchKey
+		if errors.As(err, &bne) {
+			return nil, ErrItemNotFound
+		}
 		return nil, err
 	}
 

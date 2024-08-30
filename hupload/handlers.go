@@ -22,7 +22,7 @@ import (
 // }
 
 // postShare creates a new share with a randomly generate name
-func postShare(w http.ResponseWriter, r *http.Request) {
+func (h *Hupload) postShare(w http.ResponseWriter, r *http.Request) {
 	user := auth.UserForRequest(r)
 	if user == "" {
 		slog.Error("postShare", slog.String("error", "no user in context"))
@@ -38,13 +38,13 @@ func postShare(w http.ResponseWriter, r *http.Request) {
 	// Parse the request body
 	options := storage.Options{
 		Exposure: "upload",
-		Validity: cfg.Values.DefaultValidityDays,
+		Validity: h.Config.Values.DefaultValidityDays,
 	}
 
 	// We ignore unmarshalling of JSON body as it is optional.
 	_ = json.NewDecoder(r.Body).Decode(&options)
 
-	share, err := cfg.Storage.CreateShare(code, user, options)
+	share, err := h.Config.Storage.CreateShare(code, user, options)
 	if err != nil {
 		slog.Error("postShare", slog.String("error", err.Error()))
 		switch {
@@ -63,7 +63,7 @@ func postShare(w http.ResponseWriter, r *http.Request) {
 }
 
 // patchShare updates an existing share
-func patchShare(w http.ResponseWriter, r *http.Request) {
+func (h *Hupload) patchShare(w http.ResponseWriter, r *http.Request) {
 	user := auth.UserForRequest(r)
 	if user == "" {
 		slog.Error("patchShare", slog.String("error", "no user in context"))
@@ -77,7 +77,7 @@ func patchShare(w http.ResponseWriter, r *http.Request) {
 	// We ignore unmarshalling of JSON body as it is optional.
 	_ = json.NewDecoder(r.Body).Decode(&options)
 
-	result, err := cfg.Storage.UpdateShare(r.PathValue("share"), options)
+	result, err := h.Config.Storage.UpdateShare(r.PathValue("share"), options)
 	if err != nil {
 		slog.Error("patchShare", slog.String("error", err.Error()))
 		switch {
@@ -95,46 +95,9 @@ func patchShare(w http.ResponseWriter, r *http.Request) {
 	writeSuccessJSON(w, result)
 }
 
-// putShare creates a new share with name from the request parameter
-// func putShare(w http.ResponseWriter, r *http.Request) {
-// 	user := auth.UserForRequest(r)
-// 	if user == "" {
-// 		slog.Error("putShare", slog.String("error", "no user in context"))
-// 		writeError(w, http.StatusUnauthorized, "no user in context")
-// 		return
-// 	}
-
-// 	// Parse the request body
-// 	params := ShareParameters{
-// 		Exposure: "upload",
-// 		Validity: cfg.Values.DefaultValidityDays,
-// 	}
-
-// 	_ = json.NewDecoder(r.Body).Decode(&params)
-
-// 	share, err := cfg.Storage.CreateShare(r.PathValue("share"), user, storage.Options{Validity: params.Validity, Exposure: params.Exposure})
-// 	if err != nil {
-// 		slog.Error("putShare", slog.String("error", err.Error()))
-// 		switch {
-// 		case errors.Is(err, storage.ErrInvalidShareName):
-// 			writeError(w, http.StatusBadRequest, "invalid share name")
-// 			return
-// 		case errors.Is(err, storage.ErrShareNotFound):
-// 			writeError(w, http.StatusNotFound, "share not found")
-// 			return
-// 		case errors.Is(err, storage.ErrShareAlreadyExists):
-// 			writeError(w, http.StatusConflict, "share already exists")
-// 			return
-// 		}
-// 		writeError(w, http.StatusInternalServerError, err.Error())
-// 		return
-// 	}
-// 	writeSuccessJSON(w, share)
-// }
-
 // postItem copies a new item in the share and returns the json description
-func postItem(w http.ResponseWriter, r *http.Request) {
-	share, err := cfg.Storage.GetShare(r.PathValue("share"))
+func (h *Hupload) postItem(w http.ResponseWriter, r *http.Request) {
+	share, err := h.Config.Storage.GetShare(r.PathValue("share"))
 	if err != nil {
 		slog.Error("postItem", slog.String("error", err.Error()))
 		switch {
@@ -175,7 +138,7 @@ func postItem(w http.ResponseWriter, r *http.Request) {
 	}
 
 	b := bufio.NewReader(np)
-	item, err := cfg.Storage.CreateItem(r.PathValue("share"), r.PathValue("item"), int64(cl), b)
+	item, err := h.Config.Storage.CreateItem(r.PathValue("share"), r.PathValue("item"), int64(cl), b)
 	if err != nil {
 		switch {
 		case errors.Is(err, storage.ErrInvalidShareName):
@@ -187,6 +150,9 @@ func postItem(w http.ResponseWriter, r *http.Request) {
 		case errors.Is(err, storage.ErrMaxShareSizeReached):
 			writeError(w, http.StatusInsufficientStorage, "max share size reached")
 			return
+		case errors.Is(err, storage.ErrMaxFileSizeReached):
+			writeError(w, http.StatusInsufficientStorage, "max item size reached")
+			return
 		}
 		writeError(w, http.StatusInternalServerError, err.Error())
 		return
@@ -196,8 +162,8 @@ func postItem(w http.ResponseWriter, r *http.Request) {
 }
 
 // postItem copies a new item in the share and returns the json description
-func deleteItem(w http.ResponseWriter, r *http.Request) {
-	share, err := cfg.Storage.GetShare(r.PathValue("share"))
+func (h *Hupload) deleteItem(w http.ResponseWriter, r *http.Request) {
+	share, err := h.Config.Storage.GetShare(r.PathValue("share"))
 	if err != nil {
 		slog.Error("postItem", slog.String("error", err.Error()))
 		switch {
@@ -217,7 +183,7 @@ func deleteItem(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = cfg.Storage.DeleteItem(r.PathValue("share"), r.PathValue("item"))
+	err = h.Config.Storage.DeleteItem(r.PathValue("share"), r.PathValue("item"))
 	if err != nil {
 		switch {
 		case errors.Is(err, storage.ErrInvalidShareName):
@@ -241,8 +207,8 @@ func deleteItem(w http.ResponseWriter, r *http.Request) {
 }
 
 // getShares returns the list of shares as json
-func getShares(w http.ResponseWriter, r *http.Request) {
-	shares, err := cfg.Storage.ListShares()
+func (h *Hupload) getShares(w http.ResponseWriter, r *http.Request) {
+	shares, err := h.Config.Storage.ListShares()
 
 	if err != nil {
 		slog.Error("getShares", slog.String("error", err.Error()))
@@ -258,8 +224,8 @@ func getShares(w http.ResponseWriter, r *http.Request) {
 }
 
 // getShareItems returns the share identified by the request parameter
-func getShare(w http.ResponseWriter, r *http.Request) {
-	share, err := cfg.Storage.GetShare(r.PathValue("share"))
+func (h *Hupload) getShare(w http.ResponseWriter, r *http.Request) {
+	share, err := h.Config.Storage.GetShare(r.PathValue("share"))
 
 	if err != nil {
 		slog.Error("getShare", slog.String("error", err.Error()))
@@ -288,8 +254,8 @@ func getShare(w http.ResponseWriter, r *http.Request) {
 }
 
 // getShareItems returns the share content identified by the request parameter
-func getShareItems(w http.ResponseWriter, r *http.Request) {
-	share, err := cfg.Storage.GetShare(r.PathValue("share"))
+func (h *Hupload) getShareItems(w http.ResponseWriter, r *http.Request) {
+	share, err := h.Config.Storage.GetShare(r.PathValue("share"))
 	if err != nil {
 		slog.Error("getShareItems", slog.String("error", err.Error()))
 		switch {
@@ -309,7 +275,7 @@ func getShareItems(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	content, err := cfg.Storage.ListShare(share.Name)
+	content, err := h.Config.Storage.ListShare(share.Name)
 	if err != nil {
 		slog.Error("getShareItems", slog.String("error", err.Error()))
 		writeError(w, http.StatusInternalServerError, err.Error())
@@ -319,8 +285,8 @@ func getShareItems(w http.ResponseWriter, r *http.Request) {
 }
 
 // deleteShare deletes the share identified by the request parameter
-func deleteShare(w http.ResponseWriter, r *http.Request) {
-	err := cfg.Storage.DeleteShare(r.PathValue("share"))
+func (h *Hupload) deleteShare(w http.ResponseWriter, r *http.Request) {
+	err := h.Config.Storage.DeleteShare(r.PathValue("share"))
 	if err != nil {
 		slog.Error("deleteShare", slog.String("error", err.Error()))
 		switch {
@@ -338,11 +304,11 @@ func deleteShare(w http.ResponseWriter, r *http.Request) {
 }
 
 // getItem returns the item identified by the request parameter
-func getItem(w http.ResponseWriter, r *http.Request) {
+func (h *Hupload) getItem(w http.ResponseWriter, r *http.Request) {
 	shareName := r.PathValue("share")
 	itemName := r.PathValue("item")
 
-	share, err := cfg.Storage.GetShare(shareName)
+	share, err := h.Config.Storage.GetShare(shareName)
 	if err != nil {
 		slog.Error("getItem", slog.String("error", err.Error()))
 		switch {
@@ -362,7 +328,7 @@ func getItem(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	item, err := cfg.Storage.GetItem(shareName, itemName)
+	item, err := h.Config.Storage.GetItem(shareName, itemName)
 	if err != nil {
 		switch {
 		case errors.Is(err, storage.ErrItemNotFound):
@@ -376,7 +342,7 @@ func getItem(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	reader, err := cfg.Storage.GetItemData(shareName, itemName)
+	reader, err := h.Config.Storage.GetItemData(shareName, itemName)
 	if err != nil {
 		slog.Error("getShares", slog.String("error", err.Error()))
 		writeError(w, http.StatusInternalServerError, err.Error())
@@ -398,7 +364,7 @@ func getItem(w http.ResponseWriter, r *http.Request) {
 }
 
 // postLogin returns the user name for the current session
-func postLogin(w http.ResponseWriter, r *http.Request) {
+func (h *Hupload) postLogin(w http.ResponseWriter, r *http.Request) {
 	u := struct {
 		User string `json:"user"`
 	}{
@@ -408,7 +374,7 @@ func postLogin(w http.ResponseWriter, r *http.Request) {
 }
 
 // getVersion returns hupload version
-func getVersion(w http.ResponseWriter, r *http.Request) {
+func (h *Hupload) getVersion(w http.ResponseWriter, r *http.Request) {
 	v := struct {
 		Version string `json:"version"`
 	}{

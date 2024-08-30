@@ -128,6 +128,7 @@ func TestS3GetShare(t *testing.T) {
 	got.DateCreated = time.Time{}
 
 	want := &storage.Share{
+		Version: 1,
 		Name:    "Test",
 		Owner:   "admin",
 		Options: options,
@@ -174,11 +175,13 @@ func TestS3ListShares(t *testing.T) {
 
 	want := []storage.Share{
 		{
+			Version: 1,
 			Name:    "Test2",
 			Owner:   "admin",
 			Options: storage.DefaultOptions(),
 		},
 		{
+			Version: 1,
 			Name:    "Test1",
 			Owner:   "admin",
 			Options: storage.DefaultOptions(),
