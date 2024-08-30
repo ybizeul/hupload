@@ -344,6 +344,48 @@ func TestUpdateShare(t *testing.T) {
 					return
 				}
 			})
+
+			t.Run("Update share should fail on invalid share name", func(t *testing.T) {
+				var (
+					req *http.Request
+					w   *httptest.ResponseRecorder
+				)
+
+				j := `{"exposure":"download","validity":10,"description":"new description","message":"new message"}`
+
+				req = httptest.NewRequest("PATCH", path.Join("/api/v1/shares", url.QueryEscape("../test")), bytes.NewBufferString(j))
+				req.SetBasicAuth("admin", "hupload")
+
+				w = httptest.NewRecorder()
+
+				api.Mux.ServeHTTP(w, req)
+
+				if w.Code != http.StatusBadRequest {
+					t.Errorf("Expected status %d, got %d", http.StatusBadRequest, w.Code)
+					return
+				}
+			})
+
+			t.Run("Update share should fail on inexistant share", func(t *testing.T) {
+				var (
+					req *http.Request
+					w   *httptest.ResponseRecorder
+				)
+
+				j := `{"exposure":"download","validity":10,"description":"new description","message":"new message"}`
+
+				req = httptest.NewRequest("PATCH", path.Join("/api/v1/shares", "inexistant"), bytes.NewBufferString(j))
+				req.SetBasicAuth("admin", "hupload")
+
+				w = httptest.NewRecorder()
+
+				api.Mux.ServeHTTP(w, req)
+
+				if w.Code != http.StatusNotFound {
+					t.Errorf("Expected status %d, got %d", http.StatusNotFound, w.Code)
+					return
+				}
+			})
 		})
 	}
 }
@@ -562,6 +604,7 @@ func TestGetShare(t *testing.T) {
 				t.Cleanup(func() {
 					_ = h.Config.Storage.DeleteShare(shareName)
 				})
+
 				makeItem(t, h, shareName, "newfile.txt", 1*1024*1024)
 				time.Sleep(1 * time.Second)
 				makeItem(t, h, shareName, "newfile2.txt", 2*1024*1024)
@@ -993,16 +1036,6 @@ func TestUpload(t *testing.T) {
 					t.Errorf("Expected status %d, got %d", http.StatusOK, w.Code)
 					return
 				}
-
-				// stat, err := os.Stat(path.Join("tmptest/data/", "upload", "newfile.txt"))
-				// if err != nil {
-				// 	t.Errorf("Expected file to be created")
-				// 	return
-				// }
-				// if stat.Size() != int64(fileSize) {
-				// 	t.Errorf("Expected file size to be %d, got %d", fileSize, stat.Size())
-				// 	return
-				// }
 			})
 
 			t.Run("Upload a file without authentication should not work (download share)", func(t *testing.T) {
@@ -1151,12 +1184,124 @@ func TestUpload(t *testing.T) {
 					t.Errorf("Expected status %d, got %d", http.StatusInsufficientStorage, w.Code)
 					return
 				}
+			})
 
-				// _, err := os.Stat(path.Join("tmptest/data/", "sharetoobig", "newfile2.txt"))
-				// if err == nil {
-				// 	t.Errorf("Expected file to be deleted")
-				// 	return
-				// }
+			t.Run("Upload to invalid share should fail", func(t *testing.T) {
+				fileSize := 3 * 1024 * 1024
+				pr, ct := multipartWriter(fileSize)
+
+				req = httptest.NewRequest("POST", path.Join("/api/v1/shares", url.QueryEscape("../test"), "items", "newfile.txt"), pr)
+
+				req.Header.Set("Content-Type", ct)
+				req.Header.Set("FileSize", fmt.Sprintf("%d", fileSize))
+
+				w = httptest.NewRecorder()
+
+				api.Mux.ServeHTTP(w, req)
+
+				if w.Code != http.StatusBadRequest {
+					t.Errorf("Expected status %d, got %d", http.StatusBadRequest, w.Code)
+					return
+				}
+			})
+
+			t.Run("Upload to inexistant share should fail", func(t *testing.T) {
+				fileSize := 3 * 1024 * 1024
+				pr, ct := multipartWriter(fileSize)
+
+				req = httptest.NewRequest("POST", path.Join("/api/v1/shares", "inexistant", "items", "newfile.txt"), pr)
+
+				req.Header.Set("Content-Type", ct)
+				req.Header.Set("FileSize", fmt.Sprintf("%d", fileSize))
+
+				w = httptest.NewRecorder()
+
+				api.Mux.ServeHTTP(w, req)
+
+				if w.Code != http.StatusNotFound {
+					t.Errorf("Expected status %d, got %d", http.StatusNotFound, w.Code)
+					return
+				}
+			})
+
+			t.Run("Upload malformed data should fail", func(t *testing.T) {
+				makeShare(t, h, "malformed", storage.Options{})
+				t.Cleanup(func() {
+					_ = h.Config.Storage.DeleteShare("malformed")
+				})
+
+				req = httptest.NewRequest("POST", path.Join("/api/v1/shares", "malformed", "items", "newfile.txt"), nil)
+
+				req.Header.Set("Content-Type", "text/plain")
+				req.Header.Set("FileSize", "10")
+
+				w = httptest.NewRecorder()
+
+				api.Mux.ServeHTTP(w, req)
+
+				if w.Code != http.StatusBadRequest {
+					t.Errorf("Expected status %d, got %d", http.StatusBadRequest, w.Code)
+					return
+				}
+			})
+
+			t.Run("Upload a file without file size should fail", func(t *testing.T) {
+				// Create upload share
+				makeShare(t, h, "nofilesize", storage.Options{
+					Exposure: "upload",
+					Validity: 7,
+				})
+
+				t.Cleanup(func() {
+					_ = h.Config.Storage.DeleteShare("nofilesize")
+				})
+
+				fileSize := 1 * 1024 * 1024
+
+				pr, ct := multipartWriter(fileSize)
+
+				req = httptest.NewRequest("POST", path.Join("/api/v1/shares", "nofilesize", "items", "newfile.txt"), pr)
+
+				req.Header.Set("Content-Type", ct)
+
+				w = httptest.NewRecorder()
+
+				api.Mux.ServeHTTP(w, req)
+
+				if w.Code != http.StatusBadRequest {
+					t.Errorf("Expected status %d, got %d", http.StatusBadRequest, w.Code)
+					return
+				}
+			})
+
+			t.Run("Upload a file with invalid file name should fail", func(t *testing.T) {
+				// Create upload share
+				makeShare(t, h, "upload", storage.Options{
+					Exposure: "upload",
+					Validity: 7,
+				})
+
+				t.Cleanup(func() {
+					_ = h.Config.Storage.DeleteShare("upload")
+				})
+
+				fileSize := 1 * 1024 * 1024
+
+				pr, ct := multipartWriter(fileSize)
+
+				req = httptest.NewRequest("POST", path.Join("/api/v1/shares", "upload", "items", url.QueryEscape("../file.txt")), pr)
+
+				req.Header.Set("Content-Type", ct)
+				req.Header.Set("FileSize", fmt.Sprintf("%d", fileSize))
+
+				w = httptest.NewRecorder()
+
+				api.Mux.ServeHTTP(w, req)
+
+				if w.Code != http.StatusBadRequest {
+					t.Errorf("Expected status %d, got %d", http.StatusBadRequest, w.Code)
+					return
+				}
 			})
 		})
 	}
@@ -1270,6 +1415,79 @@ func TestDeleteItem(t *testing.T) {
 					t.Errorf("Expected status %d, got %d", http.StatusOK, w.Code)
 					return
 				}
+			})
+
+			t.Run("delete a file on invalid share name should fail", func(t *testing.T) {
+				// Create upload share
+
+				req = httptest.NewRequest("DELETE", path.Join("/api/v1/shares", url.QueryEscape("../share"), "items", "newfile.txt"), nil)
+
+				req.SetBasicAuth("admin", "hupload")
+
+				w = httptest.NewRecorder()
+
+				api.Mux.ServeHTTP(w, req)
+
+				if w.Code != http.StatusBadRequest {
+					t.Errorf("Expected status %d, got %d", http.StatusBadRequest, w.Code)
+					return
+				}
+			})
+
+			t.Run("delete a file on inexistant share should fail", func(t *testing.T) {
+				// Create upload share
+
+				req = httptest.NewRequest("DELETE", path.Join("/api/v1/shares", "inexistant", "items", "newfile.txt"), nil)
+
+				req.SetBasicAuth("admin", "hupload")
+
+				w = httptest.NewRecorder()
+
+				api.Mux.ServeHTTP(w, req)
+
+				if w.Code != http.StatusNotFound {
+					t.Errorf("Expected status %d, got %d", http.StatusNotFound, w.Code)
+					return
+				}
+			})
+
+			t.Run("delete an invalid file name should fail", func(t *testing.T) {
+				makeShare(t, h, "invaliditem", storage.Options{})
+				t.Cleanup(func() {
+					_ = h.Config.Storage.DeleteShare("invaliditem")
+				})
+				req = httptest.NewRequest("DELETE", path.Join("/api/v1/shares", "invaliditem", "items", url.QueryEscape("../file.txt")), nil)
+
+				req.SetBasicAuth("admin", "hupload")
+
+				w = httptest.NewRecorder()
+
+				api.Mux.ServeHTTP(w, req)
+
+				if w.Code != http.StatusBadRequest {
+					t.Errorf("Expected status %d, got %d", http.StatusBadRequest, w.Code)
+					return
+				}
+			})
+
+			t.Run("delete an inexistant file should fail", func(t *testing.T) {
+				makeShare(t, h, "inexistantfile", storage.Options{})
+				t.Cleanup(func() {
+					_ = h.Config.Storage.DeleteShare("inexistantfile")
+				})
+				req = httptest.NewRequest("DELETE", path.Join("/api/v1/shares", "inexistantfile", "items", "newfile.txt"), nil)
+
+				req.SetBasicAuth("admin", "hupload")
+
+				w = httptest.NewRecorder()
+
+				api.Mux.ServeHTTP(w, req)
+
+				if w.Code != http.StatusNotFound {
+					t.Errorf("Expected status %d, got %d", http.StatusNotFound, w.Code)
+					return
+				}
+
 			})
 		})
 	}

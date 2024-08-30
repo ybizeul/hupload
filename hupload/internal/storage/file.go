@@ -160,6 +160,10 @@ func (b *FileBackend) CreateShare(name, owner string, options Options) (*Share, 
 		return nil, err
 	}
 
+	if options.Exposure == "" {
+		options.Exposure = "upload"
+	}
+
 	m := Share{
 		Version:     1,
 		Name:        name,

@@ -24,6 +24,9 @@ import (
 // postShare creates a new share with a randomly generate name
 func (h *Hupload) postShare(w http.ResponseWriter, r *http.Request) {
 	user := auth.UserForRequest(r)
+
+	// This should never happen as authentication is checked before in the
+	// middleware
 	if user == "" {
 		slog.Error("postShare", slog.String("error", "no user in context"))
 		http.Error(w, "no user in context", http.StatusBadRequest)
@@ -65,6 +68,9 @@ func (h *Hupload) postShare(w http.ResponseWriter, r *http.Request) {
 // patchShare updates an existing share
 func (h *Hupload) patchShare(w http.ResponseWriter, r *http.Request) {
 	user := auth.UserForRequest(r)
+
+	// This should never happen as authentication is checked before in the
+	// middleware
 	if user == "" {
 		slog.Error("patchShare", slog.String("error", "no user in context"))
 		http.Error(w, "no user in context", http.StatusBadRequest)
@@ -122,6 +128,7 @@ func (h *Hupload) postItem(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
+
 	np, err := mp.NextPart()
 	if err != nil {
 		writeError(w, http.StatusBadRequest, err.Error())
@@ -129,23 +136,23 @@ func (h *Hupload) postItem(w http.ResponseWriter, r *http.Request) {
 	}
 
 	cl := 0
-	if r.Header.Get("FileSize") != "" {
-		cl, err = strconv.Atoi(r.Header.Get("FileSize"))
-		if err != nil {
-			writeError(w, http.StatusBadRequest, "invalid content length")
-			return
-		}
+
+	if r.Header.Get("FileSize") == "" {
+		writeError(w, http.StatusBadRequest, "missing content length")
+	}
+
+	cl, err = strconv.Atoi(r.Header.Get("FileSize"))
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "invalid content length")
+		return
 	}
 
 	b := bufio.NewReader(np)
 	item, err := h.Config.Storage.CreateItem(r.PathValue("share"), r.PathValue("item"), int64(cl), b)
 	if err != nil {
 		switch {
-		case errors.Is(err, storage.ErrInvalidShareName):
-			writeError(w, http.StatusBadRequest, "invalid share name")
-			return
-		case errors.Is(err, storage.ErrShareNotFound):
-			writeError(w, http.StatusNotFound, "share not found")
+		case errors.Is(err, storage.ErrInvalidItemName):
+			writeError(w, http.StatusBadRequest, "invalid item name")
 			return
 		case errors.Is(err, storage.ErrMaxShareSizeReached):
 			writeError(w, http.StatusInsufficientStorage, "max share size reached")
@@ -186,12 +193,6 @@ func (h *Hupload) deleteItem(w http.ResponseWriter, r *http.Request) {
 	err = h.Config.Storage.DeleteItem(r.PathValue("share"), r.PathValue("item"))
 	if err != nil {
 		switch {
-		case errors.Is(err, storage.ErrInvalidShareName):
-			writeError(w, http.StatusBadRequest, "invalid share name")
-			return
-		case errors.Is(err, storage.ErrShareNotFound):
-			writeError(w, http.StatusNotFound, "share not found")
-			return
 		case errors.Is(err, storage.ErrInvalidItemName):
 			writeError(w, http.StatusBadRequest, "invalid item name")
 			return

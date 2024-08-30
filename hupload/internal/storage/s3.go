@@ -112,6 +112,10 @@ func (b *S3Backend) CreateShare(name, owner string, options Options) (*Share, er
 		return nil, ErrShareAlreadyExists
 	}
 
+	if options.Exposure == "" {
+		options.Exposure = "upload"
+	}
+
 	share := &Share{
 		Version:     1,
 		Name:        name,
@@ -267,11 +271,21 @@ func (b *S3Backend) DeleteItem(share, item string) error {
 
 	path := path.Join(share, item)
 
-	_, err := b.Client.DeleteObject(context.Background(), &s3.DeleteObjectInput{
+	_, err := b.GetItem(share, item)
+	if err != nil {
+		return err
+	}
+
+	_, err = b.Client.DeleteObject(context.Background(), &s3.DeleteObjectInput{
 		Bucket: &b.Options.Bucket,
 		Key:    &path,
 	})
+
 	if err != nil {
+		var bne *types.NoSuchKey
+		if errors.As(err, &bne) {
+			return ErrItemNotFound
+		}
 		return err
 	}
 
