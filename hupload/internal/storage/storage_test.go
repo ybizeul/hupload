@@ -1,16 +1,18 @@
-package storage
+package storage_test
 
 import (
 	"reflect"
 	"testing"
 	"time"
+
+	"github.com/ybizeul/hupload/internal/storage"
 )
 
 func TestShouldBeValid(t *testing.T) {
-	share := Share{
+	share := storage.Share{
 		Name:        "test",
 		Owner:       "admin",
-		Options:     Options{Validity: 10},
+		Options:     storage.Options{Validity: 10},
 		DateCreated: time.Now().AddDate(0, 0, -5),
 	}
 
@@ -26,10 +28,10 @@ func TestShouldBeValid(t *testing.T) {
 }
 
 func TestShouldBeInvalid(t *testing.T) {
-	share := Share{
+	share := storage.Share{
 		Name:        "test",
 		Owner:       "admin",
-		Options:     Options{Validity: 10},
+		Options:     storage.Options{Validity: 10},
 		DateCreated: time.Now().AddDate(0, 0, -12),
 	}
 
@@ -39,10 +41,10 @@ func TestShouldBeInvalid(t *testing.T) {
 }
 
 func TestPublicShare(t *testing.T) {
-	share := Share{
+	share := storage.Share{
 		Name:  "test",
 		Owner: "admin",
-		Options: Options{
+		Options: storage.Options{
 			Validity:    10,
 			Exposure:    "upload",
 			Description: "test",
@@ -53,9 +55,9 @@ func TestPublicShare(t *testing.T) {
 
 	publicShare := share.PublicShare()
 
-	want := &PublicShare{
+	want := &storage.PublicShare{
 		Name: "test",
-		Options: PublicOptions{
+		Options: storage.PublicOptions{
 			Exposure: "upload",
 			Message:  "test",
 		},

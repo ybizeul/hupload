@@ -1,4 +1,4 @@
-package storage
+package storage_test
 
 import (
 	"bufio"
@@ -7,10 +7,12 @@ import (
 	"reflect"
 	"testing"
 	"time"
+
+	"github.com/ybizeul/hupload/internal/storage"
 )
 
-func createS3Backend(t *testing.T) *S3Backend {
-	c := S3StorageConfig{
+func createS3Backend(t *testing.T) *storage.S3Backend {
+	c := storage.S3StorageConfig{
 		Endpoint:     os.Getenv("AWS_ENDPOINT_URL"),
 		Region:       os.Getenv("AWS_DEFAULT_REGION"),
 		AWSKey:       os.Getenv("AWS_ACCESS_KEY_ID"),
@@ -21,7 +23,7 @@ func createS3Backend(t *testing.T) *S3Backend {
 		MaxShareSize: 5,
 	}
 
-	f := NewS3Storage(c)
+	f := storage.NewS3Storage(c)
 	if f == nil {
 		t.Errorf("Expected S3 Storage to be created")
 	}
@@ -37,7 +39,7 @@ func TestS3CreateShare(t *testing.T) {
 	})
 
 	// Test create share
-	_, err := f.CreateShare("Test", "admin", DefaultOptions())
+	_, err := f.CreateShare("Test", "admin", storage.DefaultOptions())
 	if err != nil {
 		t.Errorf("Expected no error, got %v", err)
 	}
@@ -51,13 +53,13 @@ func TestS3UpdateShare(t *testing.T) {
 	})
 
 	// Test create share
-	_, err := f.CreateShare("Test", "admin", DefaultOptions())
+	_, err := f.CreateShare("Test", "admin", storage.DefaultOptions())
 	if err != nil {
 		t.Errorf("Expected no error, got %v", err)
 	}
 
 	// Test update share
-	newOptions := &Options{
+	newOptions := &storage.Options{
 		Validity:    20,
 		Exposure:    "both",
 		Message:     "message",
@@ -82,7 +84,7 @@ func TestCreateS3Item(t *testing.T) {
 		_ = f.DeleteShare("Test")
 	})
 
-	_, err := f.CreateShare("Test", "admin", DefaultOptions())
+	_, err := f.CreateShare("Test", "admin", storage.DefaultOptions())
 	if err != nil {
 		t.Errorf("Expected no error, got %v", err)
 		return
@@ -105,7 +107,7 @@ func TestS3GetShare(t *testing.T) {
 		_ = f.DeleteShare("Test")
 	})
 
-	options := Options{
+	options := storage.Options{
 		Validity:    7,
 		Exposure:    "upload",
 		Message:     "message",
@@ -125,7 +127,7 @@ func TestS3GetShare(t *testing.T) {
 	}
 	got.DateCreated = time.Time{}
 
-	want := &Share{
+	want := &storage.Share{
 		Name:    "Test",
 		Owner:   "admin",
 		Options: options,
@@ -148,12 +150,12 @@ func TestS3ListShares(t *testing.T) {
 		err error
 	)
 
-	_, err = f.CreateShare("Test1", "admin", DefaultOptions())
+	_, err = f.CreateShare("Test1", "admin", storage.DefaultOptions())
 	if err != nil {
 		t.Errorf("Expected no error, got %v", err)
 		return
 	}
-	_, err = f.CreateShare("Test2", "admin", DefaultOptions())
+	_, err = f.CreateShare("Test2", "admin", storage.DefaultOptions())
 	if err != nil {
 		t.Errorf("Expected no error, got %v", err)
 		return
@@ -170,16 +172,16 @@ func TestS3ListShares(t *testing.T) {
 		got[i].DateCreated = time.Time{}
 	}
 
-	want := []Share{
-		{
-			Name:    "Test1",
-			Owner:   "admin",
-			Options: DefaultOptions(),
-		},
+	want := []storage.Share{
 		{
 			Name:    "Test2",
 			Owner:   "admin",
-			Options: DefaultOptions(),
+			Options: storage.DefaultOptions(),
+		},
+		{
+			Name:    "Test1",
+			Owner:   "admin",
+			Options: storage.DefaultOptions(),
 		},
 	}
 

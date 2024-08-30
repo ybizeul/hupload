@@ -59,9 +59,9 @@ func (b *FileBackend) initialize() {
 	}
 }
 
-// isShareNameSafe checks if a share name is safe to use,, the primary goal is
+// IsShareNameSafe checks if a share name is safe to use,, the primary goal is
 // to make sure that no path traversal is possible
-func isShareNameSafe(n string) bool {
+func IsShareNameSafe(n string) bool {
 	m := regexp.MustCompile(`^[a-zA-Z0-9_-]+$`).MatchString(n)
 	return m
 }
@@ -144,7 +144,7 @@ func (b *FileBackend) Migrate() error {
 // invalid. owner is only used to populate metadata.
 
 func (b *FileBackend) CreateShare(name, owner string, options Options) (*Share, error) {
-	if !isShareNameSafe(name) {
+	if !IsShareNameSafe(name) {
 		return nil, ErrInvalidShareName
 	}
 
@@ -186,7 +186,7 @@ func (b *FileBackend) CreateShare(name, owner string, options Options) (*Share, 
 // an error if the share does not exist or if the name is invalid.
 
 func (b *FileBackend) UpdateShare(name string, options *Options) (*Options, error) {
-	if !isShareNameSafe(name) {
+	if !IsShareNameSafe(name) {
 		return nil, ErrInvalidShareName
 	}
 
@@ -217,7 +217,7 @@ func (b *FileBackend) UpdateShare(name string, options *Options) (*Options, erro
 // the provided bufio.Reader.
 
 func (b *FileBackend) CreateItem(s string, i string, size int64, r io.Reader) (*Item, error) {
-	if !isShareNameSafe(s) {
+	if !IsShareNameSafe(s) {
 		return nil, ErrInvalidShareName
 	}
 
@@ -305,7 +305,7 @@ func (b *FileBackend) CreateItem(s string, i string, size int64, r io.Reader) (*
 }
 
 func (b *FileBackend) DeleteItem(s string, i string) error {
-	if !isShareNameSafe(s) {
+	if !IsShareNameSafe(s) {
 		return ErrInvalidShareName
 	}
 
@@ -334,7 +334,7 @@ func (b *FileBackend) DeleteItem(s string, i string) error {
 // returns an error if the share does not exist or if the name is invalid.
 
 func (b *FileBackend) GetShare(s string) (*Share, error) {
-	if !isShareNameSafe(s) {
+	if !IsShareNameSafe(s) {
 		return nil, ErrInvalidShareName
 	}
 	fm, err := os.Open(path.Join(b.Options.Path, s, ".metadata"))
@@ -388,7 +388,7 @@ func (b *FileBackend) ListShares() ([]Share, error) {
 // an error if the share does not exist or if the name is invalid.
 
 func (b *FileBackend) DeleteShare(s string) error {
-	if !isShareNameSafe(s) {
+	if !IsShareNameSafe(s) {
 		return ErrInvalidShareName
 	}
 	sharePath := path.Join(b.Options.Path, s)
@@ -413,7 +413,7 @@ func (b *FileBackend) DeleteShare(s string) error {
 // .* files and temporary upload files are excluded from the result.
 
 func (b *FileBackend) ListShare(s string) ([]Item, error) {
-	if !isShareNameSafe(s) {
+	if !IsShareNameSafe(s) {
 		return nil, ErrInvalidShareName
 	}
 
@@ -448,7 +448,7 @@ func (b *FileBackend) ListShare(s string) ([]Item, error) {
 // GetItem retrieves the metadata for an item in a share. It returns an error if
 // the share or the item do not exist or if the share name is invalid.
 func (b *FileBackend) GetItem(s string, i string) (*Item, error) {
-	if !isShareNameSafe(s) {
+	if !IsShareNameSafe(s) {
 		return nil, ErrInvalidShareName
 	}
 
@@ -476,7 +476,7 @@ func (b *FileBackend) GetItem(s string, i string) (*Item, error) {
 // GetItemData retrieves the content of an item in a share. It returns an error
 // if the share or the item do not exist or if the share name is invalid.
 func (b *FileBackend) GetItemData(s string, i string) (io.ReadCloser, error) {
-	if !isShareNameSafe(s) {
+	if !IsShareNameSafe(s) {
 		return nil, ErrInvalidShareName
 	}
 
@@ -498,7 +498,7 @@ func (b *FileBackend) GetItemData(s string, i string) (io.ReadCloser, error) {
 }
 
 func (b *FileBackend) updateMetadata(s string) error {
-	if !isShareNameSafe(s) {
+	if !IsShareNameSafe(s) {
 		return ErrInvalidShareName
 	}
 	sd, err := os.ReadDir(path.Join(b.Options.Path, s))

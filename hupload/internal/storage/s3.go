@@ -103,7 +103,7 @@ func (b *S3Backend) Migrate() error {
 
 // CreateShare creates a new share
 func (b *S3Backend) CreateShare(name, owner string, options Options) (*Share, error) {
-	if !isShareNameSafe(name) {
+	if !IsShareNameSafe(name) {
 		return nil, ErrInvalidShareName
 	}
 
@@ -145,7 +145,7 @@ func (b *S3Backend) CreateShare(name, owner string, options Options) (*Share, er
 
 // UpdateShare updates an existing share
 func (b *S3Backend) UpdateShare(name string, options *Options) (*Options, error) {
-	if !isShareNameSafe(name) {
+	if !IsShareNameSafe(name) {
 		return nil, ErrInvalidShareName
 	}
 
@@ -178,7 +178,7 @@ func (b *S3Backend) UpdateShare(name string, options *Options) (*Options, error)
 
 // CreateItem creates a new item in a share
 func (b *S3Backend) CreateItem(name, item string, size int64, r io.Reader) (*Item, error) {
-	if !isShareNameSafe(name) {
+	if !IsShareNameSafe(name) {
 		return nil, ErrInvalidShareName
 	}
 	if !isItemNameSafe(item) {
@@ -257,7 +257,7 @@ func (b *S3Backend) CreateItem(name, item string, size int64, r io.Reader) (*Ite
 
 // CreateItem creates a new item in a share
 func (b *S3Backend) DeleteItem(share, item string) error {
-	if !isShareNameSafe(share) {
+	if !IsShareNameSafe(share) {
 		return ErrInvalidShareName
 	}
 	if !isItemNameSafe(item) {
@@ -284,7 +284,7 @@ func (b *S3Backend) DeleteItem(share, item string) error {
 
 // GetShare returns the share identified by share
 func (b *S3Backend) GetShare(name string) (*Share, error) {
-	if !isShareNameSafe(name) {
+	if !IsShareNameSafe(name) {
 		return nil, ErrInvalidShareName
 	}
 	path := path.Join("shares", name, ".metadata")
@@ -342,7 +342,7 @@ func (b *S3Backend) ListShares() ([]Share, error) {
 
 // ListShare returns the list of items in a share
 func (b *S3Backend) ListShare(name string) ([]Item, error) {
-	if !isShareNameSafe(name) {
+	if !IsShareNameSafe(name) {
 		return nil, ErrInvalidShareName
 	}
 	output, err := b.Client.ListObjectsV2(context.Background(), &s3.ListObjectsV2Input{
@@ -381,7 +381,7 @@ func (b *S3Backend) ListShare(name string) ([]Item, error) {
 
 // ListShare returns the list of items in a share
 func (b *S3Backend) DeleteShare(name string) error {
-	if !isShareNameSafe(name) {
+	if !IsShareNameSafe(name) {
 		return ErrInvalidShareName
 	}
 
@@ -417,7 +417,7 @@ func (b *S3Backend) DeleteShare(name string) error {
 
 // GetItem returns the item identified by share and item
 func (b *S3Backend) GetItem(share, item string) (*Item, error) {
-	if !isShareNameSafe(share) {
+	if !IsShareNameSafe(share) {
 		return nil, ErrInvalidShareName
 	}
 	if !isItemNameSafe(item) {
@@ -451,7 +451,7 @@ func (b *S3Backend) GetItem(share, item string) (*Item, error) {
 
 // GetItem returns the item identified by share and item
 func (b *S3Backend) GetItemData(share, item string) (io.ReadCloser, error) {
-	if !isShareNameSafe(share) {
+	if !IsShareNameSafe(share) {
 		return nil, ErrInvalidShareName
 	}
 	if !isItemNameSafe(item) {
@@ -478,7 +478,7 @@ func (b *S3Backend) GetItemData(share, item string) (io.ReadCloser, error) {
 }
 
 func (b *S3Backend) updateMetadata(s string) error {
-	if !isShareNameSafe(s) {
+	if !IsShareNameSafe(s) {
 		return ErrInvalidShareName
 	}
 

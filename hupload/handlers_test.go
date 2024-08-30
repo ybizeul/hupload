@@ -792,6 +792,24 @@ func TestGetItems(t *testing.T) {
 	})
 }
 
+func readerForCapacity(capacity int) io.ReadCloser {
+	pr, pw := io.Pipe()
+	go func() {
+		defer pw.Close()
+		b := 1024
+		w := 0
+		for w < capacity {
+			if w+b > capacity {
+				b = capacity - w
+			}
+			_, _ = pw.Write(make([]byte, b))
+			w += b
+		}
+	}()
+
+	return pr
+}
+
 // multipartWriter returns a reader and a multipart.Writer for a body with one
 // attachment of size size.
 func multipartWriter(size int) (io.Reader, string) {

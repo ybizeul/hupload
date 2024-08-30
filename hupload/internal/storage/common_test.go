@@ -1,10 +1,12 @@
-package storage
+package storage_test
 
 import (
 	"errors"
 	"io"
 	"os"
 	"testing"
+
+	"github.com/ybizeul/hupload/internal/storage"
 )
 
 func readerForCapacity(capacity int) io.ReadCloser {
@@ -26,7 +28,7 @@ func readerForCapacity(capacity int) io.ReadCloser {
 }
 
 func TestFileOverflow(t *testing.T) {
-	storages := []Storage{
+	storages := []storage.Storage{
 		createFileBackend(t),
 		createS3Backend(t),
 	}
@@ -38,9 +40,9 @@ func TestFileOverflow(t *testing.T) {
 	})
 
 	for i := range storages {
-		storage := storages[i]
+		s := storages[i]
 
-		share, err := storage.CreateShare("test", "admin", Options{Validity: 10, Exposure: "upload"})
+		share, err := s.CreateShare("test", "admin", storage.Options{Validity: 10, Exposure: "upload"})
 		if err != nil {
 			t.Errorf("Expected no error, got %v", err)
 		}
@@ -50,10 +52,10 @@ func TestFileOverflow(t *testing.T) {
 
 			reader := readerForCapacity(fileSize)
 
-			_, err = storage.CreateItem(share.Name, "test.txt", int64(fileSize), reader)
+			_, err = s.CreateItem(share.Name, "test.txt", int64(fileSize), reader)
 			reader.Close()
 
-			if !errors.Is(err, ErrMaxFileSizeReached) {
+			if !errors.Is(err, storage.ErrMaxFileSizeReached) {
 				t.Errorf("Expected ErrMaxFileSizeReached, got %v", err)
 			}
 		})
@@ -63,7 +65,7 @@ func TestFileOverflow(t *testing.T) {
 
 			reader := readerForCapacity(fileSize)
 
-			_, err = storage.CreateItem(share.Name, "test.txt", int64(fileSize), reader)
+			_, err = s.CreateItem(share.Name, "test.txt", int64(fileSize), reader)
 			reader.Close()
 
 			if err != nil {
@@ -76,10 +78,10 @@ func TestFileOverflow(t *testing.T) {
 
 			reader := readerForCapacity(fileSize)
 
-			_, err = storage.CreateItem(share.Name, "test.txt", int64(fileSize), reader)
+			_, err = s.CreateItem(share.Name, "test.txt", int64(fileSize), reader)
 			reader.Close()
 
-			if !errors.Is(err, ErrMaxShareSizeReached) {
+			if !errors.Is(err, storage.ErrMaxShareSizeReached) {
 				t.Errorf("Expected ErrMaxShareSizeReached, got %v", err)
 			}
 		})
@@ -93,20 +95,18 @@ func TestShareOverflow(t *testing.T) {
 		os.RemoveAll("3mb")
 	})
 
-	c := FileStorageConfig{
+	c := storage.FileStorageConfig{
 		Path:         "data",
 		MaxFileSize:  4,
 		MaxShareSize: 5,
 	}
 
-	f := NewFileStorage(c)
+	f := storage.NewFileStorage(c)
 	if f == nil {
 		t.Errorf("Expected FileStorage to be created")
 	}
 
-	f.initialize()
-
-	share, err := f.CreateShare("test", "admin", Options{Validity: 10, Exposure: "upload"})
+	share, err := f.CreateShare("test", "admin", storage.Options{Validity: 10, Exposure: "upload"})
 	if err != nil {
 		t.Errorf("Expected no error, got %v", err)
 	}

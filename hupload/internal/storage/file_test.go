@@ -1,4 +1,4 @@
-package storage
+package storage_test
 
 import (
 	"bufio"
@@ -12,22 +12,21 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ybizeul/hupload/internal/storage"
 	"gopkg.in/yaml.v3"
 )
 
-func createFileBackend(t *testing.T) *FileBackend {
-	c := FileStorageConfig{
+func createFileBackend(t *testing.T) *storage.FileBackend {
+	c := storage.FileStorageConfig{
 		Path:         "data",
 		MaxFileSize:  4,
 		MaxShareSize: 5,
 	}
 
-	f := NewFileStorage(c)
+	f := storage.NewFileStorage(c)
 	if f == nil {
 		t.Errorf("Expected FileStorage to be created")
 	}
-
-	f.initialize()
 
 	return f
 }
@@ -39,40 +38,40 @@ func TestCreateShare(t *testing.T) {
 	f := createFileBackend(t)
 
 	tests := []struct {
-		f      func() (*Share, error)
-		expect Share
+		f      func() (*storage.Share, error)
+		expect storage.Share
 	}{
 		{
-			func() (*Share, error) {
-				return f.CreateShare("test", "admin", Options{Validity: 10, Exposure: "upload"})
+			func() (*storage.Share, error) {
+				return f.CreateShare("test", "admin", storage.Options{Validity: 10, Exposure: "upload"})
 			},
-			Share{
+			storage.Share{
 				Version: 1,
 				Name:    "test",
 				Owner:   "admin",
-				Options: Options{Validity: 10, Exposure: "upload"},
+				Options: storage.Options{Validity: 10, Exposure: "upload"},
 			},
 		},
 		{
-			func() (*Share, error) {
-				return f.CreateShare("test", "admin", Options{Validity: 10, Exposure: "both"})
+			func() (*storage.Share, error) {
+				return f.CreateShare("test", "admin", storage.Options{Validity: 10, Exposure: "both"})
 			},
-			Share{
+			storage.Share{
 				Version: 1,
 				Name:    "test",
 				Owner:   "admin",
-				Options: Options{Validity: 10, Exposure: "both"},
+				Options: storage.Options{Validity: 10, Exposure: "both"},
 			},
 		},
 		{
-			func() (*Share, error) {
-				return f.CreateShare("test", "admin", Options{Validity: 10, Exposure: "download"})
+			func() (*storage.Share, error) {
+				return f.CreateShare("test", "admin", storage.Options{Validity: 10, Exposure: "download"})
 			},
-			Share{
+			storage.Share{
 				Version: 1,
 				Name:    "test",
 				Owner:   "admin",
-				Options: Options{Validity: 10, Exposure: "download"},
+				Options: storage.Options{Validity: 10, Exposure: "download"},
 			},
 		},
 	}
@@ -96,7 +95,7 @@ func TestCreateShare(t *testing.T) {
 				t.Errorf("Expected metadata to be written")
 			}
 
-			var got Share
+			var got storage.Share
 			err = yaml.NewDecoder(metadata_f).Decode(&got)
 			if err != nil {
 				t.Errorf("Expected no error, got %v", err)
@@ -118,9 +117,9 @@ func TestUpdateShare(t *testing.T) {
 
 	f := createFileBackend(t)
 
-	share, _ := f.CreateShare("test", "admin", Options{Validity: 10, Exposure: "upload", Description: "description", Message: "message"})
+	share, _ := f.CreateShare("test", "admin", storage.Options{Validity: 10, Exposure: "upload", Description: "description", Message: "message"})
 
-	newOptions := &Options{
+	newOptions := &storage.Options{
 		Validity:    20,
 		Exposure:    "both",
 		Description: "new description",
@@ -158,7 +157,7 @@ func TestCreateItem(t *testing.T) {
 
 	f := createFileBackend(t)
 
-	share, err := f.CreateShare("test", "admin", Options{Validity: 10, Exposure: "upload"})
+	share, err := f.CreateShare("test", "admin", storage.Options{Validity: 10, Exposure: "upload"})
 	if err != nil {
 		t.Errorf("Expected no error, got %v", err)
 	}
@@ -192,11 +191,11 @@ func TestDeleteItem(t *testing.T) {
 
 	f := createFileBackend(t)
 
-	share, _ := f.CreateShare("test", "admin", Options{Validity: 10, Exposure: "upload"})
+	share, _ := f.CreateShare("test", "admin", storage.Options{Validity: 10, Exposure: "upload"})
 
 	t.Run("Delete inexistant item should fail", func(t *testing.T) {
 		err := f.DeleteItem(share.Name, "test.txt")
-		if err != ErrItemNotFound {
+		if err != storage.ErrItemNotFound {
 			t.Errorf("Expected ErrItemNotFound, got %v", err)
 		}
 	})
@@ -219,20 +218,18 @@ func TestDeleteShare(t *testing.T) {
 		os.RemoveAll("data")
 	})
 
-	c := FileStorageConfig{
+	c := storage.FileStorageConfig{
 		Path:         "data",
 		MaxFileSize:  5,
 		MaxShareSize: 10,
 	}
 
-	f := NewFileStorage(c)
+	f := storage.NewFileStorage(c)
 	if f == nil {
 		t.Errorf("Expected FileStorage to be created")
 	}
 
-	f.initialize()
-
-	share, _ := f.CreateShare("test", "admin", Options{Validity: 10, Exposure: "upload"})
+	share, _ := f.CreateShare("test", "admin", storage.Options{Validity: 10, Exposure: "upload"})
 
 	err := f.DeleteShare(share.Name)
 	if err != nil {
@@ -246,15 +243,15 @@ func TestDeleteShare(t *testing.T) {
 }
 
 func TestSafeShareName(t *testing.T) {
-	if !isShareNameSafe("test") {
+	if !storage.IsShareNameSafe("test") {
 		t.Errorf("Expected true, got false")
 	}
 
-	if isShareNameSafe("Test/path") {
+	if storage.IsShareNameSafe("Test/path") {
 		t.Errorf("Expected true, got false")
 	}
 
-	if isShareNameSafe("share/../path") {
+	if storage.IsShareNameSafe("share/../path") {
 		t.Errorf("Expected true, got false")
 	}
 }
@@ -280,18 +277,16 @@ func TestSafeShareName(t *testing.T) {
 // }
 
 func TestGetItemData(t *testing.T) {
-	c := FileStorageConfig{
+	c := storage.FileStorageConfig{
 		Path:         "file_testdata/data",
 		MaxFileSize:  1,
 		MaxShareSize: 2,
 	}
 
-	f := NewFileStorage(c)
+	f := storage.NewFileStorage(c)
 	if f == nil {
 		t.Errorf("Expected FileStorage to be created")
 	}
-
-	f.initialize()
 
 	r, err := f.GetItemData("test", "test.txt")
 	if err != nil {
@@ -311,13 +306,13 @@ func TestGetItemData(t *testing.T) {
 }
 
 func TestGetShare(t *testing.T) {
-	c := FileStorageConfig{
+	c := storage.FileStorageConfig{
 		Path:         "file_testdata/data",
 		MaxFileSize:  1,
 		MaxShareSize: 2,
 	}
 
-	f := NewFileStorage(c)
+	f := storage.NewFileStorage(c)
 
 	share, err := f.GetShare("test")
 	if err != nil {
@@ -329,10 +324,10 @@ func TestGetShare(t *testing.T) {
 		t.Errorf("Expected no error, got %v", err)
 	}
 
-	want := Share{
+	want := storage.Share{
 		Name:        "test",
 		Owner:       "admin",
-		Options:     Options{Validity: 10, Exposure: "upload", Description: "description", Message: "message"},
+		Options:     storage.Options{Validity: 10, Exposure: "upload", Description: "description", Message: "message"},
 		Size:        4,
 		Count:       1,
 		DateCreated: parsedTime,
@@ -344,13 +339,13 @@ func TestGetShare(t *testing.T) {
 }
 
 func TestListShare(t *testing.T) {
-	c := FileStorageConfig{
+	c := storage.FileStorageConfig{
 		Path:         "file_testdata/data",
 		MaxFileSize:  1,
 		MaxShareSize: 2,
 	}
 
-	f := NewFileStorage(c)
+	f := storage.NewFileStorage(c)
 
 	items, err := f.ListShare("test")
 	if err != nil {
@@ -359,10 +354,10 @@ func TestListShare(t *testing.T) {
 
 	items[0].ItemInfo.DateModified = time.Time{}
 
-	want := []Item{
+	want := []storage.Item{
 		{
 			Path: "test/test.txt",
-			ItemInfo: ItemInfo{
+			ItemInfo: storage.ItemInfo{
 				Size:         4,
 				DateModified: time.Time{},
 			},
@@ -375,13 +370,13 @@ func TestListShare(t *testing.T) {
 }
 
 func TestListShares(t *testing.T) {
-	c := FileStorageConfig{
+	c := storage.FileStorageConfig{
 		Path:         "file_testdata/data",
 		MaxFileSize:  1,
 		MaxShareSize: 2,
 	}
 
-	f := NewFileStorage(c)
+	f := storage.NewFileStorage(c)
 
 	shares, err := f.ListShares()
 	if err != nil {
@@ -393,11 +388,11 @@ func TestListShares(t *testing.T) {
 		t.Errorf("Expected no error, got %v", err)
 	}
 
-	want := []Share{
+	want := []storage.Share{
 		{
 			Name:        "test",
 			Owner:       "admin",
-			Options:     Options{Validity: 10, Exposure: "upload", Description: "description", Message: "message"},
+			Options:     storage.Options{Validity: 10, Exposure: "upload", Description: "description", Message: "message"},
 			Size:        4,
 			Count:       1,
 			DateCreated: parsedTime,
@@ -405,7 +400,7 @@ func TestListShares(t *testing.T) {
 		{
 			Name:        "test2",
 			Owner:       "admin",
-			Options:     Options{Validity: 10, Exposure: "upload"},
+			Options:     storage.Options{Validity: 10, Exposure: "upload"},
 			Size:        4,
 			Count:       1,
 			DateCreated: parsedTime,
@@ -428,13 +423,13 @@ func TestMigrate(t *testing.T) {
 		t.Errorf("Expected no error, got %v", err)
 	}
 
-	c := FileStorageConfig{
+	c := storage.FileStorageConfig{
 		Path:         "file_testdata/data_old_copy",
 		MaxFileSize:  1,
 		MaxShareSize: 2,
 	}
 
-	f := NewFileStorage(c)
+	f := storage.NewFileStorage(c)
 
 	err = f.Migrate()
 	if err != nil {
@@ -445,16 +440,16 @@ func TestMigrate(t *testing.T) {
 
 	tests := []struct {
 		name string
-		want Share
+		want storage.Share
 	}{
 		// Migration of a v0 share
 		{
 			name: "test",
-			want: Share{
+			want: storage.Share{
 				Version:     1,
 				Name:        "test",
 				Owner:       "admin",
-				Options:     Options{Validity: 10},
+				Options:     storage.Options{Validity: 10},
 				Size:        4,
 				Count:       1,
 				DateCreated: parsedTime,
@@ -464,11 +459,11 @@ func TestMigrate(t *testing.T) {
 		// Migration of a v1 share
 		{
 			name: "test2",
-			want: Share{
+			want: storage.Share{
 				Version:     1,
 				Name:        "test2",
 				Owner:       "admin",
-				Options:     Options{Validity: 10},
+				Options:     storage.Options{Validity: 10},
 				Size:        4,
 				Count:       1,
 				DateCreated: parsedTime,
@@ -478,11 +473,11 @@ func TestMigrate(t *testing.T) {
 		// Migration of a v0 share that is actually a v1 share
 		{
 			name: "test3",
-			want: Share{
+			want: storage.Share{
 				Version: 1,
 				Name:    "test3",
 				Owner:   "admin",
-				Options: Options{
+				Options: storage.Options{
 					Validity:    10,
 					Exposure:    "both",
 					Description: "desc",
@@ -511,20 +506,18 @@ func TestShareWithDescriptionAndMessage(t *testing.T) {
 		os.RemoveAll("datadescription")
 	})
 
-	c := FileStorageConfig{
+	c := storage.FileStorageConfig{
 		Path:         "datadescription",
 		MaxFileSize:  1,
 		MaxShareSize: 2,
 	}
 
-	f := NewFileStorage(c)
+	f := storage.NewFileStorage(c)
 	if f == nil {
 		t.Errorf("Expected FileStorage to be created")
 	}
 
-	f.initialize()
-
-	share, err := f.CreateShare("test", "admin", Options{Validity: 10, Exposure: "upload", Description: "test description", Message: "test message"})
+	share, err := f.CreateShare("test", "admin", storage.Options{Validity: 10, Exposure: "upload", Description: "test description", Message: "test message"})
 	if err != nil {
 		t.Errorf("Expected no error, got %v", err)
 	}
@@ -534,7 +527,7 @@ func TestShareWithDescriptionAndMessage(t *testing.T) {
 		t.Errorf("Expected metadata to be written")
 	}
 
-	var got Share
+	var got storage.Share
 	err = yaml.NewDecoder(metadata_f).Decode(&got)
 	if err != nil {
 		t.Errorf("Expected no error, got %v", err)
