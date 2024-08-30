@@ -143,8 +143,6 @@ func TestCreateShare(t *testing.T) {
 
 				var share *storage.Share
 
-				_ = json.NewDecoder(w.Body).Decode(&share)
-
 				err := json.NewDecoder(w.Body).Decode(&share)
 				if err != nil {
 					t.Errorf("Expected no error, got %v", err)
@@ -165,6 +163,7 @@ func TestCreateShare(t *testing.T) {
 			t.Run("Create a share with token should succeed", func(t *testing.T) {
 				if token == nil {
 					t.Fatal("No token created")
+					return
 				}
 				var (
 					req *http.Request
