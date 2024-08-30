@@ -52,7 +52,7 @@ func New(staticUI fs.FS, templateData any) (*APIWS, error) {
 		Mux:          http.NewServeMux(),
 	}
 
-	if f != nil {
+	if result.StaticUI != nil {
 		result.Mux.HandleFunc("GET /{path...}", func(w http.ResponseWriter, r *http.Request) {
 			_, err := fs.Stat(result.StaticUI, r.URL.Path[1:])
 			if err == nil {
