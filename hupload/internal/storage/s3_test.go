@@ -3,6 +3,7 @@ package storage_test
 import (
 	"bufio"
 	"bytes"
+	"context"
 	"os"
 	"reflect"
 	"testing"
@@ -35,11 +36,11 @@ func TestS3CreateShare(t *testing.T) {
 	f := createS3Backend(t)
 
 	t.Cleanup(func() {
-		_ = f.DeleteShare("Test")
+		_ = f.DeleteShare(context.Background(), "Test")
 	})
 
 	// Test create share
-	_, err := f.CreateShare("Test", "admin", storage.DefaultOptions())
+	_, err := f.CreateShare(context.Background(), "Test", "admin", storage.DefaultOptions())
 	if err != nil {
 		t.Errorf("Expected no error, got %v", err)
 	}
@@ -49,11 +50,11 @@ func TestS3UpdateShare(t *testing.T) {
 	f := createS3Backend(t)
 
 	t.Cleanup(func() {
-		_ = f.DeleteShare("Test")
+		_ = f.DeleteShare(context.Background(), "Test")
 	})
 
 	// Test create share
-	_, err := f.CreateShare("Test", "admin", storage.DefaultOptions())
+	_, err := f.CreateShare(context.Background(), "Test", "admin", storage.DefaultOptions())
 	if err != nil {
 		t.Errorf("Expected no error, got %v", err)
 	}
@@ -65,7 +66,7 @@ func TestS3UpdateShare(t *testing.T) {
 		Message:     "message",
 		Description: "description",
 	}
-	options, err := f.UpdateShare("Test", newOptions)
+	options, err := f.UpdateShare(context.Background(), "Test", newOptions)
 
 	if err != nil {
 		t.Errorf("Expected no error, got %v", err)
@@ -81,10 +82,10 @@ func TestCreateS3Item(t *testing.T) {
 	f := createS3Backend(t)
 
 	t.Cleanup(func() {
-		_ = f.DeleteShare("Test")
+		_ = f.DeleteShare(context.Background(), "Test")
 	})
 
-	_, err := f.CreateShare("Test", "admin", storage.DefaultOptions())
+	_, err := f.CreateShare(context.Background(), "Test", "admin", storage.DefaultOptions())
 	if err != nil {
 		t.Errorf("Expected no error, got %v", err)
 		return
@@ -94,7 +95,7 @@ func TestCreateS3Item(t *testing.T) {
 	b := bufio.NewReader(bytes.NewBuffer([]byte("test")))
 
 	// Test create item
-	_, err = f.CreateItem("Test", "test.txt", int64(len(content)), b)
+	_, err = f.CreateItem(context.Background(), "Test", "test.txt", int64(len(content)), b)
 	if err != nil {
 		t.Errorf("Expected no error, got %v", err)
 	}
@@ -104,7 +105,7 @@ func TestS3GetShare(t *testing.T) {
 	f := createS3Backend(t)
 
 	t.Cleanup(func() {
-		_ = f.DeleteShare("Test")
+		_ = f.DeleteShare(context.Background(), "Test")
 	})
 
 	options := storage.Options{
@@ -113,14 +114,14 @@ func TestS3GetShare(t *testing.T) {
 		Message:     "message",
 		Description: "description",
 	}
-	_, err := f.CreateShare("Test", "admin", options)
+	_, err := f.CreateShare(context.Background(), "Test", "admin", options)
 	if err != nil {
 		t.Errorf("Expected no error, got %v", err)
 		return
 	}
 
 	// Test get share
-	got, err := f.GetShare("Test")
+	got, err := f.GetShare(context.Background(), "Test")
 	if err != nil {
 		t.Errorf("Expected no error, got %v", err)
 		return
@@ -143,27 +144,28 @@ func TestS3ListShares(t *testing.T) {
 	f := createS3Backend(t)
 
 	t.Cleanup(func() {
-		_ = f.DeleteShare("Test1")
-		_ = f.DeleteShare("Test2")
+		_ = f.DeleteShare(context.Background(), "Test1")
+		_ = f.DeleteShare(context.Background(), "Test2")
 	})
 
 	var (
 		err error
 	)
 
-	_, err = f.CreateShare("Test1", "admin", storage.DefaultOptions())
+	_, err = f.CreateShare(context.Background(), "Test1", "admin", storage.DefaultOptions())
 	if err != nil {
 		t.Errorf("Expected no error, got %v", err)
 		return
 	}
-	_, err = f.CreateShare("Test2", "admin", storage.DefaultOptions())
+	time.Sleep(1 * time.Second)
+	_, err = f.CreateShare(context.Background(), "Test2", "admin", storage.DefaultOptions())
 	if err != nil {
 		t.Errorf("Expected no error, got %v", err)
 		return
 	}
 
 	// Test list shares
-	got, err := f.ListShares()
+	got, err := f.ListShares(context.Background())
 	if err != nil {
 		t.Errorf("Expected no error, got %v", err)
 		return

@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"context"
 	"io"
 	"time"
 )
@@ -87,32 +88,32 @@ type Storage interface {
 	Migrate() error
 
 	// CreateShare creates a new share
-	CreateShare(name, owner string, options Options) (*Share, error)
+	CreateShare(ctx context.Context, name, owner string, options Options) (*Share, error)
 
 	// UpdateShare updates an existing share
-	UpdateShare(name string, options *Options) (*Options, error)
+	UpdateShare(ctx context.Context, name string, options *Options) (*Options, error)
 
 	// CreateItem creates a new item in a share
-	CreateItem(share, item string, size int64, reader io.Reader) (*Item, error)
+	CreateItem(ctx context.Context, share, item string, size int64, reader io.Reader) (*Item, error)
 
 	// CreateItem creates a new item in a share
-	DeleteItem(share, item string) error
+	DeleteItem(ctx context.Context, share, item string) error
 
 	// GetShare returns the share identified by share
-	GetShare(string) (*Share, error)
+	GetShare(ctx context.Context, share string) (*Share, error)
 
 	// ListShares returns the list of shares available
-	ListShares() ([]Share, error)
+	ListShares(ctx context.Context) ([]Share, error)
 
 	// ListShare returns the list of items in a share
-	ListShare(string) ([]Item, error)
+	ListShare(ctx context.Context, share string) ([]Item, error)
 
 	// ListShare returns the list of items in a share
-	DeleteShare(string) error
+	DeleteShare(ctx context.Context, share string) error
 
 	// GetItem returns the item identified by share and item
-	GetItem(string, string) (*Item, error)
+	GetItem(ctx context.Context, share, item string) (*Item, error)
 
 	// GetItem returns the item identified by share and item
-	GetItemData(string, string) (io.ReadCloser, error)
+	GetItemData(ctx context.Context, share string, item string) (io.ReadCloser, error)
 }

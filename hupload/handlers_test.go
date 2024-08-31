@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"bytes"
+	"context"
 	"crypto/rand"
 	"encoding/json"
 	"fmt"
@@ -64,7 +65,7 @@ func getHupload(t *testing.T, cfg *config.Config) *Hupload {
 
 // makeShare creates a new share with the given name and parameters.
 func makeShare(t *testing.T, h *Hupload, name string, params storage.Options) *storage.Share {
-	share, err := h.Config.Storage.CreateShare(name, "admin", params)
+	share, err := h.Config.Storage.CreateShare(context.Background(), name, "admin", params)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -73,7 +74,7 @@ func makeShare(t *testing.T, h *Hupload, name string, params storage.Options) *s
 
 // makeItem creates a new item with the given name and size.
 func makeItem(t *testing.T, h *Hupload, shareName, fileName string, size int) {
-	_, err := h.Config.Storage.CreateItem(shareName, fileName, int64(size), bufio.NewReader(io.LimitReader(rand.Reader, int64(size))))
+	_, err := h.Config.Storage.CreateItem(context.Background(), shareName, fileName, int64(size), bufio.NewReader(io.LimitReader(rand.Reader, int64(size))))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -117,7 +118,7 @@ func TestCreateShare(t *testing.T) {
 				}
 
 				t.Cleanup(func() {
-					_ = h.Config.Storage.DeleteShare(share.Name)
+					_ = h.Config.Storage.DeleteShare(context.Background(), share.Name)
 				})
 			})
 
@@ -150,7 +151,7 @@ func TestCreateShare(t *testing.T) {
 				}
 
 				t.Cleanup(func() {
-					_ = h.Config.Storage.DeleteShare(share.Name)
+					_ = h.Config.Storage.DeleteShare(context.Background(), share.Name)
 				})
 
 				token = &w.Result().Cookies()[0].Value
@@ -195,7 +196,7 @@ func TestCreateShare(t *testing.T) {
 				}
 
 				t.Cleanup(func() {
-					_ = h.Config.Storage.DeleteShare(share.Name)
+					_ = h.Config.Storage.DeleteShare(context.Background(), share.Name)
 				})
 
 				// _, err := os.Stat(path.Join("tmptest/data/", share.Name))
@@ -229,7 +230,7 @@ func TestCreateShare(t *testing.T) {
 				}
 
 				t.Cleanup(func() {
-					_ = h.Config.Storage.DeleteShare("samename")
+					_ = h.Config.Storage.DeleteShare(context.Background(), "samename")
 				})
 			})
 
@@ -251,7 +252,7 @@ func TestCreateShare(t *testing.T) {
 				}
 
 				t.Cleanup(func() {
-					_ = h.Config.Storage.DeleteShare("randomname")
+					_ = h.Config.Storage.DeleteShare(context.Background(), "randomname")
 				})
 			})
 
@@ -294,7 +295,7 @@ func TestUpdateShare(t *testing.T) {
 				Message:     "message",
 			})
 			t.Cleanup(func() {
-				_ = h.Config.Storage.DeleteShare("testupdate")
+				_ = h.Config.Storage.DeleteShare(context.Background(), "testupdate")
 			})
 			t.Run("Update share should succeed", func(t *testing.T) {
 				var (
@@ -415,8 +416,8 @@ func TestGetShare(t *testing.T) {
 			})
 
 			t.Cleanup(func() {
-				_ = h.Config.Storage.DeleteShare("test")
-				_ = h.Config.Storage.DeleteShare("test2")
+				_ = h.Config.Storage.DeleteShare(context.Background(), "test")
+				_ = h.Config.Storage.DeleteShare(context.Background(), "test2")
 			})
 
 			t.Run("Get shares should succeed", func(t *testing.T) {
@@ -602,7 +603,7 @@ func TestGetShare(t *testing.T) {
 
 				makeShare(t, h, shareName, storage.Options{})
 				t.Cleanup(func() {
-					_ = h.Config.Storage.DeleteShare(shareName)
+					_ = h.Config.Storage.DeleteShare(context.Background(), shareName)
 				})
 
 				makeItem(t, h, shareName, "newfile.txt", 1*1024*1024)
@@ -710,7 +711,7 @@ func TestDeleteShare(t *testing.T) {
 				shareName := "deleteshare"
 				makeShare(t, h, shareName, storage.Options{Exposure: "download"})
 				t.Cleanup(func() {
-					_ = h.Config.Storage.DeleteShare(shareName)
+					_ = h.Config.Storage.DeleteShare(context.Background(), shareName)
 				})
 				req = httptest.NewRequest("DELETE", path.Join("/api/v1/shares/", shareName), nil)
 				req.SetBasicAuth("admin", "hupload")
@@ -744,7 +745,7 @@ func TestDeleteShare(t *testing.T) {
 					return
 				}
 				t.Cleanup(func() {
-					_ = h.Config.Storage.DeleteShare("deleteshare")
+					_ = h.Config.Storage.DeleteShare(context.Background(), "deleteshare")
 				})
 			})
 
@@ -810,13 +811,13 @@ func TestGetItems(t *testing.T) {
 					fileSize := 1 * 1024 * 1024
 					makeShare(t, h, shareName, storage.Options{Exposure: exp})
 					t.Cleanup(func() {
-						_ = h.Config.Storage.DeleteShare(shareName)
+						_ = h.Config.Storage.DeleteShare(context.Background(), shareName)
 					})
 
 					makeItem(t, h, shareName, "newfile.txt", fileSize)
 
 					t.Cleanup(func() {
-						_ = h.Config.Storage.DeleteShare(shareName)
+						_ = h.Config.Storage.DeleteShare(context.Background(), shareName)
 					})
 
 					req = httptest.NewRequest("GET", path.Join("/api/v1/shares/", shareName, "items", "newfile.txt"), nil)
@@ -867,7 +868,7 @@ func TestGetItems(t *testing.T) {
 
 				makeShare(t, h, shareName, storage.Options{Exposure: "download"})
 				t.Cleanup(func() {
-					_ = h.Config.Storage.DeleteShare(shareName)
+					_ = h.Config.Storage.DeleteShare(context.Background(), shareName)
 				})
 
 				makeItem(t, h, shareName, "newfile.txt", 1*1024*1024)
@@ -894,7 +895,7 @@ func TestGetItems(t *testing.T) {
 
 				makeShare(t, h, shareName, storage.Options{Exposure: "download"})
 				t.Cleanup(func() {
-					_ = h.Config.Storage.DeleteShare(shareName)
+					_ = h.Config.Storage.DeleteShare(context.Background(), shareName)
 				})
 
 				req = httptest.NewRequest("GET", path.Join("/api/v1/shares/", shareName, "items", "notexists"), nil)
@@ -919,7 +920,7 @@ func TestGetItems(t *testing.T) {
 
 				makeShare(t, h, shareName, storage.Options{Exposure: "upload"})
 				t.Cleanup(func() {
-					_ = h.Config.Storage.DeleteShare(shareName)
+					_ = h.Config.Storage.DeleteShare(context.Background(), shareName)
 				})
 
 				makeItem(t, h, shareName, "newfile.txt", 1*1024*1024)
@@ -1014,7 +1015,7 @@ func TestUpload(t *testing.T) {
 				})
 
 				t.Cleanup(func() {
-					_ = h.Config.Storage.DeleteShare("upload")
+					_ = h.Config.Storage.DeleteShare(context.Background(), "upload")
 				})
 
 				makeItem(t, h, "upload", "newfile.txt", 1*1024*1024)
@@ -1045,7 +1046,7 @@ func TestUpload(t *testing.T) {
 				})
 
 				t.Cleanup(func() {
-					_ = h.Config.Storage.DeleteShare("download")
+					_ = h.Config.Storage.DeleteShare(context.Background(), "download")
 				})
 
 				fileSize := 3 * 1024 * 1024
@@ -1079,7 +1080,7 @@ func TestUpload(t *testing.T) {
 				})
 
 				t.Cleanup(func() {
-					_ = h.Config.Storage.DeleteShare(shareName)
+					_ = h.Config.Storage.DeleteShare(context.Background(), shareName)
 				})
 
 				fileSize := 3 * 1024 * 1024
@@ -1115,7 +1116,7 @@ func TestUpload(t *testing.T) {
 				})
 
 				t.Cleanup(func() {
-					_ = h.Config.Storage.DeleteShare("toobig")
+					_ = h.Config.Storage.DeleteShare(context.Background(), "toobig")
 				})
 
 				// writer := multipart.NewWriter(body)
@@ -1153,7 +1154,7 @@ func TestUpload(t *testing.T) {
 				})
 
 				t.Cleanup(func() {
-					_ = h.Config.Storage.DeleteShare("sharetoobig")
+					_ = h.Config.Storage.DeleteShare(context.Background(), "sharetoobig")
 				})
 
 				fileSize := 3 * 1024 * 1024
@@ -1227,7 +1228,7 @@ func TestUpload(t *testing.T) {
 			t.Run("Upload malformed data should fail", func(t *testing.T) {
 				makeShare(t, h, "malformed", storage.Options{})
 				t.Cleanup(func() {
-					_ = h.Config.Storage.DeleteShare("malformed")
+					_ = h.Config.Storage.DeleteShare(context.Background(), "malformed")
 				})
 
 				req = httptest.NewRequest("POST", path.Join("/api/v1/shares", "malformed", "items", "newfile.txt"), nil)
@@ -1253,7 +1254,7 @@ func TestUpload(t *testing.T) {
 				})
 
 				t.Cleanup(func() {
-					_ = h.Config.Storage.DeleteShare("nofilesize")
+					_ = h.Config.Storage.DeleteShare(context.Background(), "nofilesize")
 				})
 
 				fileSize := 1 * 1024 * 1024
@@ -1282,7 +1283,7 @@ func TestUpload(t *testing.T) {
 				})
 
 				t.Cleanup(func() {
-					_ = h.Config.Storage.DeleteShare("upload")
+					_ = h.Config.Storage.DeleteShare(context.Background(), "upload")
 				})
 
 				fileSize := 1 * 1024 * 1024
@@ -1329,7 +1330,7 @@ func TestDeleteItem(t *testing.T) {
 					Validity: 7,
 				})
 				t.Cleanup(func() {
-					_ = h.Config.Storage.DeleteShare("uploadadmin")
+					_ = h.Config.Storage.DeleteShare(context.Background(), "uploadadmin")
 				})
 
 				makeItem(t, h, share.Name, "newfile.txt", 1*1024*1024)
@@ -1354,7 +1355,7 @@ func TestDeleteItem(t *testing.T) {
 					Validity: 7,
 				})
 				t.Cleanup(func() {
-					_ = h.Config.Storage.DeleteShare("upload")
+					_ = h.Config.Storage.DeleteShare(context.Background(), "upload")
 				})
 				makeItem(t, h, share.Name, "newfile.txt", 1*1024*1024)
 
@@ -1377,7 +1378,7 @@ func TestDeleteItem(t *testing.T) {
 					Validity: 7,
 				})
 				t.Cleanup(func() {
-					_ = h.Config.Storage.DeleteShare("both")
+					_ = h.Config.Storage.DeleteShare(context.Background(), "both")
 				})
 
 				makeItem(t, h, share.Name, "newfile.txt", 1*1024*1024)
@@ -1401,7 +1402,7 @@ func TestDeleteItem(t *testing.T) {
 					Validity: 7,
 				})
 				t.Cleanup(func() {
-					_ = h.Config.Storage.DeleteShare("download")
+					_ = h.Config.Storage.DeleteShare(context.Background(), "download")
 				})
 				makeItem(t, h, share.Name, "newfile.txt", 1*1024*1024)
 
@@ -1454,7 +1455,7 @@ func TestDeleteItem(t *testing.T) {
 			t.Run("delete an invalid file name should fail", func(t *testing.T) {
 				makeShare(t, h, "invaliditem", storage.Options{})
 				t.Cleanup(func() {
-					_ = h.Config.Storage.DeleteShare("invaliditem")
+					_ = h.Config.Storage.DeleteShare(context.Background(), "invaliditem")
 				})
 				req = httptest.NewRequest("DELETE", path.Join("/api/v1/shares", "invaliditem", "items", url.QueryEscape("../file.txt")), nil)
 
@@ -1473,7 +1474,7 @@ func TestDeleteItem(t *testing.T) {
 			t.Run("delete an inexistant file should fail", func(t *testing.T) {
 				makeShare(t, h, "inexistantfile", storage.Options{})
 				t.Cleanup(func() {
-					_ = h.Config.Storage.DeleteShare("inexistantfile")
+					_ = h.Config.Storage.DeleteShare(context.Background(), "inexistantfile")
 				})
 				req = httptest.NewRequest("DELETE", path.Join("/api/v1/shares", "inexistantfile", "items", "newfile.txt"), nil)
 
