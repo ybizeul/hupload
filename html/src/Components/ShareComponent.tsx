@@ -55,7 +55,8 @@ export function ShareComponent(props: {share: Share}) {
                     const updateProgress = (progress: QueueItem[]) => {
                         const loaded = progress.reduce((acc, item) => acc + item.loaded, 0)
                         const total = progress.reduce((acc, item) => acc + item.total, 0)
-                        setUploadPercent(loaded/total*100)
+                        const finished = Object.values(progress).every((item) => item.finished)
+                        setUploadPercent(finished?100:loaded/total*100)
                         console.log(progress)
                     }
                     const queue = new UploadQueue(H,"/shares/"+name, updateProgress)
