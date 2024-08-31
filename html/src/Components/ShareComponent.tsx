@@ -86,7 +86,7 @@ export function ShareComponent(props: {share: Share}) {
                         </Text>
                     </Group>
                     {(uploading || uploadPercent > 0) &&
-                            <Progress pos="absolute" bottom="0" w="100%" size="xs" color="green" value={uploadPercent} />
+                            <Progress pos="absolute" bottom="0" w="100%" size="xs" color={uploading?"blue":"green"} value={uploadPercent} />
                         }
                     {/* Share informations */}
                     <Box p="lg">
