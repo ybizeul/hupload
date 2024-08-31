@@ -94,13 +94,16 @@ export function ShareComponent(props: {share: Share}) {
                             <Progress pos="absolute" bottom="0" w="100%" size="xs" color={uploading?"blue":"green"} value={uploadPercent} />
                         }
                     {/* Share informations */}
-                    <Box p="lg">
+                    <Box p="md">
                         <Stack gap="0">
                             <Flex align={"center"}>
 
                                 {/* Share name */}
-                                <Group flex="1" gap="0" align="baseline">
-                                    <Anchor style={{ whiteSpace: "nowrap"}} flex={"1"} component={Link} to={'/'+name}><Text>{name}</Text></Anchor>
+                                <Group flex="1" gap="0" align="center">
+                                    <Stack flex="1" gap={0}>
+                                        <Anchor style={{ whiteSpace: "nowrap"}} component={Link} to={'/'+name}><Text>{name}</Text></Anchor>
+                                        {share.options.description && <Text w="100%" size="xs" c="gray">{share.options.description}</Text>}
+                                    </Stack>
                                     <Stack gap="0" align="flex-end">
                                         <Text mr="xs" size="xs" c="gray">{countString + (size?(' | ' + humanFileSize(size)):'')}</Text>
                                     </Stack>
@@ -145,7 +148,8 @@ export function ShareComponent(props: {share: Share}) {
                                     </ResponsivePopover>
                                 </ActionIconGroup>
                             </Flex>
-                            {share.options.description && <Text w="100%" size="xs" c="gray">{share.options.description}</Text>}</Stack>
+                            
+                        </Stack>
                     </Box>
                 </Dropzone>
             {/* Share component footer */}
