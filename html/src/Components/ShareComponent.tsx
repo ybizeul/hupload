@@ -18,6 +18,7 @@ export function ShareComponent(props: {share: Share}) {
     const [newOptions, setNewOptions] = useState<Share["options"]>(share.options)
     const [uploadPercent, setUploadPercent] = useState(0)
     const [uploading, setUploading] = useState(false)
+    const [error, setError] = useState(false)
 
     const theme = useMantineTheme();
     const isBrowser = useMediaQuery('(min-width: +' + theme.breakpoints.xs + ')');
@@ -64,6 +65,7 @@ export function ShareComponent(props: {share: Share}) {
                     queue.addFiles(files)
                         .then(() => {
                             setUploading(false)
+                            setError(false)
                             H.get('/shares/'+name).then((r) => {
                                 const s = r as Share
                                 setShare(s)
@@ -71,6 +73,7 @@ export function ShareComponent(props: {share: Share}) {
                         })
                         .catch((e) => {
                             setUploading(false)
+                            setError(true)
                             console.log(e)
                         })
                 }}
@@ -91,7 +94,7 @@ export function ShareComponent(props: {share: Share}) {
                         </Text>
                     </Group>
                     {(uploading || uploadPercent > 0) &&
-                            <Progress pos="absolute" bottom="0" w="100%" size="xs" color={uploading?"blue":"green"} value={uploadPercent} />
+                            <Progress pos="absolute" bottom="0" w="100%" size="xs" color={error?"red":(uploading?"blue":"green")} value={uploadPercent} />
                         }
                     {/* Share informations */}
                     <Box p="md">
