@@ -63,6 +63,10 @@ export function ShareComponent(props: {share: Share}) {
                     queue.addFiles(files)
                         .then(() => {
                             setUploading(false)
+                            H.get('/shares/'+name).then((r) => {
+                                const s = r as Share
+                                setShare(s)
+                            })
                         })
                         .catch((e) => {
                             setUploading(false)
