@@ -102,12 +102,12 @@ func (b *S3Backend) Migrate() error {
 }
 
 // CreateShare creates a new share
-func (b *S3Backend) CreateShare(name, owner string, options Options) (*Share, error) {
+func (b *S3Backend) CreateShare(ctx context.Context, name, owner string, options Options) (*Share, error) {
 	if !IsShareNameSafe(name) {
 		return nil, ErrInvalidShareName
 	}
 
-	_, err := b.GetShare(name)
+	_, err := b.GetShare(ctx, name)
 	if err == nil {
 		return nil, ErrShareAlreadyExists
 	}
@@ -130,7 +130,7 @@ func (b *S3Backend) CreateShare(name, owner string, options Options) (*Share, er
 		return nil, err
 	}
 
-	_, err = b.Client.PutObject(context.Background(), &s3.PutObjectInput{
+	_, err = b.Client.PutObject(ctx, &s3.PutObjectInput{
 		Bucket: &b.Options.Bucket,
 		Key:    &path,
 		Body:   j,
@@ -149,12 +149,12 @@ func (b *S3Backend) CreateShare(name, owner string, options Options) (*Share, er
 }
 
 // UpdateShare updates an existing share
-func (b *S3Backend) UpdateShare(name string, options *Options) (*Options, error) {
+func (b *S3Backend) UpdateShare(ctx context.Context, name string, options *Options) (*Options, error) {
 	if !IsShareNameSafe(name) {
 		return nil, ErrInvalidShareName
 	}
 
-	share, err := b.GetShare(name)
+	share, err := b.GetShare(ctx, name)
 	if err != nil {
 		return nil, err
 	}
@@ -168,7 +168,7 @@ func (b *S3Backend) UpdateShare(name string, options *Options) (*Options, error)
 		return nil, err
 	}
 
-	_, err = b.Client.PutObject(context.Background(), &s3.PutObjectInput{
+	_, err = b.Client.PutObject(ctx, &s3.PutObjectInput{
 		Bucket: &b.Options.Bucket,
 		Key:    &path,
 		Body:   j,
@@ -182,7 +182,7 @@ func (b *S3Backend) UpdateShare(name string, options *Options) (*Options, error)
 }
 
 // CreateItem creates a new item in a share
-func (b *S3Backend) CreateItem(name, item string, size int64, r io.Reader) (*Item, error) {
+func (b *S3Backend) CreateItem(ctx context.Context, name, item string, size int64, r io.Reader) (*Item, error) {
 	if !IsShareNameSafe(name) {
 		return nil, ErrInvalidShareName
 	}
@@ -190,7 +190,7 @@ func (b *S3Backend) CreateItem(name, item string, size int64, r io.Reader) (*Ite
 		return nil, ErrInvalidItemName
 	}
 
-	share, err := b.GetShare(name)
+	share, err := b.GetShare(ctx, name)
 	if err != nil {
 		return nil, err
 	}
@@ -237,7 +237,7 @@ func (b *S3Backend) CreateItem(name, item string, size int64, r io.Reader) (*Ite
 	}
 
 	path := path.Join(name, item)
-	_, err = b.Client.PutObject(context.Background(), &s3.PutObjectInput{
+	_, err = b.Client.PutObject(ctx, &s3.PutObjectInput{
 		Bucket:        &b.Options.Bucket,
 		Key:           &path,
 		Body:          src,
@@ -247,12 +247,12 @@ func (b *S3Backend) CreateItem(name, item string, size int64, r io.Reader) (*Ite
 		return nil, err
 	}
 
-	err = b.updateMetadata(name)
+	err = b.updateMetadata(ctx, name)
 	if err != nil {
 		return nil, err
 	}
 
-	result, err := b.GetItem(name, item)
+	result, err := b.GetItem(ctx, name, item)
 	if err != nil {
 		return nil, err
 	}
@@ -261,7 +261,7 @@ func (b *S3Backend) CreateItem(name, item string, size int64, r io.Reader) (*Ite
 }
 
 // CreateItem creates a new item in a share
-func (b *S3Backend) DeleteItem(share, item string) error {
+func (b *S3Backend) DeleteItem(ctx context.Context, share, item string) error {
 	if !IsShareNameSafe(share) {
 		return ErrInvalidShareName
 	}
@@ -271,12 +271,12 @@ func (b *S3Backend) DeleteItem(share, item string) error {
 
 	path := path.Join(share, item)
 
-	_, err := b.GetItem(share, item)
+	_, err := b.GetItem(ctx, share, item)
 	if err != nil {
 		return err
 	}
 
-	_, err = b.Client.DeleteObject(context.Background(), &s3.DeleteObjectInput{
+	_, err = b.Client.DeleteObject(ctx, &s3.DeleteObjectInput{
 		Bucket: &b.Options.Bucket,
 		Key:    &path,
 	})
@@ -289,7 +289,7 @@ func (b *S3Backend) DeleteItem(share, item string) error {
 		return err
 	}
 
-	err = b.updateMetadata(share)
+	err = b.updateMetadata(ctx, share)
 	if err != nil {
 		return err
 	}
@@ -298,12 +298,12 @@ func (b *S3Backend) DeleteItem(share, item string) error {
 }
 
 // GetShare returns the share identified by share
-func (b *S3Backend) GetShare(name string) (*Share, error) {
+func (b *S3Backend) GetShare(ctx context.Context, name string) (*Share, error) {
 	if !IsShareNameSafe(name) {
 		return nil, ErrInvalidShareName
 	}
 	path := path.Join("shares", name, ".metadata")
-	output, err := b.Client.GetObject(context.Background(), &s3.GetObjectInput{
+	output, err := b.Client.GetObject(ctx, &s3.GetObjectInput{
 		Bucket: &b.Options.Bucket,
 		Key:    &path,
 	})
@@ -325,9 +325,9 @@ func (b *S3Backend) GetShare(name string) (*Share, error) {
 }
 
 // ListShares returns the list of shares available
-func (b *S3Backend) ListShares() ([]Share, error) {
+func (b *S3Backend) ListShares(ctx context.Context) ([]Share, error) {
 	prefix := "shares/"
-	output, err := b.Client.ListObjectsV2(context.Background(), &s3.ListObjectsV2Input{
+	output, err := b.Client.ListObjectsV2(ctx, &s3.ListObjectsV2Input{
 		Bucket: &b.Options.Bucket,
 		Prefix: &prefix,
 	})
@@ -337,7 +337,7 @@ func (b *S3Backend) ListShares() ([]Share, error) {
 
 	result := []Share{}
 	for _, item := range output.Contents {
-		gOutput, err := b.Client.GetObject(context.Background(), &s3.GetObjectInput{
+		gOutput, err := b.Client.GetObject(ctx, &s3.GetObjectInput{
 			Bucket: &b.Options.Bucket,
 			Key:    item.Key,
 		})
@@ -360,11 +360,11 @@ func (b *S3Backend) ListShares() ([]Share, error) {
 }
 
 // ListShare returns the list of items in a share
-func (b *S3Backend) ListShare(name string) ([]Item, error) {
+func (b *S3Backend) ListShare(ctx context.Context, name string) ([]Item, error) {
 	if !IsShareNameSafe(name) {
 		return nil, ErrInvalidShareName
 	}
-	output, err := b.Client.ListObjectsV2(context.Background(), &s3.ListObjectsV2Input{
+	output, err := b.Client.ListObjectsV2(ctx, &s3.ListObjectsV2Input{
 		Bucket: &b.Options.Bucket,
 		Prefix: &name,
 	})
@@ -386,7 +386,7 @@ func (b *S3Backend) ListShare(name string) ([]Item, error) {
 			// 	types.ObjectAttributesObjectSize,
 			// },
 		}
-		gOutput, err := b.Client.HeadObject(context.Background(), &inputs)
+		gOutput, err := b.Client.HeadObject(ctx, &inputs)
 		if err != nil {
 			return nil, err
 		}
@@ -409,22 +409,22 @@ func (b *S3Backend) ListShare(name string) ([]Item, error) {
 }
 
 // ListShare returns the list of items in a share
-func (b *S3Backend) DeleteShare(name string) error {
+func (b *S3Backend) DeleteShare(ctx context.Context, name string) error {
 	if !IsShareNameSafe(name) {
 		return ErrInvalidShareName
 	}
 
-	_, err := b.GetShare(name)
+	_, err := b.GetShare(ctx, name)
 	if err != nil {
 		return err
 	}
 
-	content, err := b.ListShare(name)
+	content, err := b.ListShare(ctx, name)
 	if err != nil {
 		return err
 	}
 	for _, item := range content {
-		err = b.DeleteItem(name, path.Base(item.Path))
+		err = b.DeleteItem(ctx, name, path.Base(item.Path))
 		if err != nil {
 			return err
 		}
@@ -432,7 +432,7 @@ func (b *S3Backend) DeleteShare(name string) error {
 
 	path := path.Join("shares", name, ".metadata")
 
-	_, err = b.Client.DeleteObject(context.Background(), &s3.DeleteObjectInput{
+	_, err = b.Client.DeleteObject(ctx, &s3.DeleteObjectInput{
 		Bucket: &b.Options.Bucket,
 		Key:    &path,
 	})
@@ -445,7 +445,7 @@ func (b *S3Backend) DeleteShare(name string) error {
 }
 
 // GetItem returns the item identified by share and item
-func (b *S3Backend) GetItem(share, item string) (*Item, error) {
+func (b *S3Backend) GetItem(ctx context.Context, share, item string) (*Item, error) {
 	if !IsShareNameSafe(share) {
 		return nil, ErrInvalidShareName
 	}
@@ -455,7 +455,7 @@ func (b *S3Backend) GetItem(share, item string) (*Item, error) {
 
 	path := path.Join(share, item)
 
-	aOutput, err := b.Client.GetObjectAttributes(context.Background(), &s3.GetObjectAttributesInput{
+	aOutput, err := b.Client.GetObjectAttributes(ctx, &s3.GetObjectAttributesInput{
 		Bucket: &b.Options.Bucket,
 		Key:    &path,
 		ObjectAttributes: []types.ObjectAttributes{
@@ -483,7 +483,7 @@ func (b *S3Backend) GetItem(share, item string) (*Item, error) {
 }
 
 // GetItem returns the item identified by share and item
-func (b *S3Backend) GetItemData(share, item string) (io.ReadCloser, error) {
+func (b *S3Backend) GetItemData(ctx context.Context, share, item string) (io.ReadCloser, error) {
 	if !IsShareNameSafe(share) {
 		return nil, ErrInvalidShareName
 	}
@@ -491,14 +491,14 @@ func (b *S3Backend) GetItemData(share, item string) (io.ReadCloser, error) {
 		return nil, ErrInvalidItemName
 	}
 
-	_, err := b.GetItem(share, item)
+	_, err := b.GetItem(ctx, share, item)
 	if err != nil {
 		return nil, err
 	}
 
 	path := path.Join(share, item)
 
-	aOutput, err := b.Client.GetObject(context.Background(), &s3.GetObjectInput{
+	aOutput, err := b.Client.GetObject(ctx, &s3.GetObjectInput{
 		Bucket: &b.Options.Bucket,
 		Key:    &path,
 	})
@@ -510,12 +510,12 @@ func (b *S3Backend) GetItemData(share, item string) (io.ReadCloser, error) {
 	return aOutput.Body, err
 }
 
-func (b *S3Backend) updateMetadata(s string) error {
+func (b *S3Backend) updateMetadata(ctx context.Context, s string) error {
 	if !IsShareNameSafe(s) {
 		return ErrInvalidShareName
 	}
 
-	c, err := b.ListShare(s)
+	c, err := b.ListShare(ctx, s)
 	if err != nil {
 		return err
 	}
@@ -527,7 +527,7 @@ func (b *S3Backend) updateMetadata(s string) error {
 		capacity += i.ItemInfo.Size
 	}
 
-	share, err := b.GetShare(s)
+	share, err := b.GetShare(ctx, s)
 	if err != nil {
 		return err
 	}
@@ -542,7 +542,7 @@ func (b *S3Backend) updateMetadata(s string) error {
 
 	path := path.Join("shares", s, ".metadata")
 
-	_, err = b.Client.PutObject(context.Background(), &s3.PutObjectInput{
+	_, err = b.Client.PutObject(ctx, &s3.PutObjectInput{
 		Bucket: &b.Options.Bucket,
 		Key:    &path,
 		Body:   j,

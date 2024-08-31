@@ -2,6 +2,7 @@ package storage
 
 import (
 	"bufio"
+	"context"
 	"encoding/json"
 	"io"
 	"log/slog"
@@ -143,7 +144,7 @@ func (b *FileBackend) Migrate() error {
 // in days. It returns an error if the share already exists or if the name is
 // invalid. owner is only used to populate metadata.
 
-func (b *FileBackend) CreateShare(name, owner string, options Options) (*Share, error) {
+func (b *FileBackend) CreateShare(ctx context.Context, name, owner string, options Options) (*Share, error) {
 	if !IsShareNameSafe(name) {
 		return nil, ErrInvalidShareName
 	}
@@ -189,12 +190,12 @@ func (b *FileBackend) CreateShare(name, owner string, options Options) (*Share, 
 // UpdateShare updates the metadata of a share with the provided name. It returns
 // an error if the share does not exist or if the name is invalid.
 
-func (b *FileBackend) UpdateShare(name string, options *Options) (*Options, error) {
+func (b *FileBackend) UpdateShare(ctx context.Context, name string, options *Options) (*Options, error) {
 	if !IsShareNameSafe(name) {
 		return nil, ErrInvalidShareName
 	}
 
-	m, err := b.GetShare(name)
+	m, err := b.GetShare(ctx, name)
 	if err != nil {
 		return nil, err
 	}
@@ -220,13 +221,13 @@ func (b *FileBackend) UpdateShare(name string, options *Options) (*Options, erro
 // doesn't fit in the share or if the share is full. The content is read from
 // the provided bufio.Reader.
 
-func (b *FileBackend) CreateItem(s string, i string, size int64, r io.Reader) (*Item, error) {
+func (b *FileBackend) CreateItem(ctx context.Context, s string, i string, size int64, r io.Reader) (*Item, error) {
 	if !IsShareNameSafe(s) {
 		return nil, ErrInvalidShareName
 	}
 
 	// Get Share metadata
-	share, err := b.GetShare(s)
+	share, err := b.GetShare(ctx, s)
 	if err != nil {
 		return nil, err
 	}
@@ -295,7 +296,7 @@ func (b *FileBackend) CreateItem(s string, i string, size int64, r io.Reader) (*
 		return nil, err
 	}
 
-	item, err := b.GetItem(s, i)
+	item, err := b.GetItem(ctx, s, i)
 	if err != nil {
 		return nil, err
 	}
@@ -308,7 +309,7 @@ func (b *FileBackend) CreateItem(s string, i string, size int64, r io.Reader) (*
 	return item, nil
 }
 
-func (b *FileBackend) DeleteItem(s string, i string) error {
+func (b *FileBackend) DeleteItem(ctx context.Context, s string, i string) error {
 	if !IsShareNameSafe(s) {
 		return ErrInvalidShareName
 	}
@@ -337,7 +338,7 @@ func (b *FileBackend) DeleteItem(s string, i string) error {
 // GetShare retrieves the metadata for a share with the provided name. It
 // returns an error if the share does not exist or if the name is invalid.
 
-func (b *FileBackend) GetShare(s string) (*Share, error) {
+func (b *FileBackend) GetShare(ctx context.Context, s string) (*Share, error) {
 	if !IsShareNameSafe(s) {
 		return nil, ErrInvalidShareName
 	}
@@ -364,7 +365,7 @@ func (b *FileBackend) GetShare(s string) (*Share, error) {
 // decoded.
 // The returned shares are sorted by creation date, newest first.
 
-func (b *FileBackend) ListShares() ([]Share, error) {
+func (b *FileBackend) ListShares(ctx context.Context) ([]Share, error) {
 	d, err := os.ReadDir(b.Options.Path)
 	if err != nil {
 		return nil, err
@@ -374,7 +375,7 @@ func (b *FileBackend) ListShares() ([]Share, error) {
 	// Shares loop
 	for _, f := range d {
 		if f.IsDir() {
-			m, err := b.GetShare(f.Name())
+			m, err := b.GetShare(ctx, f.Name())
 			if err != nil {
 				continue
 			}
@@ -391,7 +392,7 @@ func (b *FileBackend) ListShares() ([]Share, error) {
 // DeleteShare removes a share and all its content from the backend. It returns
 // an error if the share does not exist or if the name is invalid.
 
-func (b *FileBackend) DeleteShare(s string) error {
+func (b *FileBackend) DeleteShare(ctx context.Context, s string) error {
 	if !IsShareNameSafe(s) {
 		return ErrInvalidShareName
 	}
@@ -416,7 +417,7 @@ func (b *FileBackend) DeleteShare(s string) error {
 // modification date, newest first.
 // .* files and temporary upload files are excluded from the result.
 
-func (b *FileBackend) ListShare(s string) ([]Item, error) {
+func (b *FileBackend) ListShare(ctx context.Context, s string) ([]Item, error) {
 	if !IsShareNameSafe(s) {
 		return nil, ErrInvalidShareName
 	}
@@ -433,7 +434,7 @@ func (b *FileBackend) ListShare(s string) ([]Item, error) {
 			continue
 		}
 
-		i, err := b.GetItem(s, f.Name())
+		i, err := b.GetItem(ctx, s, f.Name())
 		if err != nil {
 			return nil, err
 		}
@@ -451,7 +452,7 @@ func (b *FileBackend) ListShare(s string) ([]Item, error) {
 
 // GetItem retrieves the metadata for an item in a share. It returns an error if
 // the share or the item do not exist or if the share name is invalid.
-func (b *FileBackend) GetItem(s string, i string) (*Item, error) {
+func (b *FileBackend) GetItem(ctx context.Context, s string, i string) (*Item, error) {
 	if !IsShareNameSafe(s) {
 		return nil, ErrInvalidShareName
 	}
@@ -479,7 +480,7 @@ func (b *FileBackend) GetItem(s string, i string) (*Item, error) {
 
 // GetItemData retrieves the content of an item in a share. It returns an error
 // if the share or the item do not exist or if the share name is invalid.
-func (b *FileBackend) GetItemData(s string, i string) (io.ReadCloser, error) {
+func (b *FileBackend) GetItemData(ctx context.Context, s string, i string) (io.ReadCloser, error) {
 	if !IsShareNameSafe(s) {
 		return nil, ErrInvalidShareName
 	}

@@ -1,6 +1,7 @@
 package storage_test
 
 import (
+	"context"
 	"errors"
 	"io"
 	"os"
@@ -35,14 +36,14 @@ func TestFileOverflow(t *testing.T) {
 
 	t.Cleanup(func() {
 		for i := range storages {
-			_ = storages[i].DeleteShare("test")
+			_ = storages[i].DeleteShare(context.Background(), "test")
 		}
 	})
 
 	for i := range storages {
 		s := storages[i]
 
-		share, err := s.CreateShare("test", "admin", storage.Options{Validity: 10, Exposure: "upload"})
+		share, err := s.CreateShare(context.Background(), "test", "admin", storage.Options{Validity: 10, Exposure: "upload"})
 		if err != nil {
 			t.Errorf("Expected no error, got %v", err)
 		}
@@ -52,7 +53,7 @@ func TestFileOverflow(t *testing.T) {
 
 			reader := readerForCapacity(fileSize)
 
-			_, err = s.CreateItem(share.Name, "test.txt", int64(fileSize), reader)
+			_, err = s.CreateItem(context.Background(), share.Name, "test.txt", int64(fileSize), reader)
 			reader.Close()
 
 			if !errors.Is(err, storage.ErrMaxFileSizeReached) {
@@ -65,7 +66,7 @@ func TestFileOverflow(t *testing.T) {
 
 			reader := readerForCapacity(fileSize)
 
-			_, err = s.CreateItem(share.Name, "test.txt", int64(fileSize), reader)
+			_, err = s.CreateItem(context.Background(), share.Name, "test.txt", int64(fileSize), reader)
 			reader.Close()
 
 			if err != nil {
@@ -78,7 +79,7 @@ func TestFileOverflow(t *testing.T) {
 
 			reader := readerForCapacity(fileSize)
 
-			_, err = s.CreateItem(share.Name, "test.txt", int64(fileSize), reader)
+			_, err = s.CreateItem(context.Background(), share.Name, "test.txt", int64(fileSize), reader)
 			reader.Close()
 
 			if !errors.Is(err, storage.ErrMaxShareSizeReached) {
@@ -106,7 +107,7 @@ func TestShareOverflow(t *testing.T) {
 		t.Errorf("Expected FileStorage to be created")
 	}
 
-	share, err := f.CreateShare("test", "admin", storage.Options{Validity: 10, Exposure: "upload"})
+	share, err := f.CreateShare(context.Background(), "test", "admin", storage.Options{Validity: 10, Exposure: "upload"})
 	if err != nil {
 		t.Errorf("Expected no error, got %v", err)
 	}
@@ -114,7 +115,7 @@ func TestShareOverflow(t *testing.T) {
 	reader1 := readerForCapacity(3 * 1024 * 1024)
 	defer reader1.Close()
 
-	_, err = f.CreateItem(share.Name, "test.txt", 0, reader1)
+	_, err = f.CreateItem(context.Background(), share.Name, "test.txt", 0, reader1)
 
 	if err != nil {
 		t.Errorf("Expected no error, got %v", err)
@@ -123,7 +124,7 @@ func TestShareOverflow(t *testing.T) {
 	reader2 := readerForCapacity(3 * 1024 * 1024)
 	defer reader2.Close()
 
-	_, err = f.CreateItem(share.Name, "test2.txt", 0, reader2)
+	_, err = f.CreateItem(context.Background(), share.Name, "test2.txt", 0, reader2)
 
 	if err == nil {
 		t.Errorf("Expected error, got nil")
