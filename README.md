@@ -21,23 +21,23 @@ SSL)
 
 **Admin page**
 
-![Screenshot 1](readme_images/shares-dark.png#gh-dark-mode-only)
-![Screenshot 1](readme_images/shares-light.png#gh-light-mode-only)
+![Shares list](readme_images/shares-dark.png#gh-dark-mode-only)
+![Shares list](readme_images/shares-light.png#gh-light-mode-only)
 
 **Share page with upload box**
 
-![Screenshot 2](readme_images/share-dark.png#gh-dark-mode-only)
-![Screenshot 2](readme_images/share-light.png#gh-light-mode-only)
+![Share content](readme_images/share-dark.png#gh-dark-mode-only)
+![Share content](readme_images/share-light.png#gh-light-mode-only)
 
 **Advanced share settings**
 
-![Screenshot 2](readme_images/properties-dark.png#gh-dark-mode-only)
-![Screenshot 2](readme_images/properties-light.png#gh-light-mode-only)
+![Share properties](readme_images/properties-dark.png#gh-dark-mode-only)
+![Share properties](readme_images/properties-light.png#gh-light-mode-only)
 
 **Markdown preview**
 
-![Screenshot 2](readme_images/properties-preview-dark.png#gh-dark-mode-only)
-![Screenshot 2](readme_images/properties-preview-light.png#gh-light-mode-only)
+![Markdown preview](readme_images/properties-preview-dark.png#gh-dark-mode-only)
+![Markdown preview](readme_images/properties-preview-light.png#gh-light-mode-only)
 
 ## Environment variables
 
