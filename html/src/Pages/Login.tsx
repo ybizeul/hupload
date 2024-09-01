@@ -43,8 +43,8 @@ export function Login() {
               </Alert>}
           <form onSubmit={authenticate}>
           <FocusTrap active={true}>
-            <TextInput label="Username" placeholder="Username" value={username} onChange={(e) => setUsername(e.target.value)} required data-autofocus/>
-            <PasswordInput label="Password" placeholder="Your password" value={password} onChange={(e) => setPassword(e.target.value)} required mt="md" />
+            <TextInput id="username" label="Username" placeholder="Username" value={username} onChange={(e) => setUsername(e.target.value)} required data-autofocus/>
+            <PasswordInput id="password" label="Password" placeholder="Your password" value={password} onChange={(e) => setPassword(e.target.value)} required mt="md" />
             <Button type="submit" fullWidth mt="xl" disabled={!(username && password)}>
               Login
             </Button>

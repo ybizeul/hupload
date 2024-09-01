@@ -42,7 +42,7 @@ export function ShareEditor(props: ShareEditorProps&BoxComponentProps) {
 
                         {/* Action icon to show message editor */}
                         {isInBrowser&&
-                        <ActionIcon variant="light" radius="xl" onClick={showMessageH.toggle} style={{position:"absolute", top: 0, right: 0}}>
+                        <ActionIcon id="showEditor" variant="light" radius="xl" onClick={showMessageH.toggle} style={{position:"absolute", top: 0, right: 0}}>
                             {showMessage?
                             <IconChevronLeft style={{ width: rem(16), height: rem(16) }} stroke={1.5} />
                             :

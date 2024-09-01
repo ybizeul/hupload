@@ -13,6 +13,18 @@
             "env": {
                 "JWT_SECRET": "9e1fada26b20ddc5ce812cafb8d2cada"
             }
+        },
+        {
+            "name": "Launch hupload (Demo)",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${workspaceFolder}/hupload",
+            "cwd": "${workspaceFolder}/hupload/demo",
+            "env": {
+                "JWT_SECRET": "9e1fada26b20ddc5ce812cafb8d2cada",
+                "DEMO": "true",
+            }
         }
     ]
 }

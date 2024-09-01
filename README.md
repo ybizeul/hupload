@@ -21,23 +21,23 @@ SSL)
 
 **Admin page**
 
-![Screenshot 1](readme_images/screenshot_1_dark.png#gh-dark-mode-only)
-![Screenshot 1](readme_images/screenshot_1_light.png#gh-light-mode-only)
+![Screenshot 1](readme_images/shares-dark.png#gh-dark-mode-only)
+![Screenshot 1](readme_images/shares-light.png#gh-light-mode-only)
 
 **Share page with upload box**
 
-![Screenshot 2](readme_images/screenshot_2_dark.png#gh-dark-mode-only)
-![Screenshot 2](readme_images/screenshot_2_light.png#gh-light-mode-only)
+![Screenshot 2](readme_images/share-dark.png#gh-dark-mode-only)
+![Screenshot 2](readme_images/share-light.png#gh-light-mode-only)
 
 **Advanced share settings**
 
-![Screenshot 2](readme_images/share_settings_1_dark.png#gh-dark-mode-only)
-![Screenshot 2](readme_images/share_settings_1_light.png#gh-light-mode-only)
+![Screenshot 2](readme_images/properties-dark.png#gh-dark-mode-only)
+![Screenshot 2](readme_images/properties-light.png#gh-light-mode-only)
 
 **Markdown preview**
 
-![Screenshot 2](readme_images/share_settings_2_dark.png#gh-dark-mode-only)
-![Screenshot 2](readme_images/share_settings_2_light.png#gh-light-mode-only)
+![Screenshot 2](readme_images/properties-preview-dark.png#gh-dark-mode-only)
+![Screenshot 2](readme_images/properties-preview-light.png#gh-light-mode-only)
 
 ## Environment variables
 
@@ -159,7 +159,8 @@ The following endpoints are available under `/api/v1`
 | `POST`   | `/shares/{share}`              | Create a new share named `{share}` (See parameters)
 | `PATCH`  | `/shares/{share}`              | Update share parameters (See parameters)
 | `DELETE` | `/shares/{share}`              | Delete a share and all its content
-| `GET`    | `/shares/{share}/items/{item}` | Get an `{item}` (file) content
+| `GET`    | `/shares/{share}/items/{item}` | Get an `{item}` (file) content. Authentication not required if share is exposed as `download` or `both`
+| `GET`    | `/d/{share}/{item}` | Alias to get an file content (See above)
 
 **Public Endpoints**
 

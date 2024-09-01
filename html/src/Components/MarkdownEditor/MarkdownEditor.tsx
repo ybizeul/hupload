@@ -26,7 +26,7 @@ interface MarkDownEditorProps {
   
     return(
         <Box display="flex" flex="1" w={{base: '100%', xs: rem(500)}} pl={props.pl} style={props.style} pos={"relative"}>
-            <ActionIcon size="xs" variant={preview?"filled":"subtle"} m={rem(3)} radius="xl" onClick={previewH.toggle} style={{position:"absolute", top: 0, right: 0}}>
+            <ActionIcon size="xs" id="preview" variant={preview?"filled":"subtle"} m={rem(3)} radius="xl" onClick={previewH.toggle} style={{position:"absolute", top: 0, right: 0}}>
                 <IconEye style={{ width: rem(16), height: rem(16) }} stroke={1.5} />
             </ActionIcon>
             {preview?

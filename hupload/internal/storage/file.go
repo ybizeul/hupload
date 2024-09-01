@@ -379,6 +379,11 @@ func (b *FileBackend) ListShares(ctx context.Context) ([]Share, error) {
 			if err != nil {
 				continue
 			}
+			if os.Getenv("DEMO") == "true" {
+				referenceDate := time.Date(2024, time.September, 1, 16, 48, 0, 0, time.UTC)
+				delta := time.Since(referenceDate)
+				m.DateCreated = m.DateCreated.Add(-delta)
+			}
 			r = append(r, *m)
 		}
 	}

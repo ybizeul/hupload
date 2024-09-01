@@ -50,7 +50,7 @@ export function ShareComponent(props: {share: Share}) {
     
     return (
         <>
-        <Paper key={key} withBorder shadow="xs" radius="md" mt={10} pos="relative" className={classes.paper}>
+        <Paper id={share.name} key={key} withBorder shadow="xs" radius="md" mt={10} pos="relative" className={classes.paper}>
             <Dropzone p={0} m={0} activateOnClick={false} enablePointerEvents={true} w={"100%"} h={"100%"} style={{border:"none", backgroundColor:"transparent"}}
                 onDrop={(files) => {
                     const updateProgress = (progress: QueueItem[]) => {
@@ -118,7 +118,7 @@ export function ShareComponent(props: {share: Share}) {
                                     <CopyButton value={window.location.protocol + '//' + window.location.host + '/' + name}>
                                     {({ copied, copy }) => (
                                         <Tooltip withArrow arrowOffset={10} arrowSize={4} label={copied?"Copied!":"Copy URL"}>
-                                            <ActionIcon variant="light" color={copied ? 'teal' : 'blue'} onClick={copy} >
+                                            <ActionIcon id="copy" variant="light" color={copied ? 'teal' : 'blue'} onClick={copy} >
                                                 <IconLink style={{ width: '70%', height: '70%' }} stroke={1.5}/>
                                             </ActionIcon>
                                         </Tooltip>
@@ -129,7 +129,7 @@ export function ShareComponent(props: {share: Share}) {
                                     <Popover width={200} position="bottom" withArrow shadow="md">
                                         <Popover.Target>
                                             <Tooltip withArrow arrowOffset={10} arrowSize={4} label="Delete Share">
-                                                <ActionIcon variant="light" color="red" >
+                                                <ActionIcon id="delete" variant="light" color="red" >
                                                     <IconTrash style={{ width: '70%', height: '70%' }} stroke={1.5}/>
                                                 </ActionIcon>
                                             </Tooltip>
@@ -143,7 +143,7 @@ export function ShareComponent(props: {share: Share}) {
                                     {/* Edit share properties button */}
                                     <ResponsivePopover withDrawer={!isBrowser}>
                                         <Tooltip withArrow arrowOffset={10} arrowSize={4} label="Edit Share">
-                                            <ActionIcon variant="light" color="blue" >
+                                            <ActionIcon id="edit" variant="light" color="blue" >
                                                 <IconDots style={{ width: '70%', height: '70%' }} stroke={1.5}/>
                                             </ActionIcon>
                                         </Tooltip>
