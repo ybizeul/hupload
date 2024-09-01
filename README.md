@@ -1,7 +1,7 @@
 ![Icon](readme_images/icon.svg#gh-light-mode-only)
 ![Icon](readme_images/icon-dark.svg#gh-dark-mode-only)
 
-# hupload
+# Hupload
 
 Hupload is a minimalist file uploader for your customers.
 
@@ -11,7 +11,7 @@ or support bundles from your users.
 It is a web portal and an API for direct integration into your products.
 
 The overall concept is that share names are random tokens that can be generated
-by **hupload** and are publicly accessible so users don't have to log in to 
+by **Hupload** and are publicly accessible so users don't have to log in to 
 upload content.
 
 Note that "Copy" buttons will not work over insecure connection (http without 
@@ -41,11 +41,11 @@ SSL)
 
 ## Environment variables
 
-| Variable    | Description |
-|-------------|-------------|
-| CONFIG      | Path to `config.yml`    |
-| HTTP_PORT   | Port to run web service |
-| JWT_SECRET  | Random string used to sign sessions cookies |
+| Variable     | Description |
+|--------------|-------------|
+| `CONFIG`     | Path to `config.yml`    |
+| `HTTP_PORT`  | Port to run web service |
+| `JWT_SECRET` | Random string used to sign sessions cookies |
 
 ## Features
 
@@ -131,7 +131,7 @@ $2y$10$LIcTF3HKNhV6qh3oi3ysHOnhiXpLOU22N61JzZXoSWQbNOpDhS/g.
 
 You can quickly test **Hupload** in a container, or run it in production :
 
-Note that the container is built to run _hupload_ as **nonroot** user (65532),
+Note that the container is built to run _Hupload_ as **nonroot** user (65532),
 and needs access to the shares directory
 
 ```
