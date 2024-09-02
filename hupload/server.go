@@ -79,6 +79,9 @@ func (h *Hupload) setup() {
 		auth.OIDCAuthMiddleware{
 			Authentication: api.Authentication,
 		},
+		auth.JWTAuthMiddleware{
+			HMACSecret: hmac,
+		},
 	}
 
 	// authenticatorsOpen := []auth.AuthMiddleware{
@@ -94,6 +97,9 @@ func (h *Hupload) setup() {
 		auth.OpenAuthMiddleware{},
 		auth.OIDCAuthMiddleware{
 			Authentication: api.Authentication,
+		},
+		auth.JWTAuthMiddleware{
+			HMACSecret: hmac,
 		},
 	}
 	// Setup routes
