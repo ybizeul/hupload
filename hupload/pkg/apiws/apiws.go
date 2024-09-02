@@ -112,7 +112,7 @@ func (a *APIWS) Start() {
 	slog.Info(fmt.Sprintf("Starting web service on port %d", a.HTTPPort))
 
 	if f, ok := a.Authentication.CallbackFunc(); ok {
-		a.Mux.HandleFunc("POST /oidc", f)
+		a.Mux.HandleFunc("GET /oidc", f)
 	}
 
 	err := http.ListenAndServe(fmt.Sprintf(":%d", a.HTTPPort), logger.NewLogger(a.Mux))

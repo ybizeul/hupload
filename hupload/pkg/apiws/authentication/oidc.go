@@ -44,7 +44,7 @@ func NewAuthenticationOIDC(o AuthenticationOIDCConfig) (*AuthenticationOIDC, err
 		Endpoint: result.Provider.Endpoint(),
 
 		// "openid" is a required scope for OpenID Connect flows.
-		Scopes: []string{oidc.ScopeOpenID, "profile", "email"},
+		Scopes: []string{oidc.ScopeOpenID, "profile", "email", "offline_access", "preferred_username"},
 	}
 
 	return result, nil
@@ -55,7 +55,7 @@ func (o *AuthenticationOIDC) AuthenticateRequest(w http.ResponseWriter, r *http.
 		http.Redirect(w, r, o.Config.AuthCodeURL("state"), http.StatusFound)
 	} else {
 		w.WriteHeader(http.StatusAccepted)
-		w.Write([]byte(o.Config.AuthCodeURL("state")))
+		_, _ = w.Write([]byte(o.Config.AuthCodeURL("state")))
 	}
 	cb(false, ErrAuthenticationRedirect)
 }
@@ -94,10 +94,12 @@ func (o *AuthenticationOIDC) CallbackFunc() (func(w http.ResponseWriter, r *http
 			Email    string `json:"email"`
 			Verified bool   `json:"email_verified"`
 		}
+
 		if err := idToken.Claims(&claims); err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			_ = json.NewEncoder(w).Encode(err)
 			return
 		}
+
 	}, true
 }

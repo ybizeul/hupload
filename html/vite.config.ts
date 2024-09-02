@@ -10,6 +10,7 @@ export default defineConfig({
       '/api': 'http://127.0.0.1:8080/',
       '/d/': 'http://127.0.0.1:8080/',
       '/login': 'http://127.0.0.1:8080/',
+      '/oidc': 'http://127.0.0.1:8080/',
     }
   },
 })
