@@ -48,19 +48,24 @@ export class APIClient {
         console.log("logout")
         return
     }
-    
-    login(path: string, user : string, password : string) {
+
+    login(path: string, user? : string, password? : string) {
         return new Promise<AxiosResponse|APIServerError>((resolve, reject) => {
-            this.request({
+            axios({
                 url: this.baseURL + path,
                 method: 'POST',
-                auth: {
+                maxRedirects: 0,
+                auth: (user && password)?{
                     username: user,
                     password: password
-                }
+                }:undefined
             })
             .then((result) => {
-                resolve(result)
+                if (result.status == 202) {
+                    resolve(result)
+                } else {
+                    resolve(result.data)
+                }
             })
             .catch (e => {
                 reject(e)

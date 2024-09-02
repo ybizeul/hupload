@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log/slog"
 	"math/rand/v2"
+	"net/http"
 )
 
 // AuthenticationDefault is the default authentication when none has been found
@@ -22,11 +23,22 @@ func NewAuthenticationDefault() *AuthenticationDefault {
 	return r
 }
 
-func (a *AuthenticationDefault) AuthenticateUser(username, password string) (bool, error) {
-	if username == "admin" && password == a.Password {
-		return true, nil
+func (a *AuthenticationDefault) AuthenticateRequest(w http.ResponseWriter, r *http.Request, cb func(ok bool, err error)) {
+	username, password, ok := r.BasicAuth()
+	if !ok {
+		cb(false, nil)
+		return
 	}
-	return false, nil
+	if username == "admin" && password == a.Password {
+		cb(true, nil)
+		return
+	}
+	cb(false, nil)
+	return
+}
+
+func (o *AuthenticationDefault) CallbackFunc() (func(w http.ResponseWriter, r *http.Request), bool) {
+	return nil, false
 }
 
 func generateCode(l int) string {

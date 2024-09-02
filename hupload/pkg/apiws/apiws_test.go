@@ -62,8 +62,16 @@ type testAuth struct {
 	Password string
 }
 
-func (a *testAuth) AuthenticateUser(username, password string) (bool, error) {
-	return a.Username == username && a.Password == password, nil
+func (a *testAuth) AuthenticateRequest(w http.ResponseWriter, r *http.Request, cb func(bool, error)) {
+	username, password, ok := r.BasicAuth()
+	if !ok {
+		cb(false, nil)
+		return
+	}
+	cb(a.Username == username && a.Password == password, nil)
+}
+func (o *testAuth) CallbackFunc() (func(w http.ResponseWriter, r *http.Request), bool) {
+	return nil, false
 }
 
 func TestAuthAPI(t *testing.T) {

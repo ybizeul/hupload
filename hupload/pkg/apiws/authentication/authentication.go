@@ -1,5 +1,7 @@
 package authentication
 
+import "net/http"
+
 type User struct {
 	Username string `yaml:"username"`
 	Password string `yaml:"password"`
@@ -7,5 +9,6 @@ type User struct {
 
 // AuthenticationInterface must be implemented by the authentication backend
 type Authentication interface {
-	AuthenticateUser(username, password string) (bool, error)
+	AuthenticateRequest(w http.ResponseWriter, r *http.Request, cb func(bool, error))
+	CallbackFunc() (func(w http.ResponseWriter, r *http.Request), bool)
 }

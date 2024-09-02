@@ -111,6 +111,10 @@ func (a *APIWS) AddRoute(pattern string, authenticators []auth.AuthMiddleware, h
 func (a *APIWS) Start() {
 	slog.Info(fmt.Sprintf("Starting web service on port %d", a.HTTPPort))
 
+	if f, ok := a.Authentication.CallbackFunc(); ok {
+		a.Mux.HandleFunc("POST /oidc", f)
+	}
+
 	err := http.ListenAndServe(fmt.Sprintf(":%d", a.HTTPPort), logger.NewLogger(a.Mux))
 	if err != nil {
 		slog.Error("unable to start http server", slog.String("error", err.Error()))

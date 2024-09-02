@@ -67,25 +67,35 @@ func (h *Hupload) setup() {
 	}
 
 	// Define authenticators for protected routes
+	// authenticators := []auth.AuthMiddleware{
+	// 	auth.BasicAuthMiddleware{
+	// 		Authentication: api.Authentication,
+	// 	},
+	// 	auth.JWTAuthMiddleware{
+	// 		HMACSecret: hmac,
+	// 	},
+	// }
 	authenticators := []auth.AuthMiddleware{
-		auth.BasicAuthMiddleware{
+		auth.OIDCAuthMiddleware{
 			Authentication: api.Authentication,
-		},
-		auth.JWTAuthMiddleware{
-			HMACSecret: hmac,
 		},
 	}
 
+	// authenticatorsOpen := []auth.AuthMiddleware{
+	// 	auth.OpenAuthMiddleware{},
+	// 	auth.BasicAuthMiddleware{
+	// 		Authentication: api.Authentication,
+	// 	},
+	// 	auth.JWTAuthMiddleware{
+	// 		HMACSecret: hmac,
+	// 	},
+	// }
 	authenticatorsOpen := []auth.AuthMiddleware{
 		auth.OpenAuthMiddleware{},
-		auth.BasicAuthMiddleware{
+		auth.OIDCAuthMiddleware{
 			Authentication: api.Authentication,
 		},
-		auth.JWTAuthMiddleware{
-			HMACSecret: hmac,
-		},
 	}
-
 	// Setup routes
 
 	// Guests can access a share and post new files in it
@@ -100,6 +110,7 @@ func (h *Hupload) setup() {
 	api.AddRoute("DELETE /api/v1/shares/{share}/items/{item}", authenticatorsOpen, h.deleteItem)
 
 	// Protected routes
+	api.AddRoute("GET    /login", authenticators, h.postLogin)
 	api.AddRoute("POST   /api/v1/login", authenticators, h.postLogin)
 	api.AddRoute("POST   /api/v1/shares", authenticators, h.postShare)
 	api.AddRoute("POST   /api/v1/shares/{share}", authenticators, h.postShare)

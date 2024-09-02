@@ -2,6 +2,7 @@ package authentication
 
 import (
 	"errors"
+	"net/http"
 	"testing"
 )
 
@@ -16,30 +17,41 @@ func TestAuthentication(t *testing.T) {
 		t.Errorf("Expected no error, got %v", err)
 	}
 
-	b, err := a.AuthenticateUser("admin", "hupload")
-	if !b {
-		t.Errorf("Expected true, got false")
-	}
+	r, _ := http.NewRequest("GET", "http://localhost:8080", nil)
+	r.SetBasicAuth("admin", "hupload")
 
-	if err != nil {
-		t.Errorf("Expected no error, got %v", err)
-	}
+	a.AuthenticateRequest(nil, r, func(ok bool, err error) {
+		if !ok {
+			t.Errorf("Expected true, got false")
+		}
+		if err != nil {
+			t.Errorf("Expected no error, got %v", err)
+		}
+	})
 
-	b, err = a.AuthenticateUser("admin", "random")
-	if b {
-		t.Errorf("Expected false, got true")
-	}
-	if err != nil {
-		t.Errorf("Expected no error, got %v", err)
-	}
+	r, _ = http.NewRequest("GET", "http://localhost:8080", nil)
+	r.SetBasicAuth("admin", "random")
 
-	b, err = a.AuthenticateUser("nonexistant", "random")
-	if b {
-		t.Errorf("Expected false, got true")
-	}
-	if err != nil {
-		t.Errorf("Expected no error, got %v", err)
-	}
+	a.AuthenticateRequest(nil, r, func(ok bool, err error) {
+		if ok {
+			t.Errorf("Expected false, got true")
+		}
+		if err != nil {
+			t.Errorf("Expected no error, got %v", err)
+		}
+	})
+
+	r, _ = http.NewRequest("GET", "http://localhost:8080", nil)
+	r.SetBasicAuth("nonexistant", "random")
+
+	a.AuthenticateRequest(nil, r, func(ok bool, err error) {
+		if ok {
+			t.Errorf("Expected false, got true")
+		}
+		if err != nil {
+			t.Errorf("Expected no error, got %v", err)
+		}
+	})
 }
 
 func TestAuthenticationInexistantUsersFile(t *testing.T) {
