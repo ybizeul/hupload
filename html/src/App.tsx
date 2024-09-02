@@ -3,7 +3,7 @@ import '@mantine/dropzone/styles.css';
 
 import { useEffect, useState } from "react";
 import { Container, MantineProvider } from "@mantine/core";
-import { BrowserRouter, Route, Routes, useNavigate } from "react-router-dom";
+import { BrowserRouter, Route, Routes } from "react-router-dom";
 
 import { H } from "./APIClient";
 import { SharePage, Login, SharesPage } from "@/Pages";
@@ -12,7 +12,6 @@ import { LoggedInContext } from "@/LoggedInContext";
 import { VersionComponent } from "@/Components";
 import { Haffix } from "./Components/Haffix";
 import { AxiosResponse } from "axios";
-import { use } from "marked";
 
 // Logged in user is passed to the context
 interface LoggedIn {
