@@ -70,7 +70,7 @@ func (a *testAuth) AuthenticateRequest(w http.ResponseWriter, r *http.Request, c
 	}
 	cb(a.Username == username && a.Password == password, nil)
 }
-func (o *testAuth) CallbackFunc() (func(w http.ResponseWriter, r *http.Request), bool) {
+func (o *testAuth) CallbackFunc(http.Handler) (func(w http.ResponseWriter, r *http.Request), bool) {
 	return nil, false
 }
 

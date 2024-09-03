@@ -81,6 +81,6 @@ func (a *AuthenticationFile) AuthenticateRequest(w http.ResponseWriter, r *http.
 	cb(false, nil)
 }
 
-func (o *AuthenticationFile) CallbackFunc() (cb func(w http.ResponseWriter, r *http.Request), ok bool) {
+func (o *AuthenticationFile) CallbackFunc(http.Handler) (cb func(w http.ResponseWriter, r *http.Request), ok bool) {
 	return nil, false
 }

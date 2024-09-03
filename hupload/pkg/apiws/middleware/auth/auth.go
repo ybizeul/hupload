@@ -77,6 +77,10 @@ type ConfirmAuthenticator struct {
 func (a *ConfirmAuthenticator) Middleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Context().Value(AuthStatus) == AuthStatusSuccess {
+			if r.URL.Path == "/oidc" {
+				http.Redirect(w, r, "/shares", http.StatusFound)
+				return
+			}
 			next.ServeHTTP(w, r)
 			return
 		}

@@ -36,7 +36,7 @@ func (a *AuthenticationDefault) AuthenticateRequest(w http.ResponseWriter, r *ht
 	cb(false, nil)
 }
 
-func (o *AuthenticationDefault) CallbackFunc() (func(w http.ResponseWriter, r *http.Request), bool) {
+func (o *AuthenticationDefault) CallbackFunc(http.Handler) (func(w http.ResponseWriter, r *http.Request), bool) {
 	return nil, false
 }
 

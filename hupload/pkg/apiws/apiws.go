@@ -6,6 +6,7 @@ import (
 	"io/fs"
 	"log/slog"
 	"net/http"
+	"os"
 	"path"
 
 	"github.com/ybizeul/hupload/pkg/apiws/authentication"
@@ -111,7 +112,11 @@ func (a *APIWS) AddRoute(pattern string, authenticators []auth.AuthMiddleware, h
 func (a *APIWS) Start() {
 	slog.Info(fmt.Sprintf("Starting web service on port %d", a.HTTPPort))
 
-	if f, ok := a.Authentication.CallbackFunc(); ok {
+	m := auth.NewJWTAuthMiddleware(os.Getenv("JWT_SECRET"))
+
+	if f, ok := a.Authentication.CallbackFunc(m.Middleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		http.Redirect(w, r, "/shares", http.StatusFound)
+	}))); ok {
 		a.Mux.HandleFunc("GET /oidc", f)
 	}
 

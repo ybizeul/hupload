@@ -60,7 +60,7 @@ func (o *AuthenticationOIDC) AuthenticateRequest(w http.ResponseWriter, r *http.
 	cb(false, ErrAuthenticationRedirect)
 }
 
-func (o *AuthenticationOIDC) CallbackFunc() (func(w http.ResponseWriter, r *http.Request), bool) {
+func (o *AuthenticationOIDC) CallbackFunc(h http.Handler) (func(w http.ResponseWriter, r *http.Request), bool) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var verifier = o.Provider.Verifier(&oidc.Config{ClientID: o.Options.ClientID})
 
@@ -100,6 +100,5 @@ func (o *AuthenticationOIDC) CallbackFunc() (func(w http.ResponseWriter, r *http
 			_ = json.NewEncoder(w).Encode(err)
 			return
 		}
-
 	}, true
 }
