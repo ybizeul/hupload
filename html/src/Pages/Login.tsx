@@ -1,16 +1,18 @@
 import { Alert, Button, Container, FocusTrap, Paper, PasswordInput, TextInput } from "@mantine/core";
-import { useState } from "react";
-import { APIServerError, H } from "../APIClient";
+import { useEffect, useState } from "react";
+import { APIServerError, Auth, H } from "../APIClient";
 
 import { IconExclamationCircle } from "@tabler/icons-react";
 import { useNavigate } from "react-router-dom";
 import { useLoggedInContext } from "../LoggedInContext";
+
 
 export function Login() {
     // Initialize States
     const [username, setUsername] = useState<undefined|string>("")
     const [password, setPassword] = useState<undefined|string>("")
     const [error, setError] = useState<APIServerError|undefined>()
+    const [showLoginForm, setShowLoginForm] = useState<boolean|undefined>(undefined)
 
     // Initialize hooks
     const navigate = useNavigate();
@@ -25,13 +27,28 @@ export function Login() {
                 setError(undefined)
                 navigate("/shares")
                 if (setLoggedIn !== null) {
-                  setLoggedIn(username)
+                  setLoggedIn({user: username, loginPage: '/login'})
                 }
             })
             .catch(e => {
                 setError(e)
             })
         }
+    }
+
+    useEffect(() => {
+      H.auth()
+      .then((r) => {
+        const resp = r as Auth
+        setShowLoginForm(resp.showLoginForm)
+        if (resp.loginUrl !== document.location.pathname) {
+          window.location.href = resp.loginUrl
+        }
+      })
+    },[navigate])
+
+    if (showLoginForm !== true) {
+      return
     }
 
     return (

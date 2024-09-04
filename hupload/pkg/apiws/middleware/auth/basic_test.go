@@ -24,17 +24,18 @@ func TestBasicAuth(t *testing.T) {
 	}
 
 	fn1 := func(w http.ResponseWriter, r *http.Request) {
-		c := r.Context().Value(AuthError)
-		if c != nil {
-			t.Errorf("Expected nil, got %v", c.(error))
+		s, ok := r.Context().Value(authentication.AuthStatusKey).(authentication.AuthStatus)
+		if !ok {
+			t.Errorf("Expected AuthStatus, got nil")
 		}
-		c = r.Context().Value(AuthStatus)
-		if c != AuthStatusSuccess {
-			t.Errorf("Expected AuthStatusSuccess, got %v", c)
+		if s.Error != nil {
+			t.Errorf("Expected nil, got %v", s.Error)
 		}
-		u := r.Context().Value(AuthUser)
-		if u != "admin" {
-			t.Errorf("Expected admin, got %v", u)
+		if s.Authenticated == false {
+			t.Errorf("Expected Success, got %t", s.Authenticated)
+		}
+		if s.User != "admin" {
+			t.Errorf("Expected admin, got %v", s.User)
 		}
 	}
 
@@ -62,11 +63,14 @@ func TestBasicWrongCredentials(t *testing.T) {
 	}
 
 	fn1 := func(w http.ResponseWriter, r *http.Request) {
-		c := r.Context().Value(AuthError)
-		if c == nil {
+		s, ok := r.Context().Value(authentication.AuthStatusKey).(authentication.AuthStatus)
+		if !ok {
+			t.Errorf("Expected AuthStatus, got nil")
+		}
+		if s.Error == nil {
 			t.Errorf("Expected error, got nil")
 		} else {
-			if !errors.Is(c.(error), ErrBasicAuthAuthenticationFailed) {
+			if !errors.Is(s.Error, ErrBasicAuthAuthenticationFailed) {
 				t.Errorf("Expected authentication failed, got %v", c)
 			}
 		}
@@ -96,8 +100,11 @@ func TestBasicAuthNoCredentials(t *testing.T) {
 	}
 
 	fn1 := func(w http.ResponseWriter, r *http.Request) {
-		c := r.Context().Value(AuthError).(error)
-		if !errors.Is(c, ErrBasicAuthNoCredentials) {
+		s, ok := r.Context().Value(authentication.AuthStatusKey).(authentication.AuthStatus)
+		if !ok {
+			t.Errorf("Expected AuthStatus, got nil")
+		}
+		if !errors.Is(s.Error, ErrBasicAuthNoCredentials) {
 			t.Errorf("Expected ErrBasicAuthNoCredentials, got %v", c)
 		}
 	}

@@ -38,23 +38,22 @@ func (j JWTAuthMiddleware) Middleware(next http.Handler) http.Handler {
 		shortCookie, _ := r.Cookie("X-Token")
 		longCookie, _ := r.Cookie("X-Token-Refresh")
 
-		upstreamUser := UserForRequest(r)
-		upstreamAuth := r.Context().Value(AuthStatus) == AuthStatusSuccess
+		upstreamUser, ok := AuthForRequest(r)
 
-		if (shortCookie == nil && longCookie == nil) || (upstreamUser != "" && upstreamAuth) {
+		if (shortCookie == nil && longCookie == nil) || (upstreamUser != "" && ok) {
 			// Check that authentication has been previoulsy approved
 			// If request is already authenticated, generate a JWT token
-			if upstreamAuth {
+			if ok {
 				short, long, err := j.generateTokens(upstreamUser)
 				if err != nil {
-					serveNextError(next, w, r, err)
+					ServeNextError(next, w, r, err)
 					return
 				}
 
 				http.SetCookie(w, &http.Cookie{Name: "X-Token", Value: short, Path: "/", Expires: time.Now().Add(shortTokenMinutesExpire)})
 				http.SetCookie(w, &http.Cookie{Name: "X-Token-Refresh", Value: long, Path: "/", Expires: time.Now().Add(longTokenMinutesExpire)})
 
-				serveNextAuthenticated(upstreamUser, next, w, r)
+				ServeNextAuthenticated(upstreamUser, next, w, r)
 				return
 			}
 
@@ -62,7 +61,7 @@ func (j JWTAuthMiddleware) Middleware(next http.Handler) http.Handler {
 			http.SetCookie(w, &http.Cookie{Name: "X-Token", Value: "deleted", Path: "/", Expires: time.Unix(0, 0)})
 			http.SetCookie(w, &http.Cookie{Name: "X-Token-Refresh", Value: "deleted", Path: "/", Expires: time.Unix(0, 0)})
 
-			serveNextError(next, w, r, JWTAuthNoAuthorizationHeader)
+			ServeNextError(next, w, r, JWTAuthNoAuthorizationHeader)
 			return
 		}
 
@@ -87,39 +86,36 @@ func (j JWTAuthMiddleware) Middleware(next http.Handler) http.Handler {
 		if err != nil {
 			http.SetCookie(w, &http.Cookie{Name: "X-Token", Value: "deleted", Path: "/", Expires: time.Unix(0, 0)})
 			http.SetCookie(w, &http.Cookie{Name: "X-Token-Refresh", Value: "deleted", Path: "/", Expires: time.Unix(0, 0)})
-			serveNextError(next, w, r, fmt.Errorf("Unable to parse token: %w", err))
+			ServeNextError(next, w, r, fmt.Errorf("Unable to parse token: %w", err))
 			return
 		}
 
 		if !token.Valid {
 			http.SetCookie(w, &http.Cookie{Name: "X-Token", Value: "deleted", Path: "/", Expires: time.Unix(0, 0)})
 			http.SetCookie(w, &http.Cookie{Name: "X-Token-Refresh", Value: "deleted", Path: "/", Expires: time.Unix(0, 0)})
-			serveNextError(next, w, r, errors.New("Invalid token"))
+			ServeNextError(next, w, r, errors.New("Invalid token"))
 			return
 		}
 
 		if claims, ok := token.Claims.(jwt.MapClaims); ok {
 			user, ok := claims["sub"].(string)
 			if !ok || user == "" {
-				serveNextError(next, w, r, JWTAuthNoSubClaim)
+				ServeNextError(next, w, r, JWTAuthNoSubClaim)
 				return
 			}
 			_, ok = claims["refresh"]
 			if ok {
 				if !ok {
-					serveNextError(next, w, r, JWTAuthNoSubClaim)
+					ServeNextError(next, w, r, JWTAuthNoSubClaim)
 				}
 				short, long, err := j.generateTokens(user)
 				if err != nil {
-					serveNextError(next, w, r, err)
+					ServeNextError(next, w, r, err)
 				}
 				http.SetCookie(w, &http.Cookie{Name: "X-Token", Value: short, Path: "/", Expires: time.Now().Add(shortTokenMinutesExpire)})
 				http.SetCookie(w, &http.Cookie{Name: "X-Token-Refresh", Value: long, Path: "/", Expires: time.Now().Add(longTokenMinutesExpire)})
 			}
-			serveNextAuthenticated(user, next, w, r)
-
-			// TODO Verify claim content
-			//fmt.Println(claims["iss"], claims["sub"], claims["exp"])
+			ServeNextAuthenticated(user, next, w, r)
 		} else {
 			slog.Error("jwt decoding returned an invalid claim")
 		}
