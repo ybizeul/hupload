@@ -84,10 +84,13 @@ func New(staticUI fs.FS, templateData any) (*APIWS, error) {
 	}
 
 	result.AddPublicRoute("GET /auth", nil, func(w http.ResponseWriter, r *http.Request) {
+		user, _ := auth.AuthForRequest(r)
 		response := struct {
+			User          string `json:"user"`
 			ShowLoginForm bool   `json:"showLoginForm"`
 			LoginURL      string `json:"loginUrl"`
 		}{
+			User:          user,
 			ShowLoginForm: result.Authentication.ShowLoginForm(),
 			LoginURL:      result.Authentication.LoginURL(),
 		}

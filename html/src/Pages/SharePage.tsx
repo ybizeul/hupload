@@ -6,7 +6,7 @@ import { H } from "../APIClient";
 import { UploadQueue, QueueItem } from "../UploadQueue";
 import {ItemComponent} from "@/Components";
 import { Item } from "../hupload";
-import { useLoggedInContext } from "@/LoggedInContext";
+import { useAuthContext } from "@/AuthContext";
 import { Message } from "@/Components/Message";
 import { useShare } from "@/hooks";
 import { AxiosError } from "axios";
@@ -19,7 +19,7 @@ export function SharePage() {
     const [error, setError] = useState<undefined|AxiosError>(undefined)
 
     // Initialize hooks
-    const { loggedIn } = useLoggedInContext()
+    const { authInfo } = useAuthContext()
     const [share, shareError] = useShare();
 
     // Check if share is expired
@@ -106,14 +106,14 @@ export function SharePage() {
     // drop zone is not displayed if the user is not logged in and the share is 
     // of type "download".
     const showDropZone = () => {
-        if (loggedIn) {
-        return true
+        if (authInfo?.user) {
+            return true
         }
 
         // We are guest
 
         if (!share) {
-        return false
+            return false
         }
 
         return share.options.exposure === "" || share.options.exposure === "upload" || share.options.exposure === "both"
@@ -123,14 +123,14 @@ export function SharePage() {
     // the user can download if they are logged in or if the share is of type
     // "download" or "both".
     const canDownload = () => {
-        if (loggedIn) {
-        return true
+        if (authInfo?.user){
+            return true
         }
 
         // We are guest
 
         if (!share) {
-        return false
+            return false
         }
 
         return (share.options.exposure === "download" || share.options.exposure === "both")
@@ -140,14 +140,14 @@ export function SharePage() {
     // the user can delete if they are logged in or if the share is of type
     // "upload" (i.e. they uploaded the files).
     const canDelete = () => {
-        if (loggedIn) {
-        return true
+        if (authInfo?.user) {
+            return true
         }
 
         // We are guest
 
         if (!share) {
-        return false
+            return false
         }
 
         return (share.options.exposure === "upload")

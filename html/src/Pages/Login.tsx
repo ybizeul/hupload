@@ -1,10 +1,10 @@
 import { Alert, Button, Container, FocusTrap, Paper, PasswordInput, TextInput } from "@mantine/core";
 import { useEffect, useState } from "react";
-import { APIServerError, Auth, H } from "../APIClient";
+import { APIServerError, AuthInfo, H } from "../APIClient";
 
 import { IconExclamationCircle } from "@tabler/icons-react";
 import { useNavigate } from "react-router-dom";
-import { useLoggedInContext } from "../LoggedInContext";
+import { useAuthContext } from "../AuthContext";
 
 
 export function Login() {
@@ -16,18 +16,22 @@ export function Login() {
 
     // Initialize hooks
     const navigate = useNavigate();
-    const { setLoggedIn } = useLoggedInContext()
+
+    // Initialize contexts
+    const { authInfo, setAuthInfo } = useAuthContext()
     
     // Functions
     function authenticate(event:React.FormEvent<HTMLFormElement>) {
         event.preventDefault()
         if (username && password) {
-            H.login('/login',username,password)
+            H.login(username,password)
             .then(() => {
                 setError(undefined)
                 navigate("/shares")
-                if (setLoggedIn !== null) {
-                  setLoggedIn({user: username, loginPage: '/login'})
+                if (setAuthInfo !== null) {
+                    if (authInfo) {
+                        setAuthInfo({...authInfo, ...{user: username}})
+                    }
                 }
             })
             .catch(e => {
@@ -37,37 +41,37 @@ export function Login() {
     }
 
     useEffect(() => {
-      H.auth()
-      .then((r) => {
-        const resp = r as Auth
-        setShowLoginForm(resp.showLoginForm)
-        if (resp.loginUrl !== document.location.pathname) {
-          window.location.href = resp.loginUrl
-        }
-      })
+        H.auth()
+            .then((r) => {
+                const resp = r as AuthInfo
+                setShowLoginForm(resp.showLoginForm)
+                if (resp.loginUrl !== document.location.pathname) {
+                window.location.href = resp.loginUrl
+                }
+        })
     },[navigate])
 
     if (showLoginForm !== true) {
-      return
+        return
     }
 
     return (
         <Container size={420} my="10%">
-          <Paper withBorder shadow="md" p={30} mt={30} radius="md">
-            {error &&
-              <Alert mb="md" variant="light" color="red" title="Error" icon={<IconExclamationCircle/>}>
-                {error.message}
-              </Alert>}
-          <form onSubmit={authenticate}>
-          <FocusTrap active={true}>
-            <TextInput id="username" label="Username" placeholder="Username" value={username} onChange={(e) => setUsername(e.target.value)} required data-autofocus/>
-            <PasswordInput id="password" label="Password" placeholder="Your password" value={password} onChange={(e) => setPassword(e.target.value)} required mt="md" />
-            <Button type="submit" fullWidth mt="xl" disabled={!(username && password)}>
-              Login
-            </Button>
-          </FocusTrap>
-          </form>
-          </Paper>
+            <Paper withBorder shadow="md" p={30} mt={30} radius="md">
+                {error &&
+                    <Alert mb="md" variant="light" color="red" title="Error" icon={<IconExclamationCircle/>}>
+                        {error.message}
+                    </Alert>}
+                <form onSubmit={authenticate}>
+                    <FocusTrap active={true}>
+                        <TextInput id="username" label="Username" placeholder="Username" value={username} onChange={(e) => setUsername(e.target.value)} required data-autofocus/>
+                        <PasswordInput id="password" label="Password" placeholder="Your password" value={password} onChange={(e) => setPassword(e.target.value)} required mt="md" />
+                        <Button type="submit" fullWidth mt="xl" disabled={!(username && password)}>
+                            Login
+                        </Button>
+                    </FocusTrap>
+                </form>
+            </Paper>
         </Container>
       );
 }
