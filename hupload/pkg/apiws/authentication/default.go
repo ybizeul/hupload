@@ -40,7 +40,7 @@ func (o *AuthenticationDefault) CallbackFunc(http.Handler) (func(w http.Response
 }
 
 func (o *AuthenticationDefault) ShowLoginForm() bool {
-	return false
+	return true
 }
 func (o *AuthenticationDefault) LoginURL() string {
 	return "/"
