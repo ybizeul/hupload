@@ -109,17 +109,12 @@ func TestCreateShare(t *testing.T) {
 					return
 				}
 
-				var share storage.Share
+				got := string(w.Body.Bytes())
+				want := `{"errors":["JWTAuthMiddleware: no Authorization header"]}`
 
-				err := json.NewDecoder(w.Body).Decode(&share)
-				if err != nil {
-					t.Errorf("Expected no error, got %v", err)
-					return
+				if want != got {
+					t.Errorf("Want %s, got %s", want, got)
 				}
-
-				t.Cleanup(func() {
-					_ = h.Config.Storage.DeleteShare(context.Background(), share.Name)
-				})
 			})
 
 			// Create a share with authentication should work
@@ -458,6 +453,12 @@ func TestGetShare(t *testing.T) {
 				if w.Code != http.StatusUnauthorized {
 					t.Errorf("Expected status %d, got %d", http.StatusUnauthorized, w.Code)
 					return
+				}
+
+				got := string(w.Body.String())
+				want := `{"errors":["JWTAuthMiddleware: no Authorization header"]}`
+				if want != got {
+					t.Errorf("Want %s, got %s", want, got)
 				}
 			})
 
