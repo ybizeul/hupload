@@ -54,10 +54,8 @@ func (o *AuthenticationOIDC) AuthenticateRequest(w http.ResponseWriter, r *http.
 	if r.URL.Path == "/login" {
 		http.Redirect(w, r, o.Config.AuthCodeURL("state"), http.StatusFound)
 		return ErrAuthenticationRedirect
-	} else {
-		w.WriteHeader(http.StatusAccepted)
-		return nil
 	}
+	return nil
 }
 
 func (o *AuthenticationOIDC) CallbackFunc(h http.Handler) (func(w http.ResponseWriter, r *http.Request), bool) {

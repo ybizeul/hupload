@@ -36,9 +36,10 @@ func (a OIDCAuthMiddleware) Middleware(next http.Handler) http.Handler {
 				return
 			}
 			ServeNextError(next, w, r, err)
+			return
 		}
 
-		ServeNextAuthenticated("", next, w, r)
+		next.ServeHTTP(w, r)
 		//ServeNextError(next, w, r, authentication.ErrAuthenticationMissingCredentials)
 	})
 }
