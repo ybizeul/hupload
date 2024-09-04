@@ -9,6 +9,7 @@ import { IconChevronDown, IconMoodSad } from "@tabler/icons-react";
 import { AxiosError } from "axios";
 import { ShareEditor } from "@/Components/ShareEditor";
 import { useMediaQuery } from "@mantine/hooks";
+
 import classes from './SharesPage.module.css';
 
 export function SharesPage(props: {owner: string|null}) {
@@ -48,20 +49,18 @@ export function SharesPage(props: {owner: string|null}) {
         })
         .catch((e) => {
             console.log(e)
-            setError(e)
+            if (e.response?.status === 401) {
+                navigate('/')
+                return
+            }
         })
-    },[])
+    },[navigate])
 
     useEffect(() => {
         updateShares()
     },[updateShares])
 
     if (error) {
-        if (error.response?.status === 401) {
-        navigate('/')
-        return
-        }
-
         return (
         <Center h="100vh">
             <Stack align="center" pb="10em">

@@ -1,8 +1,14 @@
 import { createContext, useContext } from "react";
 
+// Logged in user is passed to the context
+export interface LoggedIn {
+  user: string
+  loginPage: string
+}
+
 interface LoggedInContextValue {
-    loggedIn: string | null;
-    setLoggedIn: React.Dispatch<React.SetStateAction<string | null>>;
+    loggedIn: LoggedIn | null;
+    setLoggedIn: React.Dispatch<React.SetStateAction<LoggedIn | null>>;
   }
 
 export const LoggedInContext = createContext<LoggedInContextValue|undefined>(undefined);

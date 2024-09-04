@@ -1,6 +1,7 @@
 package authentication
 
 import (
+	"net/http"
 	"regexp"
 	"testing"
 )
@@ -15,11 +16,10 @@ func TestDefaultAuthentication(t *testing.T) {
 		t.Errorf("Expected password to be 7 characters long, got %s", p)
 	}
 
-	b, err := a.AuthenticateUser("admin", p)
+	r, _ := http.NewRequest("GET", "http://localhost:8080", nil)
+	r.SetBasicAuth("admin", p)
 
-	if !b {
-		t.Errorf("Expected true, got false")
-	}
+	err := a.AuthenticateRequest(nil, r)
 
 	if err != nil {
 		t.Errorf("Expected no error, got %v", err)

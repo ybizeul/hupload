@@ -201,6 +201,19 @@ func (c *Config) authentication() (authentication.Authentication, error) {
 			return nil, err
 		}
 		return authentication.NewAuthenticationFile(options)
+	case "oidc":
+		var options authentication.AuthenticationOIDCConfig
+
+		b, err := yaml.Marshal(a.Options)
+		if err != nil {
+			return nil, err
+		}
+
+		err = yaml.Unmarshal(b, &options)
+		if err != nil {
+			return nil, err
+		}
+		return authentication.NewAuthenticationOIDC(options)
 	case "default":
 		return authentication.NewAuthenticationDefault(), nil
 	}

@@ -3,6 +3,8 @@ package auth
 import (
 	"net/http"
 	"testing"
+
+	"github.com/ybizeul/hupload/pkg/apiws/authentication"
 )
 
 func TestOpenAuthWithCredentials(t *testing.T) {
@@ -10,17 +12,18 @@ func TestOpenAuthWithCredentials(t *testing.T) {
 	m := OpenAuthMiddleware{}
 
 	fn1 := func(w http.ResponseWriter, r *http.Request) {
-		c := r.Context().Value(AuthError)
-		if c != nil {
-			t.Errorf("Expected nil, got %v", c.(error))
+		s, ok := r.Context().Value(authentication.AuthStatusKey).(authentication.AuthStatus)
+		if !ok {
+			t.Errorf("Expected AuthStatus, got nil")
 		}
-		c = r.Context().Value(AuthStatus)
-		if c != AuthStatusSuccess {
-			t.Errorf("Expected AuthStatusSuccess, got %v", c)
+		if s.Error != nil {
+			t.Errorf("Expected nil, got %v", s.Error)
 		}
-		u := r.Context().Value(AuthUser)
-		if u != nil {
-			t.Errorf("Expected nil, got %v", u)
+		if !s.Authenticated {
+			t.Errorf("Expected AuthStatusSuccess, got %t", s.Authenticated)
+		}
+		if s.User != "" {
+			t.Errorf("Expected nil, got %s", s.User)
 		}
 	}
 
@@ -37,17 +40,18 @@ func TestOpenAuthWithoutCredentials(t *testing.T) {
 	m := OpenAuthMiddleware{}
 
 	fn1 := func(w http.ResponseWriter, r *http.Request) {
-		c := r.Context().Value(AuthError)
-		if c != nil {
-			t.Errorf("Expected nil, got %v", c.(error))
+		s, ok := r.Context().Value(authentication.AuthStatusKey).(authentication.AuthStatus)
+		if !ok {
+			t.Errorf("Expected AuthStatus, got nil")
 		}
-		c = r.Context().Value(AuthStatus)
-		if c != AuthStatusSuccess {
-			t.Errorf("Expected AuthStatusSuccess, got %v", c)
+		if s.Error != nil {
+			t.Errorf("Expected nil, got %v", s.Error)
 		}
-		u := r.Context().Value(AuthUser)
-		if u != nil {
-			t.Errorf("Expected nil, got %v", u)
+		if !s.Authenticated {
+			t.Errorf("Expected AuthStatusSuccess, got %t", s.Authenticated)
+		}
+		if s.User != "" {
+			t.Errorf("Expected nil, got %v", s.User)
 		}
 	}
 

@@ -7,11 +7,6 @@ import (
 	"github.com/ybizeul/hupload/pkg/apiws/authentication"
 )
 
-var (
-	ErrBasicAuthNoCredentials        = errors.New("no basic authentication provided")
-	ErrBasicAuthAuthenticationFailed = errors.New("authentication failed")
-)
-
 // BasicAuthenticator uses a password file to authenticate users, like :
 //   - username: admin
 //     password: $2y$10$AJEytAoJfc4yQjUS8/cG6eXADlgK/Dt3AvdB0boPJ7EcHofewGQIK
@@ -22,41 +17,29 @@ var (
 // :$2y$10$AJEytAoJfc4yQjUS8/cG6eXADlgK/Dt3AvdB0boPJ7EcHofewGQIK
 //
 // and remove the leading `:` from the hash
-type BasicAuthMiddleware struct {
+type OIDCAuthMiddleware struct {
 	Authentication authentication.Authentication
 }
 
-func (a BasicAuthMiddleware) Middleware(next http.Handler) http.Handler {
+func (a OIDCAuthMiddleware) Middleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if a.Authentication == nil {
 			ServeNextError(next, w, r, errors.New("no authentication backend"))
 			return
 		}
 
-		// If there is no credentials, skip middleware
-		var qUser string
-		var ok bool
-		if qUser, _, ok = r.BasicAuth(); !ok {
-			next.ServeHTTP(w, r)
-		}
-
 		// If authentication has been sent, check credentials
 
-		err := a.Authentication.AuthenticateRequest(nil, r)
-
+		err := a.Authentication.AuthenticateRequest(w, r)
 		if err != nil {
-			if errors.Is(err, authentication.ErrAuthenticationMissingCredentials) {
-				ServeNextAuthenticated("", next, w, r)
-				return
-			}
-			if errors.Is(err, authentication.ErrAuthenticationBadCredentials) {
-				ServeNextError(next, w, r, ErrBasicAuthAuthenticationFailed)
+			if err == authentication.ErrAuthenticationRedirect {
 				return
 			}
 			ServeNextError(next, w, r, err)
 			return
 		}
 
-		ServeNextAuthenticated(qUser, next, w, r)
+		next.ServeHTTP(w, r)
+		//ServeNextError(next, w, r, authentication.ErrAuthenticationMissingCredentials)
 	})
 }

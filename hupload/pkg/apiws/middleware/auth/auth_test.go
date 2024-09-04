@@ -6,27 +6,27 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
-)
 
-var fakeError = errors.New("Some Error")
+	"github.com/ybizeul/hupload/pkg/apiws/authentication"
+)
 
 func TestServeNextAuthenticated(t *testing.T) {
 	successMiddleware := func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			serveNextAuthenticated("user", next, w, r)
+			ServeNextAuthenticated("user", next, w, r)
 		})
 	}
 
 	fn1 := func(w http.ResponseWriter, r *http.Request) {
-		c := r.Context().Value(AuthError)
+		s := r.Context().Value(authentication.AuthStatusKey).(authentication.AuthStatus)
+		c := s.Error
 		if c != nil {
 			t.Errorf("Expected nil, got %v", c.(error))
 		}
-		c = r.Context().Value(AuthStatus)
-		if c != AuthStatusSuccess {
+		if !s.Authenticated {
 			t.Errorf("Expected AuthStatusSuccess, got %v", c)
 		}
-		u := r.Context().Value(AuthUser)
+		u := s.User
 		if u != "user" {
 			t.Errorf("Expected admin, got %v", u)
 		}
@@ -39,20 +39,22 @@ func TestServeNextAuthenticated(t *testing.T) {
 	h1.ServeHTTP(nil, req)
 }
 
+var fakeError = errors.New("Some Error")
+
 func TestServeNextAuthFailed(t *testing.T) {
 	successMiddleware := func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			serveNextError(next, w, r, fakeError)
+			ServeNextError(next, w, r, fakeError)
 		})
 	}
 
 	fn1 := func(w http.ResponseWriter, r *http.Request) {
-		c := r.Context().Value(AuthError)
-		if c == nil {
+		s := r.Context().Value(authentication.AuthStatusKey).(authentication.AuthStatus)
+		if s.Error == nil {
 			t.Errorf("Expected error, got nil")
 		} else {
-			if !errors.Is(c.(error), fakeError) {
-				t.Errorf("Expected fakeError, got %v", c)
+			if !errors.Is(s.Error, fakeError) {
+				t.Errorf("Expected fakeError, got %v", s.Error)
 			}
 		}
 	}
@@ -67,7 +69,7 @@ func TestServeNextAuthFailed(t *testing.T) {
 func TestConfirmAuthentication(t *testing.T) {
 	successMiddleware := func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			serveNextAuthenticated("user", next, w, r)
+			ServeNextAuthenticated("user", next, w, r)
 		})
 	}
 
@@ -93,7 +95,7 @@ func TestConfirmAuthentication(t *testing.T) {
 func TestFailedAuthentication(t *testing.T) {
 	successMiddleware := func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			serveNextError(next, w, r, fakeError)
+			ServeNextError(next, w, r, fakeError)
 		})
 	}
 
