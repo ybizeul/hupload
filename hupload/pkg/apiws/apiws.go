@@ -12,6 +12,7 @@ import (
 	"github.com/ybizeul/hupload/pkg/apiws/authentication"
 	"github.com/ybizeul/hupload/pkg/apiws/middleware/auth"
 	logger "github.com/ybizeul/hupload/pkg/apiws/middleware/log"
+	"gopkg.in/square/go-jose.v2/json"
 )
 
 type APIWS struct {
@@ -82,6 +83,17 @@ func New(staticUI fs.FS, templateData any) (*APIWS, error) {
 		})
 	}
 
+	result.AddPublicRoute("GET /auth", nil, func(w http.ResponseWriter, r *http.Request) {
+		response := struct {
+			ShowLoginForm bool   `json:"showLoginForm"`
+			LoginURL      string `json:"loginUrl"`
+		}{
+			ShowLoginForm: result.Authentication.ShowLoginForm(),
+			LoginURL:      result.Authentication.LoginURL(),
+		}
+		_ = json.NewEncoder(w).Encode(response)
+	})
+
 	return result, nil
 }
 
@@ -93,18 +105,35 @@ func (a *APIWS) SetAuthentication(b authentication.Authentication) {
 // AddRoute adds a new route to the API Web Server. pattern is the URL pattern
 // to match. authenticators is a list of Authenticator to use to authenticate
 // the request. handlerFunc is the function to call when the route is matched.
-func (a *APIWS) AddRoute(pattern string, authenticators []auth.AuthMiddleware, handlerFunc func(w http.ResponseWriter, r *http.Request)) {
-	if authenticators == nil {
-		a.Mux.HandleFunc(pattern, handlerFunc)
+func (a *APIWS) AddRoute(pattern string, authenticator auth.AuthMiddleware, handlerFunc func(w http.ResponseWriter, r *http.Request)) {
+	j := auth.JWTAuthMiddleware{
+		HMACSecret: os.Getenv("JWT_SECRET"),
+	}
+	c := auth.ConfirmAuthenticator{Realm: "Hupload"}
+	a.Mux.Handle(pattern,
+		authenticator.Middleware(
+			j.Middleware(
+				c.Middleware(http.HandlerFunc(handlerFunc)))))
+}
+
+func (a *APIWS) AddPublicRoute(pattern string, authenticator auth.AuthMiddleware, handlerFunc func(w http.ResponseWriter, r *http.Request)) {
+	j := auth.JWTAuthMiddleware{
+		HMACSecret: os.Getenv("JWT_SECRET"),
+	}
+	c := auth.ConfirmAuthenticator{Realm: "Hupload"}
+	o := auth.OpenAuthMiddleware{}
+
+	if authenticator == nil {
+		a.Mux.Handle(pattern,
+			j.Middleware(
+				o.Middleware(
+					c.Middleware(http.HandlerFunc(handlerFunc)))))
 	} else {
-		var h http.Handler
-		h = http.HandlerFunc(handlerFunc)
-		c := auth.ConfirmAuthenticator{Realm: "Hupload"}
-		h = c.Middleware(h)
-		for i := range authenticators {
-			h = authenticators[len(authenticators)-1-i].Middleware(h)
-		}
-		a.Mux.Handle(pattern, h)
+		a.Mux.Handle(pattern,
+			authenticator.Middleware(
+				j.Middleware(
+					o.Middleware(
+						c.Middleware(http.HandlerFunc(handlerFunc))))))
 	}
 }
 
@@ -112,11 +141,14 @@ func (a *APIWS) AddRoute(pattern string, authenticators []auth.AuthMiddleware, h
 func (a *APIWS) Start() {
 	slog.Info(fmt.Sprintf("Starting web service on port %d", a.HTTPPort))
 
-	m := auth.NewJWTAuthMiddleware(os.Getenv("JWT_SECRET"))
-
-	if f, ok := a.Authentication.CallbackFunc(m.Middleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		http.Redirect(w, r, "/shares", http.StatusFound)
-	}))); ok {
+	// Check if we have a callback function for this authentication
+	if _, ok := a.Authentication.CallbackFunc(nil); ok {
+		// If there is, define action to redirect to "/shares"
+		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			http.Redirect(w, r, "/shares", http.StatusFound)
+		})
+		m := auth.NewJWTAuthMiddleware(os.Getenv("JWT_SECRET"))
+		f, _ := a.Authentication.CallbackFunc(m.Middleware(handler))
 		a.Mux.HandleFunc("GET /oidc", f)
 	}
 

@@ -50,14 +50,14 @@ func NewAuthenticationOIDC(o AuthenticationOIDCConfig) (*AuthenticationOIDC, err
 	return result, nil
 }
 
-func (o *AuthenticationOIDC) AuthenticateRequest(w http.ResponseWriter, r *http.Request, cb func(bool, error)) {
+func (o *AuthenticationOIDC) AuthenticateRequest(w http.ResponseWriter, r *http.Request) error {
 	if r.URL.Path == "/login" {
 		http.Redirect(w, r, o.Config.AuthCodeURL("state"), http.StatusFound)
+		return ErrAuthenticationRedirect
 	} else {
 		w.WriteHeader(http.StatusAccepted)
-		_, _ = w.Write([]byte(o.Config.AuthCodeURL("state")))
+		return nil
 	}
-	cb(false, ErrAuthenticationRedirect)
 }
 
 func (o *AuthenticationOIDC) CallbackFunc(h http.Handler) (func(w http.ResponseWriter, r *http.Request), bool) {
@@ -91,6 +91,7 @@ func (o *AuthenticationOIDC) CallbackFunc(h http.Handler) (func(w http.ResponseW
 
 		// Extract custom claims
 		var claims struct {
+			Sub      string `json:"sub"`
 			Email    string `json:"email"`
 			Verified bool   `json:"email_verified"`
 		}
@@ -100,5 +101,31 @@ func (o *AuthenticationOIDC) CallbackFunc(h http.Handler) (func(w http.ResponseW
 			_ = json.NewEncoder(w).Encode(err)
 			return
 		}
+		ServeNextAuthenticated(claims.Sub, h, w, r)
 	}, true
+}
+
+func ServeNextAuthenticated(user string, next http.Handler, w http.ResponseWriter, r *http.Request) {
+	ctx := context.WithValue(r.Context(), AuthStatusKey, AuthStatus{Authenticated: true, User: user})
+	next.ServeHTTP(w, r.WithContext(ctx))
+	// if user == "" {
+	// 	next.ServeHTTP(w,
+	// 		r.WithContext(
+	// 			context.WithValue(
+	// 				r.Context(),
+	// 				AuthStatusKey,AuthStatus{Authenticated: true, User: ""},
+	// 			),
+	// 		),
+	// 	)
+	// } else {
+	// 	ctx := context.WithValue(r.Context(), AuthStatus{Authenticated: true, User: user})
+	// 	next.ServeHTTP(w, r.WithContext(ctx))
+	// }
+}
+
+func (o *AuthenticationOIDC) ShowLoginForm() bool {
+	return false
+}
+func (o *AuthenticationOIDC) LoginURL() string {
+	return "/login"
 }

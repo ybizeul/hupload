@@ -19,13 +19,9 @@ func TestDefaultAuthentication(t *testing.T) {
 	r, _ := http.NewRequest("GET", "http://localhost:8080", nil)
 	r.SetBasicAuth("admin", p)
 
-	a.AuthenticateRequest(nil, r, func(ok bool, err error) {
-		if !ok {
-			t.Errorf("Expected true, got false")
-		}
+	err := a.AuthenticateRequest(nil, r)
 
-		if err != nil {
-			t.Errorf("Expected no error, got %v", err)
-		}
-	})
+	if err != nil {
+		t.Errorf("Expected no error, got %v", err)
+	}
 }

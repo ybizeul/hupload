@@ -40,11 +40,10 @@ func NewAuthenticationFile(o FileAuthenticationConfig) (*AuthenticationFile, err
 	return &r, nil
 }
 
-func (a *AuthenticationFile) AuthenticateRequest(w http.ResponseWriter, r *http.Request, cb func(bool, error)) {
+func (a *AuthenticationFile) AuthenticateRequest(w http.ResponseWriter, r *http.Request) error {
 	username, password, ok := r.BasicAuth()
 	if !ok {
-		cb(false, ErrAuthenticationMissingCredentials)
-		return
+		return ErrAuthenticationMissingCredentials
 	}
 
 	// Prepare struct to load users.yaml
@@ -55,16 +54,14 @@ func (a *AuthenticationFile) AuthenticateRequest(w http.ResponseWriter, r *http.
 	// Fail if we can't open the file
 	pf, err := os.Open(path)
 	if err != nil {
-		cb(false, err)
-		return
+		return err
 	}
 	defer pf.Close()
 
 	// Load users.yml
 	err = yaml.NewDecoder(pf).Decode(&users)
 	if err != nil {
-		cb(false, err)
-		return
+		return err
 	}
 
 	// Check if user is in the list
@@ -73,14 +70,22 @@ func (a *AuthenticationFile) AuthenticateRequest(w http.ResponseWriter, r *http.
 			// Compare password hash
 			err := bcrypt.CompareHashAndPassword([]byte(u.Password), []byte(password))
 			if err == nil {
-				cb(true, nil)
-				return
+				return nil
 			}
 		}
 	}
-	cb(false, nil)
+
+	return ErrAuthenticationBadCredentials
 }
 
-func (o *AuthenticationFile) CallbackFunc(http.Handler) (cb func(w http.ResponseWriter, r *http.Request), ok bool) {
+func (o *AuthenticationFile) CallbackFunc(http.Handler) (func(w http.ResponseWriter, r *http.Request), bool) {
 	return nil, false
+}
+
+func (o *AuthenticationFile) ShowLoginForm() bool {
+	return true
+}
+
+func (o *AuthenticationFile) LoginURL() string {
+	return "/"
 }

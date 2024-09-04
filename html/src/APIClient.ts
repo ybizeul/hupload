@@ -50,7 +50,7 @@ export class APIClient {
     }
 
     login(path: string, user? : string, password? : string) {
-        return new Promise<AxiosResponse|APIServerError>((resolve, reject) => {
+        return new Promise<unknown|APIServerError>((resolve, reject) => {
             axios({
                 url: this.baseURL + path,
                 method: 'POST',
@@ -61,11 +61,7 @@ export class APIClient {
                 }:undefined
             })
             .then((result) => {
-                if (result.status == 202) {
-                    resolve(result)
-                } else {
-                    resolve(result.data)
-                }
+                resolve(result.data)
             })
             .catch (e => {
                 reject(e)
@@ -301,6 +297,11 @@ export class APIClient {
     }
 }
 
+export interface Auth {
+    showLoginForm: boolean
+    loginUrl: string
+  }
+
 class HuploadClient extends APIClient {
     constructor() {
         super('/api/v1')
@@ -313,6 +314,17 @@ class HuploadClient extends APIClient {
     logoutNow() {
         document.cookie = "X-Token" +'=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
         document.cookie = "X-Token-Refresh" +'=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+    }
+    auth() {
+        return new Promise<unknown|APIServerError>((resolve, reject) => {
+            this.request({
+                url: '/auth',
+            })
+            .then((result) => {
+                resolve(result)
+            })
+            .catch(reject)
+        })
     }
 }
 

@@ -67,7 +67,7 @@ func getHupload(t *testing.T, cfg *config.Config) *Hupload {
 func makeShare(t *testing.T, h *Hupload, name string, params storage.Options) *storage.Share {
 	share, err := h.Config.Storage.CreateShare(context.Background(), name, "admin", params)
 	if err != nil {
-		t.Fatal(err)
+		t.Error(err)
 	}
 	return share
 }
@@ -208,7 +208,9 @@ func TestCreateShare(t *testing.T) {
 
 			t.Run("Create a share with same name should fail", func(t *testing.T) {
 				makeShare(t, h, "samename", storage.Options{})
-
+				t.Cleanup(func() {
+					_ = h.Config.Storage.DeleteShare(context.Background(), "samename")
+				})
 				var (
 					req *http.Request
 					w   *httptest.ResponseRecorder
@@ -228,10 +230,6 @@ func TestCreateShare(t *testing.T) {
 					t.Errorf("Expected status %d, got %d", http.StatusOK, w.Code)
 					return
 				}
-
-				t.Cleanup(func() {
-					_ = h.Config.Storage.DeleteShare(context.Background(), "samename")
-				})
 			})
 
 			t.Run("Create a share with specific name should succeed", func(t *testing.T) {

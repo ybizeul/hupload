@@ -2,6 +2,7 @@ package apiws
 
 import (
 	"encoding/json"
+	"errors"
 	"io/fs"
 	"log/slog"
 	"net/http"
@@ -44,7 +45,7 @@ func makeAPI(staticUI fs.FS, templateData any) *APIWS {
 func TestSimpleAPI(t *testing.T) {
 	api := makeAPI(nil, nil)
 
-	api.AddRoute("GET /", nil, func(w http.ResponseWriter, r *http.Request) {
+	api.AddPublicRoute("GET /", nil, func(w http.ResponseWriter, r *http.Request) {
 		writeSuccessJSON(w, map[string]string{"status": "ok"})
 	})
 
@@ -62,16 +63,25 @@ type testAuth struct {
 	Password string
 }
 
-func (a *testAuth) AuthenticateRequest(w http.ResponseWriter, r *http.Request, cb func(bool, error)) {
+func (a *testAuth) AuthenticateRequest(w http.ResponseWriter, r *http.Request) error {
 	username, password, ok := r.BasicAuth()
 	if !ok {
-		cb(false, nil)
-		return
+		return errors.New("No basic auth")
 	}
-	cb(a.Username == username && a.Password == password, nil)
+	if a.Username == username && a.Password == password {
+		return nil
+	}
+	return errors.New("bad credentials")
 }
+
 func (o *testAuth) CallbackFunc(http.Handler) (func(w http.ResponseWriter, r *http.Request), bool) {
 	return nil, false
+}
+func (o *testAuth) ShowLoginForm() bool {
+	return false
+}
+func (o *testAuth) LoginURL() string {
+	return "/"
 }
 
 func TestAuthAPI(t *testing.T) {
@@ -84,7 +94,7 @@ func TestAuthAPI(t *testing.T) {
 
 	api := makeAPI(nil, nil)
 
-	api.AddRoute("GET /", []auth.AuthMiddleware{authenticator}, func(w http.ResponseWriter, r *http.Request) {
+	api.AddRoute("GET /", authenticator, func(w http.ResponseWriter, r *http.Request) {
 		writeSuccessJSON(w, map[string]string{"status": "ok"})
 	})
 

@@ -24,22 +24,21 @@ type OIDCAuthMiddleware struct {
 func (a OIDCAuthMiddleware) Middleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if a.Authentication == nil {
-			serveNextError(next, w, r, errors.New("no authentication backend"))
+			ServeNextError(next, w, r, errors.New("no authentication backend"))
 			return
 		}
 
 		// If authentication has been sent, check credentials
 
-		a.Authentication.AuthenticateRequest(w, r, func(ok bool, err error) {
+		err := a.Authentication.AuthenticateRequest(w, r)
+		if err != nil {
 			if err == authentication.ErrAuthenticationRedirect {
 				return
 			}
-			if ok {
-				// TODO
-				serveNextAuthenticated("admin", next, w, r)
-			} else {
-				serveNextError(next, w, r, err)
-			}
-		})
+			ServeNextError(next, w, r, err)
+		}
+
+		ServeNextAuthenticated("", next, w, r)
+		//ServeNextError(next, w, r, authentication.ErrAuthenticationMissingCredentials)
 	})
 }

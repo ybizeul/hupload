@@ -29,29 +29,28 @@ type BasicAuthMiddleware struct {
 func (a BasicAuthMiddleware) Middleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if a.Authentication == nil {
-			serveNextError(next, w, r, errors.New("no authentication backend"))
+			ServeNextError(next, w, r, errors.New("no authentication backend"))
 			return
 		}
 
 		// If authentication has been sent, check credentials
 
-		a.Authentication.AuthenticateRequest(nil, r, func(ok bool, err error) {
-			if err != nil {
-				if errors.Is(err, authentication.ErrAuthenticationMissingCredentials) {
-					serveNextError(next, w, r, ErrBasicAuthNoCredentials)
-					return
-				}
-				serveNextError(next, w, r, err)
+		err := a.Authentication.AuthenticateRequest(nil, r)
+
+		if err != nil {
+			if errors.Is(err, authentication.ErrAuthenticationMissingCredentials) {
+				ServeNextAuthenticated("", next, w, r)
 				return
 			}
-			if !ok {
-				serveNextError(next, w, r, ErrBasicAuthAuthenticationFailed)
-				return
-			} else {
-				qUser, _, _ := r.BasicAuth()
-				serveNextAuthenticated(qUser, next, w, r)
+			if errors.Is(err, authentication.ErrAuthenticationBadCredentials) {
+				ServeNextError(next, w, r, ErrBasicAuthAuthenticationFailed)
 				return
 			}
-		})
+			ServeNextError(next, w, r, err)
+			return
+		}
+
+		qUser, _, _ := r.BasicAuth()
+		ServeNextAuthenticated(qUser, next, w, r)
 	})
 }

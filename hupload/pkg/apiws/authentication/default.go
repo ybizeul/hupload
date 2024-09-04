@@ -23,23 +23,28 @@ func NewAuthenticationDefault() *AuthenticationDefault {
 	return r
 }
 
-func (a *AuthenticationDefault) AuthenticateRequest(w http.ResponseWriter, r *http.Request, cb func(ok bool, err error)) {
+func (a *AuthenticationDefault) AuthenticateRequest(w http.ResponseWriter, r *http.Request) error {
 	username, password, ok := r.BasicAuth()
 	if !ok {
-		cb(false, nil)
-		return
+		return ErrAuthenticationMissingCredentials
 	}
 	if username == "admin" && password == a.Password {
-		cb(true, nil)
-		return
+
+		return nil
 	}
-	cb(false, nil)
+	return ErrAuthenticationBadCredentials
 }
 
 func (o *AuthenticationDefault) CallbackFunc(http.Handler) (func(w http.ResponseWriter, r *http.Request), bool) {
 	return nil, false
 }
 
+func (o *AuthenticationDefault) ShowLoginForm() bool {
+	return false
+}
+func (o *AuthenticationDefault) LoginURL() string {
+	return "/"
+}
 func generateCode(l int) string {
 	code := ""
 
