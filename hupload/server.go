@@ -61,21 +61,7 @@ func (h *Hupload) Start() {
 func (h *Hupload) setup() {
 
 	api := h.API
-	// Get JWT_SECRET
-	// hmac := os.Getenv("JWT_SECRET")
-	// if len(hmac) == 0 {
-	// 	hmac = generateRandomString(32)
-	// }
 
-	// Define authenticators for protected routes
-	// authenticators := []auth.AuthMiddleware{
-	// 	auth.BasicAuthMiddleware{
-	// 		Authentication: api.Authentication,
-	// 	},
-	// 	auth.JWTAuthMiddleware{
-	// 		HMACSecret: hmac,
-	// 	},
-	// }
 	var authenticator auth.AuthMiddleware
 	switch h.Config.Authentication.(type) {
 	case *authentication.AuthenticationFile:
@@ -87,32 +73,7 @@ func (h *Hupload) setup() {
 			Authentication: api.Authentication,
 		}
 	}
-	// authenticator := auth.OIDCAuthMiddleware{
-	// 	Authentication: api.Authentication,
-	// }
 
-	// auth.JWTAuthMiddleware{
-	// 	HMACSecret: hmac,
-	// },
-
-	// authenticatorsOpen := []auth.AuthMiddleware{
-	// 	auth.OpenAuthMiddleware{},
-	// 	auth.BasicAuthMiddleware{
-	// 		Authentication: api.Authentication,
-	// 	},
-	// 	auth.JWTAuthMiddleware{
-	// 		HMACSecret: hmac,
-	// 	},
-	// }
-	// authenticatorsOpen := []auth.AuthMiddleware{
-	// 	auth.OpenAuthMiddleware{},
-	// 	auth.OIDCAuthMiddleware{
-	// 		Authentication: api.Authentication,
-	// 	},
-	// 	auth.JWTAuthMiddleware{
-	// 		HMACSecret: hmac,
-	// 	},
-	// }
 	// Setup routes
 
 	// Guests can access a share and post new files in it
@@ -127,8 +88,8 @@ func (h *Hupload) setup() {
 	api.AddPublicRoute("DELETE /api/v1/shares/{share}/items/{item}", authenticator, h.deleteItem)
 
 	// Protected routes
-	api.AddRoute("GET /login", authenticator, h.postLogin)
-	api.AddRoute("POST /api/v1/login", authenticator, h.postLogin)
+	api.AddRoute("POST /login", authenticator, h.postLogin)
+	// api.AddRoute("POST /api/v1/login", authenticator, h.postLogin)
 	api.AddRoute("POST /api/v1/shares", authenticator, h.postShare)
 	api.AddRoute("POST /api/v1/shares/{share}", authenticator, h.postShare)
 	api.AddRoute("PATCH /api/v1/shares/{share}", authenticator, h.patchShare)

@@ -49,25 +49,6 @@ export class APIClient {
         return
     }
 
-    login(path: string, user? : string, password? : string) {
-        return new Promise<unknown|APIServerError>((resolve, reject) => {
-            axios({
-                url: this.baseURL + path,
-                method: 'POST',
-                maxRedirects: 0,
-                auth: (user && password)?{
-                    username: user,
-                    password: password
-                }:undefined
-            })
-            .then((result) => {
-                resolve(result.data)
-            })
-            .catch (e => {
-                reject(e)
-            })
-        })
-    }
     get(path: string, auth?: AxiosBasicCredentials) {
         return new Promise<unknown|APIServerError>((resolve, reject) => {
             this.request({
@@ -259,62 +240,76 @@ export class APIClient {
             // Send request with regular token
             //config.headers = {"Authorization": "Bearer " + window.localStorage.getItem('token')}
             axios(config)
-            .then((result) => {
-                resolve(result.data)
-            })
-            .catch((e) => {
-                const ae = e as AxiosError
-                if (ae.response) {
-                    // We have a live server,
-                    // Check if we need to refresh token
-                    if (ae.response.status == 401 && ae.response?.headers["www-authenticate"]) {
-                        this.authFailed()
-                        // Regular token failed, config for refresh token
-                        //window.location.reload()
-                        reject(ae)
-                        return
-                        //config.headers = {"Authorization": "Bearer " + window.localStorage.getItem('refresh')}
-                    }
-                    else {
-                        // It's not an authentication problem, handle the exception
-                        if (ae.response.data && isAPIServerError(ae.response.data)) {
-                            // There is data, and that's an exception
-                            reject(ae)
-                        } else {
-                            // It's a generic exception, return as-is
+                .then((result) => {
+                    resolve(result.data)
+                })
+                .catch((e) => {
+                    const ae = e as AxiosError
+                    if (ae.response) {
+                        // We have a live server,
+                        // Check if we need to refresh token
+                        if (ae.response.status == 401 && ae.response?.headers["www-authenticate"]) {
+                            this.authFailed()
+                            // Regular token failed, config for refresh token
+                            //window.location.reload()
                             reject(ae)
                             return
+                            //config.headers = {"Authorization": "Bearer " + window.localStorage.getItem('refresh')}
                         }
+                        else {
+                            // It's not an authentication problem, handle the exception
+                            if (ae.response.data && isAPIServerError(ae.response.data)) {
+                                // There is data, and that's an exception
+                                reject(ae)
+                            } else {
+                                // It's a generic exception, return as-is
+                                reject(ae)
+                                return
+                            }
+                        }
+                    } else {
+                        // There is no data in the error, return as-is
+                        console.log(e)
+                        reject(e)
+                        return
                     }
-                } else {
-                    // There is no data in the error, return as-is
-                    console.log(e)
-                    reject(e)
-                    return
-                }
-            })
+                })
         })
     }
 }
 
-export interface Auth {
+export interface AuthInfo {
+    user: string
     showLoginForm: boolean
     loginUrl: string
-  }
+}
 
 class HuploadClient extends APIClient {
     constructor() {
         super('/api/v1')
     }
-    // authFailed() {
-    //     if (!window.location.href.endsWith("/login")) {
-    //         window.location.href = "/login"
-    //     }
-    // }
-    logoutNow() {
-        document.cookie = "X-Token" +'=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
-        document.cookie = "X-Token-Refresh" +'=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+
+    login(user : string, password : string) {
+        return new Promise<unknown|APIServerError>((resolve, reject) => {
+            axios({
+                url: '/login',
+                method: 'POST',
+                maxRedirects: 0,
+                auth: (user && password)?{
+                    username: user,
+                    password: password
+                }:undefined
+            })
+            .then((result) => {
+                resolve(result.data)
+            })
+            .catch (e => {
+                reject(e)
+            })
+        })
     }
+
+    
     auth() {
         return new Promise<unknown|APIServerError>((resolve, reject) => {
             this.request({
@@ -325,6 +320,11 @@ class HuploadClient extends APIClient {
             })
             .catch(reject)
         })
+    }
+
+    logoutNow() {
+        document.cookie = "X-Token" +'=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+        document.cookie = "X-Token-Refresh" +'=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
     }
 }
 

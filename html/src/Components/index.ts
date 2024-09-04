@@ -1,4 +1,5 @@
 export * from './CenteredTextInput'
+export * from './Haffix'
 export * from './ItemComponent'
 export * from './ShareComponent'
 export * from './ResponsivePopover'
