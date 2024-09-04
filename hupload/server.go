@@ -80,22 +80,22 @@ func (h *Hupload) setup() {
 	// That's Hupload principle, the security is based on the share name
 	// which is usually a random string.
 
-	api.AddPublicRoute("POST /api/v1/shares/{share}/items/{item}", authenticator, h.postItem)
-	api.AddPublicRoute("GET /api/v1/shares/{share}/items", authenticator, h.getShareItems)
-	api.AddPublicRoute("GET /api/v1/shares/{share}", authenticator, h.getShare)
-	api.AddPublicRoute("GET /api/v1/shares/{share}/items/{item}", authenticator, h.getItem)
-	api.AddPublicRoute("GET /d/{share}/{item}", authenticator, h.getItem)
+	api.AddPublicRoute("POST   /api/v1/shares/{share}/items/{item}", authenticator, h.postItem)
+	api.AddPublicRoute("GET    /api/v1/shares/{share}/items", authenticator, h.getShareItems)
+	api.AddPublicRoute("GET    /api/v1/shares/{share}", authenticator, h.getShare)
+	api.AddPublicRoute("GET    /api/v1/shares/{share}/items/{item}", authenticator, h.getItem)
+	api.AddPublicRoute("GET    /d/{share}/{item}", authenticator, h.getItem)
 	api.AddPublicRoute("DELETE /api/v1/shares/{share}/items/{item}", authenticator, h.deleteItem)
 
 	// Protected routes
-	api.AddRoute("GET /login", authenticator, h.postLogin)
-	api.AddRoute("POST /api/v1/login", authenticator, h.postLogin)
-	api.AddRoute("POST /api/v1/shares", authenticator, h.postShare)
-	api.AddRoute("POST /api/v1/shares/{share}", authenticator, h.postShare)
-	api.AddRoute("PATCH /api/v1/shares/{share}", authenticator, h.patchShare)
+	api.AddRoute("GET    /login", authenticator, h.postLogin)
+	api.AddRoute("POST   /login", authenticator, h.postLogin)
+	api.AddRoute("POST   /api/v1/shares", authenticator, h.postShare)
+	api.AddRoute("POST   /api/v1/shares/{share}", authenticator, h.postShare)
+	api.AddRoute("PATCH  /api/v1/shares/{share}", authenticator, h.patchShare)
 	api.AddRoute("DELETE /api/v1/shares/{share}", authenticator, h.deleteShare)
-	api.AddRoute("GET /api/v1/shares", authenticator, h.getShares)
-	api.AddRoute("GET /api/v1/version", authenticator, h.getVersion)
+	api.AddRoute("GET    /api/v1/shares", authenticator, h.getShares)
+	api.AddRoute("GET    /api/v1/version", authenticator, h.getVersion)
 
 	api.AddRoute("GET /api/v1/*", authenticator, func(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadRequest, "Error")

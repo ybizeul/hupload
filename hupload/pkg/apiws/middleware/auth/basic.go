@@ -36,8 +36,10 @@ func (a BasicAuthMiddleware) Middleware(next http.Handler) http.Handler {
 		// If there is no credentials, skip middleware
 		var qUser string
 		var ok bool
+
 		if qUser, _, ok = r.BasicAuth(); !ok {
 			next.ServeHTTP(w, r)
+			return
 		}
 
 		// If authentication has been sent, check credentials
