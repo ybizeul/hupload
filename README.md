@@ -57,6 +57,7 @@ SSL)
 - Add instructions in Markdown for your users,
 - Automatic dark mode following OS settings,
 - Multi user (all admins see all shares, but see their own listed separately first),
+- Flat user file or OIDC authentication,
 - API first, everything can be done through REST calls,
 - Minimalist, clean interface.
 
@@ -85,8 +86,25 @@ storage:
     max_share_mb: 2048
 ```
 
-Currently, there is only one authentication backend `file` and you can use
-either local file storage `file` or `s3` with the following configuration :
+For authentication, users are defined in a yaml file :
+
+```
+- username: user1
+  password: $2y$10$LIcTF3HKNhV6qh3oi3ysHOnhiXpLOU22N61JzZXoSWQbNOpDhS/g.
+- username: user2
+  password: $2y$10$Rwj3rjfmXuflxds.uhgKReiXFy5VRziYuDDw/aO1w9ut9BzafTFr6
+```
+
+Passwords are hashes that you can generate with `htpasswd` :
+
+To generate a hash for `hupload` password string :
+
+```
+htpasswd -bnBC 10 "" hupload | tr -d ":"
+$2y$10$LIcTF3HKNhV6qh3oi3ysHOnhiXpLOU22N61JzZXoSWQbNOpDhS/g.
+```
+
+### S3 Storage
 
 ```
 storage:
@@ -109,22 +127,19 @@ in configuration file have precedence.
 Note that `region` is mandatory for AWS API to work correctly even if you
 are using your own S3 server like minio.
 
-For authentication, users are defined in a yaml file :
+### OIDC 
+
+OIDC redirect url is `/oidc` and you can provide application details with the
+following configuration :
 
 ```
-- username: user1
-  password: $2y$10$LIcTF3HKNhV6qh3oi3ysHOnhiXpLOU22N61JzZXoSWQbNOpDhS/g.
-- username: user2
-  password: $2y$10$Rwj3rjfmXuflxds.uhgKReiXFy5VRziYuDDw/aO1w9ut9BzafTFr6
-```
-
-Passwords are hashes that you can generate with `htpasswd` :
-
-To generate a hash for `hupload` password string :
-
-```
-htpasswd -bnBC 10 "" hupload | tr -d ":"
-$2y$10$LIcTF3HKNhV6qh3oi3ysHOnhiXpLOU22N61JzZXoSWQbNOpDhS/g.
+auth:
+  type: oidc
+  options:
+    provider_url: https://auth.tynsoe.org/application/o/hupload/
+    client_id: <client_id>
+    client_secret: <client_secret>
+    redirect_url: https://hupload.company.com/oidc
 ```
 
 ## Run in a container
