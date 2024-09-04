@@ -88,8 +88,8 @@ func (h *Hupload) setup() {
 	api.AddPublicRoute("DELETE /api/v1/shares/{share}/items/{item}", authenticator, h.deleteItem)
 
 	// Protected routes
-	api.AddRoute("POST /login", authenticator, h.postLogin)
-	// api.AddRoute("POST /api/v1/login", authenticator, h.postLogin)
+	api.AddRoute("GET /login", authenticator, h.postLogin)
+	api.AddRoute("POST /api/v1/login", authenticator, h.postLogin)
 	api.AddRoute("POST /api/v1/shares", authenticator, h.postShare)
 	api.AddRoute("POST /api/v1/shares/{share}", authenticator, h.postShare)
 	api.AddRoute("PATCH /api/v1/shares/{share}", authenticator, h.patchShare)

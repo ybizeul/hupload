@@ -295,10 +295,10 @@ class HuploadClient extends APIClient {
                 url: '/login',
                 method: 'POST',
                 maxRedirects: 0,
-                auth: (user && password)?{
+                auth: {
                     username: user,
                     password: password
-                }:undefined
+                }
             })
             .then((result) => {
                 resolve(result.data)
