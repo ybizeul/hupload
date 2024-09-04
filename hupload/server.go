@@ -64,7 +64,7 @@ func (h *Hupload) setup() {
 
 	var authenticator auth.AuthMiddleware
 	switch h.Config.Authentication.(type) {
-	case *authentication.AuthenticationFile:
+	case *authentication.AuthenticationFile, *authentication.AuthenticationDefault:
 		authenticator = auth.BasicAuthMiddleware{
 			Authentication: api.Authentication,
 		}
