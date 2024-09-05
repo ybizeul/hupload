@@ -26,6 +26,10 @@ export interface ItemInfo {
     Size: number;
 }
 
+export interface Message {
+  title: string;
+  message: string;
+}
 
 // Utilities
 

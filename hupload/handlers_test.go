@@ -109,7 +109,7 @@ func TestCreateShare(t *testing.T) {
 					return
 				}
 
-				got := string(w.Body.Bytes())
+				got := string(w.Body.String())
 				want := `{"errors":["JWTAuthMiddleware: no Authorization header"]}`
 
 				if want != got {
@@ -1492,6 +1492,131 @@ func TestDeleteItem(t *testing.T) {
 		})
 	}
 }
+
+func TestMessages(t *testing.T) {
+	c := &config.Config{
+		Path: "handlers_testdata/config.yml",
+	}
+
+	h := getHupload(t, c)
+
+	t.Run("Get messages should work", func(t *testing.T) {
+		req := httptest.NewRequest("GET", "/api/v1/messages", nil)
+
+		req.SetBasicAuth("admin", "hupload")
+
+		w := httptest.NewRecorder()
+
+		h.API.Mux.ServeHTTP(w, req)
+
+		if w.Code != http.StatusOK {
+			t.Errorf("Expected status %d, got %d", http.StatusOK, w.Code)
+			return
+		}
+
+		got := []string{}
+		_ = json.NewDecoder(w.Body).Decode(&got)
+
+		want := []string{"Message title"}
+
+		if !reflect.DeepEqual(got, want) {
+			t.Errorf("Expected %v, got %v", want, got)
+			return
+		}
+	})
+
+	t.Run("Get message without auth should fail", func(t *testing.T) {
+		req := httptest.NewRequest("GET", "/api/v1/messages", nil)
+
+		w := httptest.NewRecorder()
+
+		h.API.Mux.ServeHTTP(w, req)
+
+		if w.Code != http.StatusUnauthorized {
+			t.Errorf("Expected status %d, got %d", http.StatusOK, w.Code)
+			return
+		}
+
+		type btype struct {
+			Errors []string `json:"errors"`
+		}
+
+		got := btype{}
+
+		_ = json.NewDecoder(w.Body).Decode(&got)
+
+		want := btype{
+			Errors: []string{"JWTAuthMiddleware: no Authorization header"},
+		}
+
+		if !reflect.DeepEqual(got, want) {
+			t.Errorf("Expected %v, got %v", want, got)
+			return
+		}
+	})
+
+	t.Run("Get message should work", func(t *testing.T) {
+		req := httptest.NewRequest("GET", "/api/v1/messages/1", nil)
+
+		req.SetBasicAuth("admin", "hupload")
+
+		w := httptest.NewRecorder()
+
+		h.API.Mux.ServeHTTP(w, req)
+
+		if w.Code != http.StatusOK {
+			t.Errorf("Expected status %d, got %d", http.StatusOK, w.Code)
+			return
+		}
+
+		var got *config.MessageTemplate
+
+		_ = json.NewDecoder(w.Body).Decode(&got)
+
+		want := &config.MessageTemplate{
+			Title:   "Message title",
+			Message: "Message content",
+		}
+
+		if !reflect.DeepEqual(got, want) {
+			t.Errorf("Expected %v, got %v", want, got)
+			return
+		}
+	})
+
+	t.Run("Get message without auth should fail", func(t *testing.T) {
+		req := httptest.NewRequest("GET", "/api/v1/messages/1", nil)
+
+		req.SetBasicAuth("admin", "hupload")
+
+		w := httptest.NewRecorder()
+
+		h.API.Mux.ServeHTTP(w, req)
+
+		if w.Code != http.StatusUnauthorized {
+			t.Errorf("Expected status %d, got %d", http.StatusOK, w.Code)
+			return
+		}
+
+		type btype struct {
+			Errors []string `json:"errors"`
+		}
+
+		got := btype{}
+
+		_ = json.NewDecoder(w.Body).Decode(&got)
+
+		want := btype{
+			Errors: []string{"JWTAuthMiddleware: no Authorization header"},
+		}
+
+		if !reflect.DeepEqual(got, want) {
+			t.Errorf("Expected %v, got %v", want, got)
+			return
+		}
+	})
+}
+
 func TestVersion(t *testing.T) {
 	t.Cleanup(func() {
 		os.RemoveAll("tmptest")

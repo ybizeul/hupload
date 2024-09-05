@@ -7,15 +7,14 @@ import { FullHeightTextArea } from "./FullHeightTextArea";
 
 interface MarkDownEditorProps {
     onChange: (message: string) => void;
-    markdown: string;
   }
   
-  export function MarkDownEditor(props: MarkDownEditorProps&BoxComponentProps) {
+  export function MarkDownEditor(props: MarkDownEditorProps&BoxComponentProps&{children: string}) {
     // Initialize props
-    const { onChange, markdown } = props;
+    const { onChange, children } = props;
   
     // Initialize state
-    const [_markdown, setMarkdown] = useState<string>(markdown);
+    const [markdown, setMarkdown] = useState<string>(children);
     const [preview, previewH] = useDisclosure(false);
   
     // Functions
@@ -32,7 +31,7 @@ interface MarkDownEditorProps {
             {preview?
                 <InputWrapper display="flex" style={{flexDirection:"column"}} label="Message" description="This markdown will be displayed to the user" w="100%">
                     <Paper flex="1" withBorder mt="5" pt="5.5" px="12" display="flex">
-                        <Message value={_markdown} />
+                        <Message value={markdown} />
                     </Paper>
                 </InputWrapper>
             :

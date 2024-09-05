@@ -29,9 +29,10 @@ type TypeOptions struct {
 // ConfigValues.Title.
 type ConfigValues struct {
 	Title               string
-	DefaultValidityDays int         `yaml:"availability_days"`
-	Storage             TypeOptions `yaml:"storage"`
-	Authentication      TypeOptions `yaml:"auth"`
+	DefaultValidityDays int               `yaml:"availability_days"`
+	Storage             TypeOptions       `yaml:"storage"`
+	Authentication      TypeOptions       `yaml:"auth"`
+	MessageTemplates    []MessageTemplate `yaml:"messages"`
 }
 
 // Config is the internal representation of Hupload configuration file at path
