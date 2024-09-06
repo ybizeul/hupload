@@ -9,3 +9,11 @@ auth:
   type: file
   options:
     path: users.yml
+messages:
+  - title: Welcome to Hupload
+    message: |
+      Hupload is a simple file sharing service.
+
+      You can upload files up to 3MB and share up to 5MB.
+
+      Enjoy!
