@@ -54,7 +54,7 @@ SSL)
 - S3 or filesystem storage,
 - Configurable max share size and max file size,
 - Basic share informations listed (number of items, total size),
-- Add instructions in Markdown for your users,
+- Add instructions in Markdown for your users and define your own reusable templates.
 - Automatic dark mode following OS settings,
 - Multi user (all admins see all shares, but see their own listed separately first),
 - Flat user file or OIDC authentication,
@@ -140,6 +140,30 @@ auth:
     client_id: <client_id>
     client_secret: <client_secret>
     redirect_url: https://hupload.company.com/oidc
+```
+
+### Canned messages
+
+When creating a share you can use markdown to display a custom message with
+instructions to the user.
+
+You can pre-define canned messages in the configuration file :
+
+```
+messages:
+  - title: Welcome to Hupload
+    message: |
+      Hupload is a simple file sharing service.
+
+      You can upload files up to 3MB and share up to 5MB.
+
+      Enjoy!
+  - title: Log collection
+    message: |
+      ### Collecting support bundle
+
+      You can download a support bundle from the home page in the
+      **About** menu. Download the file and upload it here.
 ```
 
 ## Run in a container
