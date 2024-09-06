@@ -25,6 +25,14 @@
                 "JWT_SECRET": "9e1fada26b20ddc5ce812cafb8d2cada",
                 "DEMO": "true",
             }
+        },
+        {
+
+            "type": "robotframework-lsp",
+            "name": "Robot Framework: Launch template",
+            "request": "launch",
+            "terminal": "integrated",
+            "args": ["-d","robot/logs"]
         }
     ]
 }
