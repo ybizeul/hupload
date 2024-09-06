@@ -385,6 +385,35 @@ func (h *Hupload) postLogin(w http.ResponseWriter, r *http.Request) {
 	writeSuccessJSON(w, u)
 }
 
+func (h *Hupload) getMessages(w http.ResponseWriter, r *http.Request) {
+	titles := []string{}
+
+	for _, m := range h.Config.Values.MessageTemplates {
+		titles = append(titles, m.Title)
+	}
+
+	writeSuccessJSON(w, titles)
+}
+
+var ErrMessageInvalidIndex = errors.New("invalid index")
+var ErrMessageIndexOutOfBounds = errors.New("index out of bounds")
+
+func (h *Hupload) getMessage(w http.ResponseWriter, r *http.Request) {
+	index, err := strconv.Atoi(r.PathValue("index"))
+	if err != nil {
+		writeError(w, http.StatusBadRequest, ErrMessageInvalidIndex.Error())
+		return
+	}
+	t := h.Config.Values.MessageTemplates
+	if index <= len(t) && index > 0 {
+		writeSuccessJSON(w, t[index-1])
+		return
+	} else {
+		writeError(w, http.StatusBadRequest, ErrMessageIndexOutOfBounds.Error())
+		return
+	}
+}
+
 // getVersion returns hupload version
 func (h *Hupload) getVersion(w http.ResponseWriter, r *http.Request) {
 	v := struct {

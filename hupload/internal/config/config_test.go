@@ -81,6 +81,12 @@ func TestLoadGoodConfig(t *testing.T) {
 				"path": "config_testdata/users.yml",
 			},
 		},
+		MessageTemplates: []MessageTemplate{
+			{
+				Title:   "Message title",
+				Message: "Message content",
+			},
+		},
 	}
 
 	got := c.Values

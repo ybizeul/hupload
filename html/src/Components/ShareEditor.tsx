@@ -5,6 +5,7 @@ import { useDisclosure, useMediaQuery } from "@mantine/hooks";
 import { useState } from "react";
 import classes from './ShareEditor.module.css';
 import { MarkDownEditor } from "./MarkdownEditor";
+import { TemplatesMenu } from "./TemplatesMenu";
 
 interface ShareEditorProps {
   onChange: (options: Share["options"]) => void;
@@ -28,8 +29,8 @@ export function ShareEditor(props: ShareEditorProps&BoxComponentProps) {
 
     // Functions
     const notifyChange = (o: Share["options"]) => {
-      setOptions(o)
-      onChange(o)
+        setOptions(o)
+        onChange(o)
     }
 
     return (
@@ -82,12 +83,16 @@ export function ShareEditor(props: ShareEditorProps&BoxComponentProps) {
 
                 {/* Right section */}
                 {(showMessage||!isInBrowser)&&
-                <MarkDownEditor 
-                    pl={isInBrowser?"sm":"0"} 
-                    style={{borderLeft: isInBrowser?"1px solid lightGray":""}} 
-                    onChange={(v) => { notifyChange({..._options, message:v}); }}
-                    markdown={_options.message?_options.message:""}
-                />
+                    <Box display="flex" flex="1" w={{base: '100%', xs: rem(500)}} pos={"relative"}>
+                        <MarkDownEditor 
+                            pl={isInBrowser?"sm":"0"} 
+                            style={{borderLeft: isInBrowser?"1px solid lightGray":""}} 
+                            onChange={(v) => { notifyChange({..._options, message:v}); }}
+                            message={_options.message?_options.message:""}
+                        />
+                        <TemplatesMenu onChange={(v) => { notifyChange({..._options, message: v}); }}/>
+                    </Box>
+                    
                 }
                 </Flex>
                 <Flex >
