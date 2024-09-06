@@ -21,7 +21,7 @@ func TestServeNextAuthenticated(t *testing.T) {
 		s := r.Context().Value(authentication.AuthStatusKey).(authentication.AuthStatus)
 		c := s.Error
 		if c != nil {
-			t.Errorf("Expected nil, got %v", c.(error))
+			t.Errorf("Expected nil, got %v", c)
 		}
 		if !s.Authenticated {
 			t.Errorf("Expected AuthStatusSuccess, got %v", c)

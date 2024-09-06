@@ -9,3 +9,7 @@ auth:
   type: file
   options:
     path: handlers_testdata/users.yml
+messages:
+  - title: Message title
+    message: |
+      Message content

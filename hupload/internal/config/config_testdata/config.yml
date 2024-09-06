@@ -10,3 +10,7 @@ storage:
     path: data
     max_file_mb: 500
     max_share_mb: 2000
+messages:
+  - title: Message title
+    message: |
+      Message content
