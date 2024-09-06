@@ -1,11 +1,11 @@
-import { Message, Share } from "@/hupload";
-import { ActionIcon, Box, BoxComponentProps, Button, Flex, Input, Menu, NumberInput, rem, SegmentedControl, Stack, TextInput, useMantineTheme } from "@mantine/core";
-import { IconChevronLeft, IconChevronRight, IconListCheck } from "@tabler/icons-react";
+import { Share } from "@/hupload";
+import { ActionIcon, Box, BoxComponentProps, Button, Flex, Input, NumberInput, rem, SegmentedControl, Stack, TextInput, useMantineTheme } from "@mantine/core";
+import { IconChevronLeft, IconChevronRight } from "@tabler/icons-react";
 import { useDisclosure, useMediaQuery } from "@mantine/hooks";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import classes from './ShareEditor.module.css';
 import { MarkDownEditor } from "./MarkdownEditor";
-import { H } from "@/APIClient";
+import { TemplatesMenu } from "./TemplatesMenu";
 
 interface ShareEditorProps {
   onChange: (options: Share["options"]) => void;
@@ -21,30 +21,16 @@ export function ShareEditor(props: ShareEditorProps&BoxComponentProps) {
 
     // Initialize state
     const [_options, setOptions] = useState<Share["options"]>(options)
-    const [messages, setMessages] = useState<string[]>([])
 
     // Initialize hooks
     const [showMessage, showMessageH ] = useDisclosure(false);
     const theme = useMantineTheme()
     const isInBrowser = useMediaQuery('(min-width: +' + theme.breakpoints.xs + ')');
 
-    // effects
-    useEffect(() => {
-        H.get('/messages').then((res) => {
-            setMessages(res as string[])
-        })
-    },[])
-
-    const selectMessage = (index: number) => {
-        H.get('/messages/'+index).then((res) => {
-            const m = res as Message
-            notifyChange({..._options, message: m.message as string})
-        })
-    }
     // Functions
     const notifyChange = (o: Share["options"]) => {
-      setOptions(o)
-      onChange(o)
+        setOptions(o)
+        onChange(o)
     }
 
     return (
@@ -97,31 +83,16 @@ export function ShareEditor(props: ShareEditorProps&BoxComponentProps) {
 
                 {/* Right section */}
                 {(showMessage||!isInBrowser)&&
-                <>
-                    <MarkDownEditor 
-                        pl={isInBrowser?"sm":"0"} 
-                        style={{borderLeft: isInBrowser?"1px solid lightGray":""}} 
-                        onChange={(v) => { notifyChange({..._options, message:v}); }}
-                    >
-                        {_options.message?_options.message:""}
-                    </MarkDownEditor>
-                    {messages.length>0&&
-                    <Menu withArrow trapFocus={false}>
-                        <Menu.Target>
-                            <ActionIcon size="xs" id="template" variant={"subtle"} m={rem(3)} radius="xl" style={{position:"absolute", top: 12, right: 40}}>
-                                <IconListCheck style={{ width: rem(16), height: rem(16) }} stroke={1.5} />
-                            </ActionIcon>
-                        </Menu.Target>
-                        <Menu.Dropdown>
-                            {messages.map((m, i) => (
-                                <Menu.Item key={i+1} onClick={() => {selectMessage(i+1)}}>
-                                    {m}
-                                </Menu.Item>
-                            ))}
-                        </Menu.Dropdown>
-                    </Menu>
-                    }
-                </>
+                    <Box display="flex" flex="1" w={{base: '100%', xs: rem(500)}} pos={"relative"}>
+                        <MarkDownEditor 
+                            pl={isInBrowser?"sm":"0"} 
+                            style={{borderLeft: isInBrowser?"1px solid lightGray":""}} 
+                            onChange={(v) => { notifyChange({..._options, message:v}); }}
+                            message={_options.message?_options.message:""}
+                        />
+                        <TemplatesMenu onChange={(v) => { notifyChange({..._options, message: v}); }}/>
+                    </Box>
+                    
                 }
                 </Flex>
                 <Flex >

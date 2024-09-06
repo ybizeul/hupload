@@ -405,7 +405,7 @@ func (h *Hupload) getMessage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	t := h.Config.Values.MessageTemplates
-	if len(t) <= index && index > 0 {
+	if index <= len(t) && index > 0 {
 		writeSuccessJSON(w, t[index-1])
 		return
 	} else {

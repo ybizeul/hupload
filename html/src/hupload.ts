@@ -55,12 +55,12 @@ export function humanFileSize(bytes: number, si=false, dp=1) {
     return bytes.toFixed(dp) + ' ' + units[u];
   }
 
-  export function prettyfiedCount(count: number|null, singular: string, plural: string, empty: string|null) {
+export function prettyfiedCount(count: number|null, singular: string, plural: string, empty: string|null) {
     if (count === 0 || count === null|| count === undefined) {
-      return empty
+        return empty
     } else if (count === 1) {
-      return count.toFixed() + ' ' + singular
+        return count.toFixed() + ' ' + singular
     } else {
-      return count.toFixed() + ' ' + plural
+        return count.toFixed() + ' ' + plural
     }
-  }
+}
