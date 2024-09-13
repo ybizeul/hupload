@@ -11,7 +11,10 @@ import { ShareEditor } from "./ShareEditor";
 import { Dropzone } from "@mantine/dropzone";
 import { QueueItem, UploadQueue } from "@/UploadQueue";
 
+import { useTranslation } from "react-i18next";
+
 export function ShareComponent(props: {share: Share}) {
+    const { t } = useTranslation();
     // Initialize States
     const [share,setShare] = useState(props.share)
     const [deleted,setDeleted] = useState(false)
@@ -28,7 +31,7 @@ export function ShareComponent(props: {share: Share}) {
     const name = share.name
     const count = share.count
     const size = share.size
-    const countString = prettyfiedCount(count,"item", "items","empty")
+    const countString = prettyfiedCount(count,t("item"), t("items"),t("empty"))
     const remaining = (share.options.validity===0||share.options.validity===undefined)?null:(new Date(share.created).getTime() + share.options.validity*1000*60*60*24 - Date.now()) / 1000 / 60 / 60 / 24
 
     // Function
@@ -85,12 +88,12 @@ export function ShareComponent(props: {share: Share}) {
                         <IconClock color={(remaining===null || remaining > 0 )?"gray":"red"} size="0.8em"  width={"1em"}/>
                         <Text style={{ whiteSpace: "nowrap"}} size="xs" c="gray">{
                             (remaining === null)?
-                            "Unlimited"
+                            t("unlimited")
                             :
                             (remaining<0)?
-                            "Expired"
+                            t("expired")
                             :
-                            prettyfiedCount(remaining,"day","days",null) + " left"} | {share.options.exposure==="download"?"Guests can download":(share.options.exposure==="both"?"Guests can upload & download":"Guests can upload")}
+                            prettyfiedCount(remaining,t("day_left"),t("days_left"),null)} | {share.options.exposure==="download"?t("guests_can_download"):(share.options.exposure==="both"?t("guests_can_upload_and_download"):t("guests_can_upload"))}
                         </Text>
                     </Group>
                     {(uploading || uploadPercent > 0) &&

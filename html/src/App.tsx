@@ -1,5 +1,6 @@
 import "@mantine/core/styles.css";
 import '@mantine/dropzone/styles.css';
+import "./i18n/config.ts";
 
 import { useEffect, useState } from "react";
 import { Container, MantineProvider } from "@mantine/core";

@@ -10,8 +10,10 @@ import { useAuthContext } from "@/AuthContext";
 import { Message } from "@/Components/Message";
 import { useShare } from "@/hooks";
 import { AxiosError } from "axios";
+import { useTranslation } from "react-i18next";
 
 export function SharePage() {
+    const { t } = useTranslation();
 
     const [items, setItems] = useState<Item[]|undefined>(undefined)
     const [queueItems, setQueueItems] = useState<QueueItem[]>([])
@@ -62,7 +64,7 @@ export function SharePage() {
             <Center h="100vh">
                 <Stack align="center" pb="10em">
                 <IconClock style={{ width: '10%', height: '10%' }} stroke={1.5}/>
-                <Text size="xl" fw="700">Sorry, this share has expired</Text>
+                <Text size="xl" fw="700">{t("sorry_share_expired")}</Text>
                 </Stack>
             </Center>
         )
@@ -73,8 +75,8 @@ export function SharePage() {
             <Center h="100vh">
             <Stack align="center" pb="10em">
                 <IconHelpHexagon style={{ width: '10%', height: '10%' }} stroke={1.5}/>
-                <Text size="xl" fw="700">Share does not exists</Text>
-                <Text>Please check the link used to access this page.</Text>
+                <Text size="xl" fw="700">{t("share_does_not_exists")}</Text>
+                <Text>{t("please_check_link")}</Text>
             </Stack>
             </Center>
         )
@@ -86,7 +88,7 @@ export function SharePage() {
                 <Stack align="center" pb="10em">
                 <IconMoodSad style={{ width: '10%', height: '10%' }} stroke={1.5}/>
                 <Text size="xl" fw="700">{error.message}</Text>
-                <Anchor onClick={() => { window.location.reload()}}>Reload</Anchor>
+                <Anchor onClick={() => { window.location.reload()}}>{t("reload")}</Anchor>
                 </Stack>
             </Center>
         )
@@ -176,7 +178,7 @@ export function SharePage() {
                         )}
                     </CopyButton>
                     {canDownload() && items.length + queueItems.filter((i) => i.failed === false && i.finished === true ).length > 0 &&
-                        <Button component="a" href={'/d/'+share.name} justify="center" variant="outline" size="xs"><IconDownload style={{ width: '70%', height: '70%' }} stroke={1.5}/>Download</Button>
+                        <Button component="a" href={'/d/'+share.name} justify="center" variant="outline" size="xs"><IconDownload style={{ width: '70%', height: '70%' }} stroke={1.5}/>{t("download_button")}</Button>
                     }
                 </Group>
             </Box>
@@ -237,7 +239,7 @@ export function SharePage() {
                     </Dropzone.Idle>
                     <div>
                     <Text size="xl" inline>
-                        Drag files here or click to select files
+                        {t("drag_area")}
                     </Text>
                     </div>
                 </Group>

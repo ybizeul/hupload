@@ -12,7 +12,11 @@ import { useMediaQuery } from "@mantine/hooks";
 
 import classes from './SharesPage.module.css';
 
+import { useTranslation } from "react-i18next";
+
 export function SharesPage(props: {owner: string|null}) {
+    const { t } = useTranslation();
+
     // Initialize props
     const { owner } = props
 
@@ -89,7 +93,7 @@ export function SharesPage(props: {owner: string|null}) {
             {/* Create share button */}
             <Box ta="center" mt="xl" mb="xl">
                 <Group wrap="nowrap" gap={0} justify='center'>
-                    <Button onClick={() => {createShare()}} className={classes.button}>Create Share </Button>
+                    <Button onClick={() => {createShare()}} className={classes.button}>{t("create_share")}</Button>
                     <ResponsivePopover withDrawer={!isBrowser} >
                         <ActionIcon
                             variant="filled"
@@ -99,7 +103,7 @@ export function SharesPage(props: {owner: string|null}) {
                         >
                             <IconChevronDown style={{ width: rem(16), height: rem(16) }} stroke={1.5} />
                         </ActionIcon>
-                        <ShareEditor buttonTitle="Create" onChange={updateShareProperties}
+                        <ShareEditor buttonTitle={t("create")} onChange={updateShareProperties}
                             onClick={() => {createShare()}} 
                             options={newShareOptions}
                         />
@@ -114,7 +118,7 @@ export function SharesPage(props: {owner: string|null}) {
                 {/* Currently logged in user shares */}
                 {shares.some((s) => s.owner === owner) &&
                     <>
-                    <Text size="xl" fw="700">Your Shares</Text>
+                    <Text size="xl" fw="700">{t("your_shares")}</Text>
                     {shares.map((s) => (
                     s.owner === owner &&
                     <ShareComponent key={s.name} share={s} />
@@ -125,7 +129,7 @@ export function SharesPage(props: {owner: string|null}) {
                 {/* Other users shares */}
                 {shares.some((s) => s.owner !== owner) &&
                     <>
-                    <Text mt="md" size="xl" fw="700">Other Shares</Text>
+                    <Text mt="md" size="xl" fw="700">{t("other_shares")}</Text>
                     {shares.map((s) => (
                     s.owner === owner ||
                     <ShareComponent key={s.name} share={s} />
