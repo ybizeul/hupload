@@ -381,15 +381,13 @@ func (b *S3Backend) ListShare(ctx context.Context, name string) ([]Item, error) 
 		inputs := s3.HeadObjectInput{
 			Bucket: &b.Options.Bucket,
 			Key:    item.Key,
-
-			// ObjectAttributes: []types.ObjectAttributes{
-			// 	types.ObjectAttributesObjectSize,
-			// },
 		}
+
 		gOutput, err := b.Client.HeadObject(ctx, &inputs)
 		if err != nil {
 			return nil, err
 		}
+
 		item := &Item{
 			Path: *item.Key,
 			ItemInfo: ItemInfo{

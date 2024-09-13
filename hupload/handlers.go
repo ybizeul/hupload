@@ -1,6 +1,7 @@
 package main
 
 import (
+	"archive/zip"
 	"bufio"
 	"encoding/json"
 	"errors"
@@ -8,6 +9,7 @@ import (
 	"io"
 	"log/slog"
 	"net/http"
+	"path"
 	"strconv"
 
 	"github.com/ybizeul/hupload/internal/storage"
@@ -366,6 +368,73 @@ func (h *Hupload) getItem(w http.ResponseWriter, r *http.Request) {
 	_, err = io.Copy(w, reader)
 	if err != nil {
 		slog.Error("getItem", slog.String("error", err.Error()))
+		writeError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+}
+
+// getVersion returns hupload version
+func (h *Hupload) downloadShare(w http.ResponseWriter, r *http.Request) {
+	shareName := r.PathValue("share")
+
+	share, err := h.Config.Storage.GetShare(r.Context(), shareName)
+	if err != nil {
+		slog.Error("getItem", slog.String("error", err.Error()))
+		switch {
+		case errors.Is(err, storage.ErrInvalidShareName):
+			writeError(w, http.StatusBadRequest, "invalid share name")
+			return
+		case errors.Is(err, storage.ErrShareNotFound):
+			writeError(w, http.StatusNotFound, "share not found")
+			return
+		}
+		writeError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	user, _ := auth.AuthForRequest(r)
+
+	if user == "" && (share.Options.Exposure != "both" && share.Options.Exposure != "download") {
+		writeError(w, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+
+	items, err := h.Config.Storage.ListShare(r.Context(), shareName)
+	if err != nil {
+		slog.Error("downloadShare", slog.String("error", err.Error()))
+		writeError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	w.Header().Add("Content-Type", "application/zip")
+	w.Header().Add("Content-Disposition", "attachment")
+
+	zipWriter := zip.NewWriter(w)
+
+	for _, item := range items {
+		f, err := zipWriter.Create(path.Base(item.Path))
+		if err != nil {
+			slog.Error("downloadShare", slog.String("error", err.Error()))
+			writeError(w, http.StatusInternalServerError, err.Error())
+			return
+		}
+		d, err := h.Config.Storage.GetItemData(r.Context(), shareName, path.Base(item.Path))
+		if err != nil {
+			slog.Error("downloadShare", slog.String("error", err.Error()))
+			writeError(w, http.StatusInternalServerError, err.Error())
+			return
+		}
+		defer d.Close()
+		_, err = io.Copy(f, d)
+		if err != nil {
+			slog.Error("downloadShare", slog.String("error", err.Error()))
+			writeError(w, http.StatusInternalServerError, err.Error())
+			return
+		}
+	}
+	err = zipWriter.Close()
+	if err != nil {
+		slog.Error("downloadShare", slog.String("error", err.Error()))
 		writeError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
