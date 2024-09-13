@@ -40,6 +40,7 @@ i18n
         // `translation` is the default namespace.
         // More details about namespaces shortly.
         translation: {
+          drag_area: "Drag files here or click to select files",
           create_share: "Create Share",
           your_shares: "Your Shares",
           other_shares: "Other Shares",
@@ -73,11 +74,15 @@ i18n
           share_does_not_exists: "Share does not exists.",
           please_check_link: "Please check the link used to access this page.",
           reload: "Reload",
+
+          download_button: "Download",
+
         },
       },
       // Arabic
       fr: {
         translation: {
+            drag_area: "Glissez des fichiers ou cliquez pour sélectionner",
             create_share: "Créer un partage",
             your_shares: "Vos Partages",
             other_shares: "Autres Partages",
@@ -111,6 +116,8 @@ i18n
             share_does_not_exists: "Ce partage n'existe pas.",
             please_check_link: "Merci de vérifier le lien qui vous a été transmis.",
             reload: "Recharger",
+
+            download_button: "Télécharger",
         },
       },
     },

@@ -88,7 +88,7 @@ export function SharePage() {
                 <Stack align="center" pb="10em">
                 <IconMoodSad style={{ width: '10%', height: '10%' }} stroke={1.5}/>
                 <Text size="xl" fw="700">{error.message}</Text>
-                <Anchor onClick={() => { window.location.reload()}}>Reload</Anchor>
+                <Anchor onClick={() => { window.location.reload()}}>{t("reload")}</Anchor>
                 </Stack>
             </Center>
         )
@@ -178,7 +178,7 @@ export function SharePage() {
                         )}
                     </CopyButton>
                     {canDownload() && items.length + queueItems.filter((i) => i.failed === false && i.finished === true ).length > 0 &&
-                        <Button component="a" href={'/d/'+share.name} justify="center" variant="outline" size="xs"><IconDownload style={{ width: '70%', height: '70%' }} stroke={1.5}/>Download</Button>
+                        <Button component="a" href={'/d/'+share.name} justify="center" variant="outline" size="xs"><IconDownload style={{ width: '70%', height: '70%' }} stroke={1.5}/>{t("download_button")}</Button>
                     }
                 </Group>
             </Box>
@@ -239,7 +239,7 @@ export function SharePage() {
                     </Dropzone.Idle>
                     <div>
                     <Text size="xl" inline>
-                        Drag files here or click to select files
+                        {t("drag_area")}
                     </Text>
                     </div>
                 </Group>
