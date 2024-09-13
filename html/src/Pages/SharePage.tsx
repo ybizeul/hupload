@@ -1,6 +1,6 @@
 import { Anchor, Box, Button, Center, CopyButton, Group, Paper, rem, Stack, Text, Tooltip } from "@mantine/core";
 import { Dropzone } from "@mantine/dropzone";
-import { IconClock, IconFileZip, IconHelpHexagon, IconLink, IconMoodSad, IconUpload, IconX } from "@tabler/icons-react";
+import { IconClock, IconDownload, IconFileZip, IconHelpHexagon, IconLink, IconMoodSad, IconUpload, IconX } from "@tabler/icons-react";
 import { useCallback, useEffect, useState } from "react";
 import { H } from "../APIClient";
 import { UploadQueue, QueueItem } from "../UploadQueue";
@@ -167,13 +167,16 @@ export function SharePage() {
         <>
             {/* Top of page copy button */}
             <Box w="100%" ta="center">
-                <CopyButton value={window.location.protocol + '//' + window.location.host + '/' + share.name}>
-                    {({ copied, copy }) => (
-                    <Tooltip withArrow arrowOffset={10} arrowSize={4} label={copied?"Copied!":"Copy URL"}>
-                        <Button mb="sm" justify="center" variant="outline" color={copied ? 'teal' : 'gray'} size="xs" onClick={copy}><IconLink style={{ width: '70%', height: '70%' }} stroke={1.5}/>{share.name}</Button>
-                    </Tooltip>
-                    )}
-                </CopyButton>
+                <Group gap="md" justify={"center"} w="100%" mb="sm">
+                    <CopyButton value={window.location.protocol + '//' + window.location.host + '/' + share.name}>
+                        {({ copied, copy }) => (
+                        <Tooltip withArrow arrowOffset={10} arrowSize={4} label={copied?"Copied!":"Copy URL"}>
+                            <Button justify="center" variant="outline" color={copied ? 'teal' : 'gray'} size="xs" onClick={copy}><IconLink style={{ width: '70%', height: '70%' }} stroke={1.5}/>{share.name}</Button>
+                        </Tooltip>
+                        )}
+                    </CopyButton>
+                    <Button component="a" href={'/d/'+share.name} justify="center" variant="outline" size="xs"><IconDownload style={{ width: '70%', height: '70%' }} stroke={1.5}/>Download</Button>
+                </Group>
             </Box>
 
             {/* Message */}
