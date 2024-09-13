@@ -41,6 +41,7 @@ i18n
         // More details about namespaces shortly.
         translation: {
           drag_area: "Drag files here or click to select files",
+          no_shares: "There are currently no shares.",
           create_share: "Create Share",
           your_shares: "Your Shares",
           other_shares: "Other Shares",
@@ -83,6 +84,7 @@ i18n
       fr: {
         translation: {
             drag_area: "Glissez des fichiers ou cliquez pour sélectionner",
+            no_shares: "Il n'y a aucun partage.",
             create_share: "Créer un partage",
             your_shares: "Vos Partages",
             other_shares: "Autres Partages",
