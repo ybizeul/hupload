@@ -112,7 +112,7 @@ export function SharesPage(props: {owner: string|null}) {
             </Box>
 
             { shares.length == 0 ?
-                <Text ta="center" mt="xl">There are currently no shares</Text>
+                <Text ta="center" mt="xl">{t("no_shares")}</Text>
                 :
                 <>
                 {/* Currently logged in user shares */}
