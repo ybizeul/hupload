@@ -175,7 +175,9 @@ export function SharePage() {
                         </Tooltip>
                         )}
                     </CopyButton>
-                    <Button component="a" href={'/d/'+share.name} justify="center" variant="outline" size="xs"><IconDownload style={{ width: '70%', height: '70%' }} stroke={1.5}/>Download</Button>
+                    {canDownload() && items.length + queueItems.filter((i) => i.failed === false && i.finished === true ).length > 0 &&
+                        <Button component="a" href={'/d/'+share.name} justify="center" variant="outline" size="xs"><IconDownload style={{ width: '70%', height: '70%' }} stroke={1.5}/>Download</Button>
+                    }
                 </Group>
             </Box>
 
