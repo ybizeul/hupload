@@ -55,10 +55,12 @@ SSL)
 - Configurable max share size and max file size,
 - Basic share informations listed (number of items, total size),
 - Add instructions in Markdown for your users and define your own reusable templates.
+- Download a zip archive of all files in a share,
 - Automatic dark mode following OS settings,
 - Multi user (all admins see all shares, but see their own listed separately first),
 - Flat user file or OIDC authentication,
 - API first, everything can be done through REST calls,
+- English and French translations,
 - Minimalist, clean interface.
 
 ## Configuration
