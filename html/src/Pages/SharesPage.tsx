@@ -2,7 +2,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { H } from "../APIClient";
 import { useNavigate } from "react-router-dom";
-import { Share } from "../hupload";
+import { Share, ShareDefaults } from "../hupload";
 import {ShareComponent, ResponsivePopover} from "@/Components";
 import { ActionIcon, Anchor, Box, Button, Center, Group, rem, Stack, Text, useMantineTheme } from "@mantine/core";
 import { IconChevronDown, IconMoodSad } from "@tabler/icons-react";
@@ -59,6 +59,14 @@ export function SharesPage(props: {owner: string|null}) {
     useEffect(() => {
         updateShares()
     },[updateShares])
+
+    useEffect(() => {
+        H.get("/defaults").then(
+        (res) => {
+            const newOptions = {...newShareOptions,...res as ShareDefaults}
+            setNewShareOptions(newOptions)
+        })
+    },[])
 
     if (error) {
         return (

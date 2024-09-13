@@ -28,6 +28,7 @@ func TestLoadEmptyConfig(t *testing.T) {
 	expect := ConfigValues{
 		Title:               "Hupload",
 		DefaultValidityDays: 7,
+		DefaultExposure:     "upload",
 		Storage: TypeOptions{
 			Type: "file",
 			Options: map[string]any{
@@ -67,6 +68,7 @@ func TestLoadGoodConfig(t *testing.T) {
 	expect := ConfigValues{
 		Title:               "Hupload",
 		DefaultValidityDays: 12,
+		DefaultExposure:     "download",
 		Storage: TypeOptions{
 			Type: "file",
 			Options: map[string]any{

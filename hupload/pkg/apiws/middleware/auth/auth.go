@@ -83,10 +83,6 @@ func (a *ConfirmAuthenticator) Middleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		s, ok := r.Context().Value(authentication.AuthStatusKey).(authentication.AuthStatus)
 		if ok && s.Authenticated {
-			// if r.URL.Path == "/oidc" {
-			// 	http.Redirect(w, r, "/shares", http.StatusFound)
-			// 	return
-			// }
 			next.ServeHTTP(w, r)
 			return
 		}

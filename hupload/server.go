@@ -94,6 +94,8 @@ func (h *Hupload) setup() {
 	api.AddRoute("GET    /login", authenticator, h.postLogin)
 	api.AddRoute("POST   /login", authenticator, h.postLogin)
 
+	api.AddRoute("GET   /api/v1/defaults", authenticator, h.getDefaults)
+
 	api.AddRoute("GET    /api/v1/shares", authenticator, h.getShares)
 	api.AddRoute("POST   /api/v1/shares", authenticator, h.postShare)
 	api.AddRoute("POST   /api/v1/shares/{share}", authenticator, h.postShare)

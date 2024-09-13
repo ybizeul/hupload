@@ -3,6 +3,7 @@ package auth
 import (
 	"errors"
 	"net/http"
+	"net/http/httptest"
 	"testing"
 
 	"github.com/ybizeul/hupload/pkg/apiws/authentication"
@@ -48,6 +49,10 @@ func TestBasicAuth(t *testing.T) {
 }
 
 func TestBasicWrongCredentials(t *testing.T) {
+	confirmMiddleware := ConfirmAuthenticator{
+		Realm: "test",
+	}
+
 	c := authentication.FileAuthenticationConfig{
 		Path: "basic_testdata/users.yml",
 	}
@@ -76,15 +81,26 @@ func TestBasicWrongCredentials(t *testing.T) {
 		}
 	}
 
-	h1 := m.Middleware(http.HandlerFunc(fn1))
+	h1 := confirmMiddleware.Middleware(m.Middleware(http.HandlerFunc(fn1)))
+
+	w := httptest.NewRecorder()
 
 	req, _ := http.NewRequest("GET", "https://example.com/", nil)
 	req.SetBasicAuth("admin", "wrong")
 
-	h1.ServeHTTP(nil, req)
+	h1.ServeHTTP(w, req)
+
+	if w.Code != http.StatusUnauthorized {
+		t.Errorf("Expected 401, got %v", w.Code)
+	}
 }
 
 func TestBasicAuthNoCredentials(t *testing.T) {
+
+	confirmMiddleware := ConfirmAuthenticator{
+		Realm: "test",
+	}
+
 	c := authentication.FileAuthenticationConfig{
 		Path: "basic_testdata/users.yml",
 	}
@@ -100,18 +116,24 @@ func TestBasicAuthNoCredentials(t *testing.T) {
 	}
 
 	fn1 := func(w http.ResponseWriter, r *http.Request) {
-		s, ok := r.Context().Value(authentication.AuthStatusKey).(authentication.AuthStatus)
-		if !ok {
-			t.Errorf("Expected AuthStatus, got nil")
-		}
-		if !errors.Is(s.Error, ErrBasicAuthNoCredentials) {
-			t.Errorf("Expected ErrBasicAuthNoCredentials, got %v", c)
-		}
+		w.WriteHeader(http.StatusOK)
+		// s, ok := r.Context().Value(authentication.AuthStatusKey).(authentication.AuthStatus)
+		// if !ok {
+		// 	t.Errorf("Expected AuthStatus, got nil")
+		// }
+		// if !errors.Is(s.Error, ErrBasicAuthNoCredentials) {
+		// 	t.Errorf("Expected ErrBasicAuthNoCredentials, got %v", c)
+		// }
 	}
 
-	h1 := m.Middleware(http.HandlerFunc(fn1))
+	h1 := confirmMiddleware.Middleware(m.Middleware(http.HandlerFunc(fn1)))
 
 	req, _ := http.NewRequest("GET", "https://example.com/", nil)
 
-	h1.ServeHTTP(nil, req)
+	w := httptest.NewRecorder()
+	h1.ServeHTTP(w, req)
+
+	if w.Code != http.StatusUnauthorized {
+		t.Errorf("Expected 401, got %v", w.Code)
+	}
 }

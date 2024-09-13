@@ -29,7 +29,8 @@ type TypeOptions struct {
 // ConfigValues.Title.
 type ConfigValues struct {
 	Title               string
-	DefaultValidityDays int               `yaml:"availability_days"`
+	DefaultValidityDays int               `yaml:"default_validity_days"`
+	DefaultExposure     string            `yaml:"default_exposure"`
 	Storage             TypeOptions       `yaml:"storage"`
 	Authentication      TypeOptions       `yaml:"auth"`
 	MessageTemplates    []MessageTemplate `yaml:"messages"`
@@ -59,6 +60,7 @@ func (c *Config) Load() (fileExists bool, err error) {
 	c.Values = ConfigValues{
 		Title:               "Hupload",
 		DefaultValidityDays: 7,
+		DefaultExposure:     "upload",
 		Storage: TypeOptions{
 			Type: "file",
 			Options: map[string]any{

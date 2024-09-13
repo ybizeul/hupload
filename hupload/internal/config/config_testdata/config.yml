@@ -1,5 +1,6 @@
 title: Hupload
-availability_days: 12
+default_validity_days: 12
+default_exposure: download
 auth:
   type: file
   options:

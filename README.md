@@ -73,7 +73,8 @@ Sample configuration file :
 
 ```
 Title: Hupload
-availability_days: 12
+default_exposure: upload
+default_validity_days: 7
 auth:
   type: file
   options:
