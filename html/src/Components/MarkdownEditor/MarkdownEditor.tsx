@@ -3,6 +3,7 @@ import { useDisclosure, useUncontrolled } from "@mantine/hooks";
 import { IconEye } from "@tabler/icons-react";
 import { Message } from "../Message";
 import { FullHeightTextArea } from "./FullHeightTextArea";
+import { useTranslation } from "react-i18next";
 
 interface MarkDownEditorProps {
     onChange: (message: string) => void;
@@ -10,6 +11,8 @@ interface MarkDownEditorProps {
   }
   
   export function MarkDownEditor(props: MarkDownEditorProps&BoxComponentProps) {
+    const {t} = useTranslation()
+
     // Initialize props
     const { onChange, message } = props;
   
@@ -35,7 +38,7 @@ interface MarkDownEditorProps {
                 <IconEye style={{ width: rem(16), height: rem(16) }} stroke={1.5} />
             </ActionIcon>
             {preview?
-                <InputWrapper display="flex" style={{flexDirection:"column"}} label="Message" description="This markdown will be displayed to the user" w="100%">
+                <InputWrapper display="flex" style={{flexDirection:"column"}} label={t("message")} description={t("markdown_description")} w="100%">
                     <Paper flex="1" withBorder mt="5" pt="5.5" px="12" display="flex">
                         <Message value={markdown} />
                     </Paper>

@@ -5,6 +5,7 @@ import { useDisclosure, useMediaQuery, useUncontrolled } from "@mantine/hooks";
 import classes from './ShareEditor.module.css';
 import { MarkDownEditor } from "./MarkdownEditor";
 import { TemplatesMenu } from "./TemplatesMenu";
+import { useTranslation } from "react-i18next";
 
 interface ShareEditorProps {
   onChange: (options: Share["options"]) => void;
@@ -15,6 +16,7 @@ interface ShareEditorProps {
 }
 
 export function ShareEditor(props: ShareEditorProps&BoxComponentProps) {
+    const { t } = useTranslation()
     // Initialize props
     const { onChange, onClick, close, buttonTitle } = props;
 
@@ -58,13 +60,13 @@ export function ShareEditor(props: ShareEditorProps&BoxComponentProps) {
                         }
 
                         {/* Share exposure */}
-                        <Input.Wrapper label="Exposure" description="Guests users can :">
+                        <Input.Wrapper label={t("exposure")} description={t("guest_users_can")}>
                             <SegmentedControl 
                                 className={classes.segmented} 
                                 value={options.exposure} 
-                                data={[ { label: 'Upload', value: 'upload' }, 
-                                        { label: 'Download', value: 'download' }, 
-                                        { label: 'Both', value: 'both' },
+                                data={[ { label: t("upload"), value: 'upload' }, 
+                                        { label: t("download"), value: 'download' }, 
+                                        { label: t("both"), value: 'both' },
                                     ]}
                                 onChange={(v) => { notifyChange({...options, exposure:v}); }} transitionDuration={0} 
                             />
@@ -72,8 +74,8 @@ export function ShareEditor(props: ShareEditorProps&BoxComponentProps) {
 
                         {/* Share validity */}
                         <NumberInput
-                            label="Validity"
-                            description={"Number of days the share is valid. 0 is unlimited."}
+                            label={t("validity")}
+                            description={t("number_of_days_the_share_is_valid")}
                             value={options.validity}
                             min={0}
                             classNames={{wrapper: classes.numberInput}}
@@ -81,7 +83,7 @@ export function ShareEditor(props: ShareEditorProps&BoxComponentProps) {
                         />
 
                         {/* Share description */}
-                        <TextInput label="Description" value={options.description}
+                        <TextInput label={t("description")} value={options.description}
                             onChange={(v) => { notifyChange({...options, description:v.target.value}); }}
                         />
                     </Stack>

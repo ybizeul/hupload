@@ -10,8 +10,10 @@ import { useAuthContext } from "@/AuthContext";
 import { Message } from "@/Components/Message";
 import { useShare } from "@/hooks";
 import { AxiosError } from "axios";
+import { useTranslation } from "react-i18next";
 
 export function SharePage() {
+    const { t } = useTranslation();
 
     const [items, setItems] = useState<Item[]|undefined>(undefined)
     const [queueItems, setQueueItems] = useState<QueueItem[]>([])
@@ -62,7 +64,7 @@ export function SharePage() {
             <Center h="100vh">
                 <Stack align="center" pb="10em">
                 <IconClock style={{ width: '10%', height: '10%' }} stroke={1.5}/>
-                <Text size="xl" fw="700">Sorry, this share has expired</Text>
+                <Text size="xl" fw="700">{t("sorry_share_expired")}</Text>
                 </Stack>
             </Center>
         )
@@ -73,8 +75,8 @@ export function SharePage() {
             <Center h="100vh">
             <Stack align="center" pb="10em">
                 <IconHelpHexagon style={{ width: '10%', height: '10%' }} stroke={1.5}/>
-                <Text size="xl" fw="700">Share does not exists</Text>
-                <Text>Please check the link used to access this page.</Text>
+                <Text size="xl" fw="700">{t("share_does_not_exists")}</Text>
+                <Text>{t("please_check_link")}</Text>
             </Stack>
             </Center>
         )
