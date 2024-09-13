@@ -1587,14 +1587,12 @@ func TestMessages(t *testing.T) {
 	t.Run("Get message without auth should fail", func(t *testing.T) {
 		req := httptest.NewRequest("GET", "/api/v1/messages/1", nil)
 
-		req.SetBasicAuth("admin", "hupload")
-
 		w := httptest.NewRecorder()
 
 		h.API.Mux.ServeHTTP(w, req)
 
 		if w.Code != http.StatusUnauthorized {
-			t.Errorf("Expected status %d, got %d", http.StatusOK, w.Code)
+			t.Errorf("Expected status %d, got %d", http.StatusUnauthorized, w.Code)
 			return
 		}
 
@@ -1675,6 +1673,65 @@ func TestVersion(t *testing.T) {
 
 		if v.Version != "" {
 			t.Errorf("Expected version \"\", got %s", v.Version)
+			return
+		}
+	})
+}
+
+func TestDefaults(t *testing.T) {
+	h := getHupload(t, cfgs["file"].Config)
+	api := h.API
+
+	t.Run("Get defaults with authentication should succceed", func(t *testing.T) {
+		var (
+			req *http.Request
+			w   *httptest.ResponseRecorder
+		)
+		req = httptest.NewRequest("GET", "/api/v1/defaults", nil)
+		req.SetBasicAuth("admin", "hupload")
+		w = httptest.NewRecorder()
+
+		api.Mux.ServeHTTP(w, req)
+
+		if w.Code != http.StatusOK {
+			t.Errorf("Expected status %d, got %d", http.StatusOK, w.Code)
+			return
+		}
+
+		got := struct {
+			Validity int    `json:"validity"`
+			Exposure string `json:"exposure"`
+		}{}
+
+		json.NewDecoder(w.Body).Decode(&got)
+
+		want := struct {
+			Validity int    `json:"validity"`
+			Exposure string `json:"exposure"`
+		}{
+			Validity: 12,
+			Exposure: "download",
+		}
+
+		if !reflect.DeepEqual(got, want) {
+			t.Errorf("Expected %v, got %v", want, got)
+			return
+		}
+	})
+
+	t.Run("Get defaults without authentication should fail", func(t *testing.T) {
+		var (
+			req *http.Request
+			w   *httptest.ResponseRecorder
+		)
+		req = httptest.NewRequest("GET", "/api/v1/defaults", nil)
+
+		w = httptest.NewRecorder()
+
+		api.Mux.ServeHTTP(w, req)
+
+		if w.Code != http.StatusUnauthorized {
+			t.Errorf("Expected status %d, got %d", http.StatusUnauthorized, w.Code)
 			return
 		}
 	})

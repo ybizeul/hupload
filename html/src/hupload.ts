@@ -31,6 +31,11 @@ export interface Message {
   message: string;
 }
 
+export interface ShareDefaults {
+  expiration: number;
+  exposure: string;
+}
+
 // Utilities
 
 export function humanFileSize(bytes: number, si=false, dp=1) {

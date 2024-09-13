@@ -1,8 +1,7 @@
 import { Share } from "@/hupload";
 import { ActionIcon, Box, BoxComponentProps, Button, Flex, Input, NumberInput, rem, SegmentedControl, Stack, TextInput, useMantineTheme } from "@mantine/core";
 import { IconChevronLeft, IconChevronRight } from "@tabler/icons-react";
-import { useDisclosure, useMediaQuery } from "@mantine/hooks";
-import { useState } from "react";
+import { useDisclosure, useMediaQuery, useUncontrolled } from "@mantine/hooks";
 import classes from './ShareEditor.module.css';
 import { MarkDownEditor } from "./MarkdownEditor";
 import { TemplatesMenu } from "./TemplatesMenu";
@@ -17,10 +16,16 @@ interface ShareEditorProps {
 
 export function ShareEditor(props: ShareEditorProps&BoxComponentProps) {
     // Initialize props
-    const { onChange, onClick, close, options, buttonTitle } = props;
-
+    const { onChange, onClick, close, buttonTitle } = props;
+console.log(props.options)
     // Initialize state
-    const [_options, setOptions] = useState<Share["options"]>(options)
+    const [options, setOptions] = useUncontrolled({
+        value: props.options,
+        defaultValue: {validity: 7, exposure: "upload"},
+        finalValue: {},
+        onChange,
+      });
+ //   const [_options, setOptions] = useState<Share["options"]>(options)
 
     // Initialize hooks
     const [showMessage, showMessageH ] = useDisclosure(false);
@@ -56,12 +61,12 @@ export function ShareEditor(props: ShareEditorProps&BoxComponentProps) {
                         <Input.Wrapper label="Exposure" description="Guests users can :">
                             <SegmentedControl 
                                 className={classes.segmented} 
-                                value={_options.exposure} 
+                                value={options.exposure} 
                                 data={[ { label: 'Upload', value: 'upload' }, 
                                         { label: 'Download', value: 'download' }, 
                                         { label: 'Both', value: 'both' },
                                     ]}
-                                onChange={(v) => { notifyChange({..._options, exposure:v}); }} transitionDuration={0} 
+                                onChange={(v) => { notifyChange({...options, exposure:v}); }} transitionDuration={0} 
                             />
                         </Input.Wrapper>
 
@@ -69,15 +74,15 @@ export function ShareEditor(props: ShareEditorProps&BoxComponentProps) {
                         <NumberInput
                             label="Validity"
                             description={"Number of days the share is valid. 0 is unlimited."}
-                            value={_options.validity}
+                            value={options.validity}
                             min={0}
                             classNames={{wrapper: classes.numberInput}}
-                            onChange={(v) => { notifyChange({..._options, validity:v as number}); }}
+                            onChange={(v) => { notifyChange({...options, validity:v as number}); }}
                         />
 
                         {/* Share description */}
-                        <TextInput label="Description" value={_options.description}
-                            onChange={(v) => { notifyChange({..._options, description:v.target.value}); }}
+                        <TextInput label="Description" value={options.description}
+                            onChange={(v) => { notifyChange({...options, description:v.target.value}); }}
                         />
                     </Stack>
 
@@ -87,10 +92,10 @@ export function ShareEditor(props: ShareEditorProps&BoxComponentProps) {
                         <MarkDownEditor 
                             pl={isInBrowser?"sm":"0"} 
                             style={{borderLeft: isInBrowser?"1px solid lightGray":""}} 
-                            onChange={(v) => { notifyChange({..._options, message:v}); }}
-                            message={_options.message?_options.message:""}
+                            onChange={(v) => { notifyChange({...options, message:v}); }}
+                            message={options.message?options.message:""}
                         />
-                        <TemplatesMenu onChange={(v) => { notifyChange({..._options, message: v}); }}/>
+                        <TemplatesMenu onChange={(v) => { notifyChange({...options, message: v}); }}/>
                     </Box>
                     
                 }

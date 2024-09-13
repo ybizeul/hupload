@@ -395,6 +395,18 @@ func (h *Hupload) getMessages(w http.ResponseWriter, r *http.Request) {
 	writeSuccessJSON(w, titles)
 }
 
+func (h *Hupload) getDefaults(w http.ResponseWriter, r *http.Request) {
+	defaults := struct {
+		Validity int    `json:"validity"`
+		Exposure string `json:"exposure"`
+	}{
+		Validity: h.Config.Values.DefaultValidityDays,
+		Exposure: h.Config.Values.DefaultExposure,
+	}
+
+	writeSuccessJSON(w, defaults)
+}
+
 var ErrMessageInvalidIndex = errors.New("invalid index")
 var ErrMessageIndexOutOfBounds = errors.New("index out of bounds")
 
