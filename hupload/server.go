@@ -87,6 +87,7 @@ func (h *Hupload) setup() {
 	api.AddPublicRoute("POST   /api/v1/shares/{share}/items/{item}", authenticator, h.postItem)
 	api.AddPublicRoute("DELETE /api/v1/shares/{share}/items/{item}", authenticator, h.deleteItem)
 
+	api.AddPublicRoute("GET    /d/{share}", authenticator, h.downloadShare)
 	api.AddPublicRoute("GET    /d/{share}/{item}", authenticator, h.getItem)
 
 	// Protected routes
@@ -94,7 +95,7 @@ func (h *Hupload) setup() {
 	api.AddRoute("GET    /login", authenticator, h.postLogin)
 	api.AddRoute("POST   /login", authenticator, h.postLogin)
 
-	api.AddRoute("GET   /api/v1/defaults", authenticator, h.getDefaults)
+	api.AddRoute("GET    /api/v1/defaults", authenticator, h.getDefaults)
 
 	api.AddRoute("GET    /api/v1/shares", authenticator, h.getShares)
 	api.AddRoute("POST   /api/v1/shares", authenticator, h.postShare)
@@ -107,7 +108,7 @@ func (h *Hupload) setup() {
 
 	api.AddRoute("GET    /api/v1/version", authenticator, h.getVersion)
 
-	api.AddRoute("GET /api/v1/*", authenticator, func(w http.ResponseWriter, r *http.Request) {
+	api.AddRoute("GET    /api/v1/*", authenticator, func(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadRequest, "Error")
 	})
 

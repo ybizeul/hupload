@@ -691,6 +691,40 @@ func TestGetShare(t *testing.T) {
 	}
 }
 
+func TestDownloadShare(t *testing.T) {
+	for name, cfg := range cfgs {
+		if !cfg.Enabled {
+			continue
+		}
+
+		shareName := "downloadshare"
+		h := getHupload(t, cfg.Config)
+
+		makeShare(t, h, shareName, storage.Options{Exposure: "download"})
+		t.Cleanup(func() {
+			_ = h.Config.Storage.DeleteShare(context.Background(), shareName)
+		})
+
+		makeItem(t, h, shareName, "newfile1.txt", 1*1024*1024)
+		makeItem(t, h, shareName, "newfile2.txt", 1*1024*1024)
+
+		t.Run(name, func(t *testing.T) {
+			t.Cleanup(func() { cfg.Cleanup(h) })
+			api := h.API
+
+			req := httptest.NewRequest("GET", path.Join("/d/", shareName), nil)
+
+			w := httptest.NewRecorder()
+
+			api.Mux.ServeHTTP(w, req)
+
+			if w.Code != http.StatusOK {
+				t.Errorf("Expected status %d, got %d", http.StatusOK, w.Code)
+				return
+			}
+		})
+	}
+}
 func TestDeleteShare(t *testing.T) {
 	for name, cfg := range cfgs {
 		if !cfg.Enabled {
