@@ -17,7 +17,7 @@ interface ShareEditorProps {
 export function ShareEditor(props: ShareEditorProps&BoxComponentProps) {
     // Initialize props
     const { onChange, onClick, close, buttonTitle } = props;
-console.log(props.options)
+
     // Initialize state
     const [options, setOptions] = useUncontrolled({
         value: props.options,
