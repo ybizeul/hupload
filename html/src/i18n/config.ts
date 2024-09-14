@@ -45,6 +45,7 @@ i18n
           create_share: "Create Share",
           your_shares: "Your Shares",
           other_shares: "Other Shares",
+
           guests_can_upload: "Guests can upload",
           guests_can_download: "Guests can download",
           guests_can_upload_and_download: "Guests can upload & download",
@@ -55,6 +56,7 @@ i18n
           days_left: "days left",
           unlimited: "Unlimited",
           expired: "Expired",
+          created: "Created",
 
           exposure: "Exposure",
           guest_users_can: "Guest users can :",
@@ -88,6 +90,7 @@ i18n
             create_share: "Créer un partage",
             your_shares: "Vos Partages",
             other_shares: "Autres Partages",
+
             guests_can_upload: "Les invités peuvent envoyer",
             guests_can_download: "Les invités peuvent télécharger",
             guests_can_upload_and_download: "Les invités peuvent envoyer & télécharger",
@@ -98,6 +101,7 @@ i18n
             days_left: "jours restant",
             unlimited: "Illimité",
             expired: "Expiré",
+            created: "Créé le",
 
             exposure: "Type de partage",
             guest_users_can: "Les invités peuvent :",
