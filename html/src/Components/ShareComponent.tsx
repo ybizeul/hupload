@@ -108,7 +108,12 @@ export function ShareComponent(props: {share: Share}) {
                                 <Group flex="1" gap="0" align="center">
                                     <Stack flex="1" gap={0}>
                                         <Anchor style={{ whiteSpace: "nowrap"}} component={Link} to={'/'+name}><Text>{name}</Text></Anchor>
-                                        {share.options.description && <Text w="100%" size="xs" c="gray">{share.options.description}</Text>}
+                                        <Text w="100%" size="xs" c="gray">
+                                            {share.options.description?share.options.description
+                                        :
+                                            t("created") + " " + new Date(share.created).toLocaleString([],{dateStyle:"long",timeStyle:"short"})
+                                        }
+                                        </Text>
                                     </Stack>
                                     <Stack gap="0" align="flex-end">
                                         <Text mr="xs" size="xs" c="gray">{countString + (size?(' | ' + humanFileSize(size)):'')}</Text>
