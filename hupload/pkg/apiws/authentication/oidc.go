@@ -2,8 +2,13 @@ package authentication
 
 import (
 	"context"
+	"crypto/rand"
+	"encoding/base64"
 	"encoding/json"
+	"io"
+	"log/slog"
 	"net/http"
+	"time"
 
 	"github.com/coreos/go-oidc"
 	"golang.org/x/oauth2"
@@ -21,6 +26,25 @@ type AuthenticationOIDC struct {
 
 	Provider *oidc.Provider
 	Config   oauth2.Config
+}
+
+func randString(nByte int) (string, error) {
+	b := make([]byte, nByte)
+	if _, err := io.ReadFull(rand.Reader, b); err != nil {
+		return "", err
+	}
+	return base64.RawURLEncoding.EncodeToString(b), nil
+}
+
+func setCallbackCookie(w http.ResponseWriter, r *http.Request, name, value string) {
+	c := &http.Cookie{
+		Name:     name,
+		Value:    value,
+		MaxAge:   int(time.Hour.Seconds()),
+		Secure:   r.TLS != nil,
+		HttpOnly: true,
+	}
+	http.SetCookie(w, c)
 }
 
 func NewAuthenticationOIDC(o AuthenticationOIDCConfig) (*AuthenticationOIDC, error) {
@@ -44,17 +68,34 @@ func NewAuthenticationOIDC(o AuthenticationOIDCConfig) (*AuthenticationOIDC, err
 		Endpoint: result.Provider.Endpoint(),
 
 		// "openid" is a required scope for OpenID Connect flows.
-		Scopes: []string{oidc.ScopeOpenID, "profile", "email", "offline_access", "preferred_username"},
+		Scopes: []string{oidc.ScopeOpenID, "profile", "email"},
 	}
 
 	return result, nil
 }
 
 func (o *AuthenticationOIDC) AuthenticateRequest(w http.ResponseWriter, r *http.Request) error {
+	state, err := randString(16)
+	if err != nil {
+		http.Error(w, "Internal error", http.StatusInternalServerError)
+		return err
+	}
+	nonce, err := randString(16)
+	if err != nil {
+		http.Error(w, "Internal error", http.StatusInternalServerError)
+		return err
+	}
+
+	setCallbackCookie(w, r, "state", state)
+	setCallbackCookie(w, r, "nonce", nonce)
+
 	if r.URL.Path == "/login" {
-		http.Redirect(w, r, o.Config.AuthCodeURL("state"), http.StatusFound)
+		http.Redirect(w, r, o.Config.AuthCodeURL(state, oidc.Nonce(nonce)), http.StatusFound)
 		return ErrAuthenticationRedirect
 	}
+
+	//http.Redirect(w, r, o.Config.AuthCodeURL(state, oidc.Nonce(nonce)), http.StatusFound)
+
 	return nil
 }
 
@@ -87,38 +128,44 @@ func (o *AuthenticationOIDC) CallbackFunc(h http.Handler) (func(w http.ResponseW
 			return
 		}
 
-		// Extract custom claims
-		var claims struct {
-			Sub      string `json:"sub"`
-			Email    string `json:"email"`
-			Verified bool   `json:"email_verified"`
+		nonce, err := r.Cookie("nonce")
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			_ = json.NewEncoder(w).Encode(err)
+			//http.Error(w, "nonce not found", http.StatusBadRequest)
+			return
+		}
+		if idToken.Nonce != nonce.Value {
+			w.WriteHeader(http.StatusBadRequest)
+			_ = json.NewEncoder(w).Encode(err)
+			//http.Error(w, "nonce did not match", http.StatusBadRequest)
+			return
 		}
 
+		// Extract custom claims
+		var claims struct {
+			Email    string `json:"email"`
+			Username string `json:"preferred_username"`
+		}
 		if err := idToken.Claims(&claims); err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			_ = json.NewEncoder(w).Encode(err)
 			return
 		}
-		ServeNextAuthenticated(claims.Sub, h, w, r)
+
+		var rmessage json.RawMessage
+		if err := idToken.Claims(&rmessage); err == nil {
+			b, _ := json.MarshalIndent(rmessage, "", "    ")
+			slog.Info("ID Token Claims: %s", slog.String("claims", string(b)))
+		}
+
+		ServeNextAuthenticated(claims.Username, h, w, r)
 	}, true
 }
 
 func ServeNextAuthenticated(user string, next http.Handler, w http.ResponseWriter, r *http.Request) {
 	ctx := context.WithValue(r.Context(), AuthStatusKey, AuthStatus{Authenticated: true, User: user})
 	next.ServeHTTP(w, r.WithContext(ctx))
-	// if user == "" {
-	// 	next.ServeHTTP(w,
-	// 		r.WithContext(
-	// 			context.WithValue(
-	// 				r.Context(),
-	// 				AuthStatusKey,AuthStatus{Authenticated: true, User: ""},
-	// 			),
-	// 		),
-	// 	)
-	// } else {
-	// 	ctx := context.WithValue(r.Context(), AuthStatus{Authenticated: true, User: user})
-	// 	next.ServeHTTP(w, r.WithContext(ctx))
-	// }
 }
 
 func (o *AuthenticationOIDC) ShowLoginForm() bool {
