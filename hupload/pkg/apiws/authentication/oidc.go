@@ -5,8 +5,8 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"io"
-	"log/slog"
 	"net/http"
 	"time"
 
@@ -68,7 +68,7 @@ func NewAuthenticationOIDC(o AuthenticationOIDCConfig) (*AuthenticationOIDC, err
 		Endpoint: result.Provider.Endpoint(),
 
 		// "openid" is a required scope for OpenID Connect flows.
-		Scopes: []string{oidc.ScopeOpenID, "profile", "email"},
+		Scopes: []string{oidc.ScopeOpenID, "email", "profile"},
 	}
 
 	return result, nil
@@ -107,8 +107,7 @@ func (o *AuthenticationOIDC) CallbackFunc(h http.Handler) (func(w http.ResponseW
 
 		oauth2Token, err := o.Config.Exchange(r.Context(), r.URL.Query().Get("code"))
 		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			_ = json.NewEncoder(w).Encode(err)
+			ServeNextError(h, errors.New("code verification failed"), w, r)
 			return
 		}
 
@@ -123,21 +122,18 @@ func (o *AuthenticationOIDC) CallbackFunc(h http.Handler) (func(w http.ResponseW
 		// Parse and verify ID Token payload.
 		idToken, err := verifier.Verify(r.Context(), rawIDToken)
 		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			_ = json.NewEncoder(w).Encode(err)
+			ServeNextError(h, errors.New("token verification failed"), w, r)
 			return
 		}
 
 		nonce, err := r.Cookie("nonce")
 		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			_ = json.NewEncoder(w).Encode(err)
+			ServeNextError(h, errors.New("missing nonce"), w, r)
 			//http.Error(w, "nonce not found", http.StatusBadRequest)
 			return
 		}
 		if idToken.Nonce != nonce.Value {
-			w.WriteHeader(http.StatusBadRequest)
-			_ = json.NewEncoder(w).Encode(err)
+			ServeNextError(h, errors.New("nonce doesn't match"), w, r)
 			//http.Error(w, "nonce did not match", http.StatusBadRequest)
 			return
 		}
@@ -148,18 +144,21 @@ func (o *AuthenticationOIDC) CallbackFunc(h http.Handler) (func(w http.ResponseW
 			Username string `json:"preferred_username"`
 		}
 		if err := idToken.Claims(&claims); err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			_ = json.NewEncoder(w).Encode(err)
+			ServeNextError(h, err, w, r)
 			return
 		}
 
-		var rmessage json.RawMessage
-		if err := idToken.Claims(&rmessage); err == nil {
-			b, _ := json.MarshalIndent(rmessage, "", "    ")
-			slog.Info("ID Token Claims: %s", slog.String("claims", string(b)))
-		}
+		// var rmessage json.RawMessage
+		// if err := idToken.Claims(&rmessage); err == nil {
+		// 	b, _ := json.MarshalIndent(rmessage, "", "    ")
+		// 	slog.Info("ID Token Claims: %s", slog.String("claims", string(b)))
+		// }
 
-		ServeNextAuthenticated(claims.Username, h, w, r)
+		if claims.Username != "" {
+			ServeNextAuthenticated(claims.Username, h, w, r)
+			return
+		}
+		h.ServeHTTP(w, r)
 	}, true
 }
 
@@ -167,7 +166,10 @@ func ServeNextAuthenticated(user string, next http.Handler, w http.ResponseWrite
 	ctx := context.WithValue(r.Context(), AuthStatusKey, AuthStatus{Authenticated: true, User: user})
 	next.ServeHTTP(w, r.WithContext(ctx))
 }
-
+func ServeNextError(next http.Handler, err error, w http.ResponseWriter, r *http.Request) {
+	ctx := context.WithValue(r.Context(), AuthStatusKey, AuthStatus{Authenticated: false, User: "", Error: err})
+	next.ServeHTTP(w, r.WithContext(ctx))
+}
 func (o *AuthenticationOIDC) ShowLoginForm() bool {
 	return false
 }

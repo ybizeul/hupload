@@ -27,9 +27,9 @@ Screenshot Home Page
         Sleep            0.5 second
         Click            css=\#showEditor
         Sleep            0.5 second
-        Take Screenshot  ${CURDIR}/../readme_images/properties-${theme}.png  crop={'x': 0, 'y': 216, 'width': 800, 'height': 345}
+        Take Screenshot  ${CURDIR}/../readme_images/properties-${theme}.png  crop={'x': 0, 'y': 222, 'width': 800, 'height': 346}
         Click            css=\#preview
-        Take Screenshot  ${CURDIR}/../readme_images/properties-preview-${theme}.png  crop={'x': 0, 'y': 216, 'width': 800, 'height': 345}
+        Take Screenshot  ${CURDIR}/../readme_images/properties-preview-${theme}.png  crop={'x': 0, 'y': 222, 'width': 800, 'height': 346}
 
 
         Click            css=\#kuva-yibi-bata \#edit

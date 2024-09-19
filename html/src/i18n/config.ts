@@ -59,9 +59,9 @@ i18n
           created: "Created",
 
           exposure: "Exposure",
-          guest_users_can: "Guest users can :",
-          upload: "Upload",
-          download: "Download",
+          you_want_to: "You want to :",
+          send: "Send",
+          receive: "Receive",
           both: "Both",
 
           validity: "Validity",
@@ -104,9 +104,9 @@ i18n
             created: "Créé le",
 
             exposure: "Type de partage",
-            guest_users_can: "Les invités peuvent :",
-            upload: "Envoyer",
-            download: "Reçevoir",
+            you_want_to: "Vous souhaitez :",
+            send: "Envoyer",
+            receive: "Reçevoir",
             both: "Les deux",
 
             validity: "Expiration",

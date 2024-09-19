@@ -148,7 +148,15 @@ func (a *APIWS) Start() {
 	if _, ok := a.Authentication.CallbackFunc(nil); ok {
 		// If there is, define action to redirect to "/shares"
 		handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			http.Redirect(w, r, "/shares", http.StatusFound)
+			s, ok := r.Context().Value(authentication.AuthStatusKey).(authentication.AuthStatus)
+			if ok && s.Authenticated {
+				http.Redirect(w, r, "/shares", http.StatusFound)
+				return
+			}
+			if r.URL.Query().Get("error") != "" {
+				http.Error(w, r.URL.Query().Get("error"), http.StatusUnauthorized)
+				return
+			}
 		})
 		m := auth.NewJWTAuthMiddleware(os.Getenv("JWT_SECRET"))
 		f, _ := a.Authentication.CallbackFunc(m.Middleware(handler))

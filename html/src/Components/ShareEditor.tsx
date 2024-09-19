@@ -60,12 +60,12 @@ export function ShareEditor(props: ShareEditorProps&BoxComponentProps) {
                         }
 
                         {/* Share exposure */}
-                        <Input.Wrapper label={t("exposure")} description={t("guest_users_can")}>
+                        <Input.Wrapper label={t("exposure")} description={t("you_want_to")}>
                             <SegmentedControl 
                                 className={classes.segmented} 
                                 value={options.exposure} 
-                                data={[ { label: t("upload"), value: 'upload' }, 
-                                        { label: t("download"), value: 'download' }, 
+                                data={[ { label: t("receive"), value: 'upload' }, 
+                                        { label: t("send"), value: 'download' }, 
                                         { label: t("both"), value: 'both' },
                                     ]}
                                 onChange={(v) => { notifyChange({...options, exposure:v}); }} transitionDuration={0} 
