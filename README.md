@@ -3,16 +3,17 @@
 
 # Hupload
 
-Hupload is a minimalist file uploader for your customers.
+Hupload is a minimalist file sharing solution for your customers.
 
-With technical support in mind, it simplifies the process of receiving log files
-or support bundles from your users.
+With technical support in mind, it simplifies the process of sharing log files
+or support bundles from/to your users.
 
 It is a web portal and an API for direct integration into your products.
 
 The overall concept is that share names are random tokens that can be generated
 by **Hupload** and are publicly accessible so users don't have to log in to 
-upload content.
+upload content. SHare creation page is protected by a password or single
+sign-on.
 
 Note that "Copy" buttons will not work over insecure connection (http without 
 SSL)
@@ -50,7 +51,7 @@ SSL)
 ## Features
 
 - Quickly create random links and share with users,
-- Easy to use drag and drop interface for uploads,
+- Easy to use drag and drop interface,
 - S3 or filesystem storage,
 - Configurable max share size and max file size,
 - Basic share informations listed (number of items, total size),
@@ -128,18 +129,18 @@ S3 options can also be set in environment using `AWS_DEFAULT_REGION`,
 in configuration file have precedence.
 
 Note that `region` is mandatory for AWS API to work correctly even if you
-are using your own S3 server like minio.
+are using your own S3 server like [minio](https://min.io).
 
 ### OIDC 
 
-OIDC redirect url is `/oidc` and you can provide application details with the
-following configuration :
+OIDC redirect url is `/oidc` and you can provide configuration details with the
+following :
 
 ```
 auth:
   type: oidc
   options:
-    provider_url: https://auth.tynsoe.org/application/o/hupload/
+    provider_url: https://auth.company.com/application/o/hupload/
     client_id: <client_id>
     client_secret: <client_secret>
     redirect_url: https://hupload.company.com/oidc
@@ -220,4 +221,4 @@ When creating or updateing a new share, you can define parameters in the JSON bo
 | `validity`    | `number`                           | Number of days the share is valid
 | `exposure`    | `enum["upload","download","both"]` | Whether guest users can upload files, download files or do both
 | `description` | `string`                           | A short description displayed in shares view
-| `message`     | `url encoded markdown`             | Instructions in markdown visible to the guest
+| `message`     | `string`             | Instructions in markdown visible to the guest
