@@ -11,6 +11,7 @@ import { SharePage, Login, SharesPage } from "@/Pages";
 import { AuthContext } from "@/AuthContext";
 import { VersionComponent, Haffix } from "@/Components";
 import { AuthInfo, H } from "./APIClient";
+import { ErrorPage } from "./Pages/ErrorPage.tsx";
 
 
 
@@ -38,8 +39,9 @@ export default function App() {
         <BrowserRouter>
             <AuthContext.Provider value={{authInfo,setAuthInfo}}>
             <Routes>
-                <Route path="/" element={<Login />}/>
-                <Route path="/shares" element={<>{authInfo?.user&&<Haffix/>}<SharesPage owner={authInfo?.user?(authInfo?.user):null}/></>} />
+            <Route path="/" element={<Login />}/>
+            <Route path="/error" element={<ErrorPage/>}/>
+            <Route path="/shares" element={<>{authInfo?.user&&<Haffix/>}<SharesPage owner={authInfo?.user?(authInfo?.user):null}/></>} />
                 <Route path=":share" element={<>{authInfo?.user&&<Haffix/>}<SharePage /></>} />
             </Routes>
             </AuthContext.Provider>

@@ -8,6 +8,7 @@ import (
 	"errors"
 	"io"
 	"net/http"
+	"slices"
 	"time"
 
 	"github.com/coreos/go-oidc"
@@ -140,12 +141,30 @@ func (o *AuthenticationOIDC) CallbackFunc(h http.Handler) (func(w http.ResponseW
 
 		// Extract custom claims
 		var claims struct {
-			Email    string `json:"email"`
-			Username string `json:"preferred_username"`
+			Email           string `json:"email"`
+			Username        string `json:"preferred_username"`
+			Audience        any    `json:"aud"`
+			AuthorizedParty string `json:"azp"`
+			Nonce           string `json:"nonce"`
 		}
 		if err := idToken.Claims(&claims); err != nil {
 			ServeNextError(h, err, w, r)
 			return
+		}
+
+		// Validate audience
+		switch claims.Audience.(type) {
+		case string:
+			if claims.Audience != o.Options.ClientID {
+				ServeNextError(h, errors.New("User not authorized for application"), w, r)
+				return
+			}
+
+		case []string:
+			if !slices.Contains(claims.Audience.([]string), o.Options.ClientID) {
+				ServeNextError(h, errors.New("User not authorized for application"), w, r)
+				return
+			}
 		}
 
 		// var rmessage json.RawMessage

@@ -153,10 +153,7 @@ func (a *APIWS) Start() {
 				http.Redirect(w, r, "/shares", http.StatusFound)
 				return
 			}
-			if r.URL.Query().Get("error") != "" {
-				http.Error(w, r.URL.Query().Get("error"), http.StatusUnauthorized)
-				return
-			}
+			http.Redirect(w, r, "/error?"+r.URL.RawQuery, http.StatusFound)
 		})
 		m := auth.NewJWTAuthMiddleware(os.Getenv("JWT_SECRET"))
 		f, _ := a.Authentication.CallbackFunc(m.Middleware(handler))

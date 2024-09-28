@@ -11,6 +11,7 @@ import { Message } from "@/Components/Message";
 import { useShare } from "@/hooks";
 import { AxiosError } from "axios";
 import { useTranslation } from "react-i18next";
+import { ErrorPage } from "./ErrorPage";
 
 export function SharePage() {
     const { t } = useTranslation();
@@ -72,13 +73,7 @@ export function SharePage() {
 
     if (shareError?.response?.status === 404) {
         return (
-            <Center h="100vh">
-            <Stack align="center" pb="10em">
-                <IconHelpHexagon style={{ width: '10%', height: '10%' }} stroke={1.5}/>
-                <Text size="xl" fw="700">{t("share_does_not_exists")}</Text>
-                <Text>{t("please_check_link")}</Text>
-            </Stack>
-            </Center>
+            <ErrorPage text={t("share_does_not_exists")} subText={t("please_check_link")} icon={IconHelpHexagon}/>
         )
     }
 
