@@ -15,6 +15,7 @@ import { useTranslation } from "react-i18next";
 
 export function ShareComponent(props: {share: Share}) {
     const { t } = useTranslation();
+    
     // Initialize States
     const [share,setShare] = useState(props.share)
     const [deleted,setDeleted] = useState(false)
@@ -155,7 +156,7 @@ export function ShareComponent(props: {share: Share}) {
                                                 <IconDots style={{ width: '70%', height: '70%' }} stroke={1.5}/>
                                             </ActionIcon>
                                         </Tooltip>
-                                        <ShareEditor buttonTitle="Update" onChange={setNewOptions} onClick={updateShare} options={newOptions}/>
+                                        <ShareEditor buttonTitle={t("update")} onChange={setNewOptions} onClick={updateShare} options={newOptions}/>
                                     </ResponsivePopover>
                                 </ActionIconGroup>
                             </Flex>

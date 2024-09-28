@@ -40,12 +40,29 @@ i18n
         // `translation` is the default namespace.
         // More details about namespaces shortly.
         translation: {
+          // Generic
+          copy_url: "Copy URL",
+          copied: "Copied!",
+          download_button: "Download",
+
+          // Share page
           drag_area: "Drag files here or click to select files",
+
+          sorry_share_expired: "Sorry, this share has expired.",
+          share_does_not_exists: "Share does not exists.",
+          please_check_link: "Please check the link used to access this page.",
+          reload: "Reload",
+
+          download_all: "Download all",
+
+          // Shares page
           no_shares: "There are currently no shares.",
           create_share: "Create Share",
           your_shares: "Your Shares",
           other_shares: "Other Shares",
+          create: "Create",
 
+          // Share component
           guests_can_upload: "Guests can upload",
           guests_can_download: "Guests can download",
           guests_can_upload_and_download: "Guests can upload & download",
@@ -57,7 +74,15 @@ i18n
           unlimited: "Unlimited",
           expired: "Expired",
           created: "Created",
+          delete_share: "Delete Share",
+          edit_share: "Edit",
+          update: "Update",
 
+          // Item Component
+          delete_file: "Delete",
+          delete_this_item: "Delete this file?",
+
+          // Share editor
           exposure: "Exposure",
           you_want_to: "You want to :",
           send: "Send",
@@ -68,36 +93,41 @@ i18n
           number_of_days_the_share_is_valid: "Number of days the share is valid. 0 is unlimited.",
           description: "Description",
 
-          create: "Create",
-
+          // Markdown Editor
           message: "Message",
           markdown_description: "This markdown will be displayed to the user",
 
-          sorry_share_expired: "Sorry, this share has expired.",
-          share_does_not_exists: "Share does not exists.",
-          please_check_link: "Please check the link used to access this page.",
-          reload: "Reload",
-
-          delete_share: "Delete Share",
-          edit_share: "Edit",
-
-          copy_url: "Copy URL",
-          copied: "Copied!",
-          download_all: "Download all",
-          download_button: "Download",
-          delete_file: "Delete",
-          delete_this_item: "Delete this file?",
+          // Haffix
+          shares: "Shares",
+          logout: "Logout",
         },
       },
       // Arabic
       fr: {
         translation: {
+            // Generic
+            copy_url: "Copier le lien",
+            copied: "Copié!",
+            download_button: "Télécharger",
+
+            // Share page
             drag_area: "Glissez des fichiers ou cliquez pour sélectionner",
+
+            sorry_share_expired: "Désolé, ce partage a expiré.",
+            share_does_not_exists: "Ce partage n'existe pas.",
+            please_check_link: "Merci de vérifier le lien qui vous a été transmis.",
+            reload: "Recharger",
+
+            download_all: "Tout Télécharger",
+
+            // Shares page
             no_shares: "Il n'y a aucun partage.",
             create_share: "Créer un partage",
             your_shares: "Vos Partages",
             other_shares: "Autres Partages",
+            create: "Créer",
 
+            // Share component
             guests_can_upload: "Les invités peuvent envoyer",
             guests_can_download: "Les invités peuvent télécharger",
             guests_can_upload_and_download: "Les invités peuvent envoyer & télécharger",
@@ -109,7 +139,15 @@ i18n
             unlimited: "Illimité",
             expired: "Expiré",
             created: "Créé le",
+            delete_share: "Supprimer",
+            edit_share: "Modifier",
+            update: "Mettre à jour",
 
+            // Item Component
+            delete_file: "Supprimer",
+            delete_this_item: "Supprimer ce fichier ?",
+
+            // Share editor
             exposure: "Type de partage",
             you_want_to: "Vous souhaitez :",
             send: "Envoyer",
@@ -120,24 +158,13 @@ i18n
             number_of_days_the_share_is_valid: "Nombre de jours pendant lesquels le partage est valide. 0 signifie illimité.",
             description: "Description",
 
-            create: "Créer",
-
+            // Markdown Editor
             message: "Message",
             markdown_description: "Ce markdown sera affiché à l'utilisateur",
 
-            sorry_share_expired: "Désolé, ce partage a expiré.",
-            share_does_not_exists: "Ce partage n'existe pas.",
-            please_check_link: "Merci de vérifier le lien qui vous a été transmis.",
-            reload: "Recharger",
-
-            delete_share: "Supprimer",
-            edit_share: "Modifier",
-            copy_url: "Copier le lien",
-            copied: "Copié!",
-            download_all: "Tout Télécharger",
-            download_button: "Télécharger",
-            delete_file: "Supprimer",
-            delete_this_item: "Supprimer ce fichier ?",
+            // Haffix
+            shares: "Partages",
+            logout: "Quitter",
         },
       },
     },
