@@ -167,13 +167,15 @@ export function SharePage() {
                 <Group gap="md" justify={"center"} w="100%" mb="sm">
                     <CopyButton value={window.location.protocol + '//' + window.location.host + '/' + share.name}>
                         {({ copied, copy }) => (
-                        <Tooltip withArrow arrowOffset={10} arrowSize={4} label={copied?"Copied!":"Copy URL"}>
+                        <Tooltip withArrow arrowOffset={10} arrowSize={4} label={copied?t("copied"):t("copy_url")}>
                             <Button justify="center" variant="outline" color={copied ? 'teal' : 'gray'} size="xs" onClick={copy}><IconLink style={{ width: '70%', height: '70%' }} stroke={1.5}/>{share.name}</Button>
                         </Tooltip>
                         )}
                     </CopyButton>
                     {canDownload() && items.length + queueItems.filter((i) => i.failed === false && i.finished === true ).length > 0 &&
-                        <Button component="a" href={'/d/'+share.name} justify="center" variant="outline" size="xs"><IconDownload style={{ width: '70%', height: '70%' }} stroke={1.5}/>{t("download_button")}</Button>
+                        <Tooltip withArrow arrowOffset={10} arrowSize={4} label={t("download_all")}>
+                            <Button component="a" href={'/d/'+share.name} justify="center" variant="outline" size="xs"><IconDownload style={{ width: '70%', height: '70%' }} stroke={1.5}/>{t("download_button")}</Button>
+                        </Tooltip>
                     }
                 </Group>
             </Box>

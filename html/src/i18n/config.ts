@@ -78,8 +78,15 @@ i18n
           please_check_link: "Please check the link used to access this page.",
           reload: "Reload",
 
-          download_button: "Download",
+          delete_share: "Delete Share",
+          edit_share: "Edit",
 
+          copy_url: "Copy URL",
+          copied: "Copied!",
+          download_all: "Download all",
+          download_button: "Download",
+          delete_file: "Delete",
+          delete_this_item: "Delete this file?",
         },
       },
       // Arabic
@@ -123,7 +130,14 @@ i18n
             please_check_link: "Merci de vérifier le lien qui vous a été transmis.",
             reload: "Recharger",
 
+            delete_share: "Supprimer",
+            edit_share: "Modifier",
+            copy_url: "Copier le lien",
+            copied: "Copié!",
+            download_all: "Tout Télécharger",
             download_button: "Télécharger",
+            delete_file: "Supprimer",
+            delete_this_item: "Supprimer ce fichier ?",
         },
       },
     },

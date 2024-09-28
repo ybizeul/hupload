@@ -125,7 +125,7 @@ export function ShareComponent(props: {share: Share}) {
                                     {/* Copy button */}
                                     <CopyButton value={window.location.protocol + '//' + window.location.host + '/' + name}>
                                     {({ copied, copy }) => (
-                                        <Tooltip withArrow arrowOffset={10} arrowSize={4} label={copied?"Copied!":"Copy URL"}>
+                                        <Tooltip withArrow arrowOffset={10} arrowSize={4} label={copied?t("copied"):t("copy_url")}>
                                             <ActionIcon id="copy" variant="light" color={copied ? 'teal' : 'blue'} onClick={copy} >
                                                 <IconLink style={{ width: '70%', height: '70%' }} stroke={1.5}/>
                                             </ActionIcon>
@@ -136,7 +136,7 @@ export function ShareComponent(props: {share: Share}) {
                                     {/* Delete button with confirmation Popover */}
                                     <Popover width={200} position="bottom" withArrow shadow="md">
                                         <Popover.Target>
-                                            <Tooltip withArrow arrowOffset={10} arrowSize={4} label="Delete Share">
+                                            <Tooltip withArrow arrowOffset={10} arrowSize={4} label={t("delete_share")}>
                                                 <ActionIcon id="delete" variant="light" color="red" >
                                                     <IconTrash style={{ width: '70%', height: '70%' }} stroke={1.5}/>
                                                 </ActionIcon>
@@ -150,7 +150,7 @@ export function ShareComponent(props: {share: Share}) {
                                     
                                     {/* Edit share properties button */}
                                     <ResponsivePopover withDrawer={!isBrowser}>
-                                        <Tooltip withArrow arrowOffset={10} arrowSize={4} label="Edit Share">
+                                        <Tooltip withArrow arrowOffset={10} arrowSize={4} label={t("edit_share")}>
                                             <ActionIcon id="edit" variant="light" color="blue" >
                                                 <IconDots style={{ width: '70%', height: '70%' }} stroke={1.5}/>
                                             </ActionIcon>
