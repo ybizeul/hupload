@@ -118,7 +118,7 @@ export function SharesPage(props: {owner: string|null}) {
                 {/* Currently logged in user shares */}
                 {shares.some((s) => s.owner === owner) &&
                     <>
-                    <Text size="xl" fw="700">{t("your_shares")}</Text>
+                    {shares.some((s) => s.owner !== owner)&&<Text size="xl" fw="700">{t("your_shares")}</Text>}
                     {shares.map((s) => (
                     s.owner === owner &&
                     <ShareComponent key={s.name} share={s} />
