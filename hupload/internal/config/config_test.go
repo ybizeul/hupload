@@ -29,6 +29,7 @@ func TestLoadEmptyConfig(t *testing.T) {
 		Title:               "Hupload",
 		DefaultValidityDays: 7,
 		DefaultExposure:     "upload",
+		HideOtherShares:     false,
 		Storage: TypeOptions{
 			Type: "file",
 			Options: map[string]any{
@@ -69,6 +70,7 @@ func TestLoadGoodConfig(t *testing.T) {
 		Title:               "Hupload",
 		DefaultValidityDays: 12,
 		DefaultExposure:     "download",
+		HideOtherShares:     true,
 		Storage: TypeOptions{
 			Type: "file",
 			Options: map[string]any{

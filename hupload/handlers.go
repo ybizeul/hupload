@@ -85,7 +85,7 @@ func (h *Hupload) patchShare(w http.ResponseWriter, r *http.Request) {
 	// We ignore unmarshalling of JSON body as it is optional.
 	_ = json.NewDecoder(r.Body).Decode(&options)
 
-	result, err := h.Config.Storage.UpdateShare(r.Context(), r.PathValue("share"), options)
+	share, err := h.Config.Storage.GetShare(r.Context(), r.PathValue("share"))
 	if err != nil {
 		slog.Error("patchShare", slog.String("error", err.Error()))
 		switch {
@@ -93,10 +93,23 @@ func (h *Hupload) patchShare(w http.ResponseWriter, r *http.Request) {
 			writeError(w, http.StatusBadRequest, "invalid share name")
 			return
 		case errors.Is(err, storage.ErrShareNotFound):
-			writeError(w, http.StatusNotFound, "share does not exists")
+			writeError(w, http.StatusNotFound, "share not found")
 			return
 		}
+		writeError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
 
+	if h.Config.Values.HideOtherShares {
+		if share.Owner != user {
+			writeError(w, http.StatusForbidden, "unauthorized")
+			return
+		}
+	}
+
+	result, err := h.Config.Storage.UpdateShare(r.Context(), share.Name, options)
+	if err != nil {
+		slog.Error("patchShare", slog.String("error", err.Error()))
 		writeError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
@@ -221,6 +234,16 @@ func (h *Hupload) getShares(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	user, _ := auth.AuthForRequest(r)
+
+	if h.Config.Values.HideOtherShares {
+		tmpShares := []storage.Share{}
+		for s := range shares {
+			if shares[s].Owner == user {
+				tmpShares = append(tmpShares, shares[s])
+			}
+		}
+		shares = tmpShares
+	}
 
 	if user == "" {
 		writeSuccessJSON(w, storage.PublicShares(shares))

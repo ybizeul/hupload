@@ -75,9 +75,18 @@ be used to configure storage backend and authentication.
 Sample configuration file :
 
 ```
+# Web site name for the title bar
 Title: Hupload
+
+# By default shares will be created for upload only
 default_exposure: upload
+
+# By default, shares will be available for 7 days
 default_validity_days: 7
+
+# Registered users will only see their own shares
+hide_other_shares: false
+
 auth:
   type: file
   options:

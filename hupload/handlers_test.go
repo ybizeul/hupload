@@ -64,8 +64,8 @@ func getHupload(t *testing.T, cfg *config.Config) *Hupload {
 }
 
 // makeShare creates a new share with the given name and parameters.
-func makeShare(t *testing.T, h *Hupload, name string, params storage.Options) *storage.Share {
-	share, err := h.Config.Storage.CreateShare(context.Background(), name, "admin", params)
+func makeShare(t *testing.T, h *Hupload, name string, owner string, params storage.Options) *storage.Share {
+	share, err := h.Config.Storage.CreateShare(context.Background(), name, owner, params)
 	if err != nil {
 		t.Error(err)
 	}
@@ -202,7 +202,7 @@ func TestCreateShare(t *testing.T) {
 			})
 
 			t.Run("Create a share with same name should fail", func(t *testing.T) {
-				makeShare(t, h, "samename", storage.Options{})
+				makeShare(t, h, "samename", "admin", storage.Options{})
 				t.Cleanup(func() {
 					_ = h.Config.Storage.DeleteShare(context.Background(), "samename")
 				})
@@ -276,111 +276,127 @@ func TestUpdateShare(t *testing.T) {
 		if !cfg.Enabled {
 			continue
 		}
-		t.Run(name, func(t *testing.T) {
-			h := getHupload(t, cfg.Config)
-			t.Cleanup(func() { cfg.Cleanup(h) })
-			api := h.API
+		for altUser := range 2 {
+			var username = "admin"
+			if altUser == 1 {
+				username = "admin2"
+			}
 
-			makeShare(t, h, "testupdate", storage.Options{
-				Exposure:    "upload",
-				Validity:    7,
-				Description: "description",
-				Message:     "message",
+			t.Run(name, func(t *testing.T) {
+				h := getHupload(t, cfg.Config)
+				h.Config.Values.HideOtherShares = (altUser == 1)
+
+				t.Cleanup(func() { cfg.Cleanup(h) })
+				api := h.API
+
+				makeShare(t, h, "testupdate", "admin", storage.Options{
+					Exposure:    "upload",
+					Validity:    7,
+					Description: "description",
+					Message:     "message",
+				})
+				t.Cleanup(func() {
+					_ = h.Config.Storage.DeleteShare(context.Background(), "testupdate")
+				})
+
+				t.Run("Update share should succeed", func(t *testing.T) {
+					var (
+						req *http.Request
+						w   *httptest.ResponseRecorder
+					)
+
+					payload := `{"exposure":"download","validity":10,"description":"new description","message":"new message"}`
+
+					req = httptest.NewRequest("PATCH", path.Join("/api/v1/shares", "testupdate"), bytes.NewBufferString(payload))
+					req.SetBasicAuth(username, "hupload")
+
+					w = httptest.NewRecorder()
+
+					api.Mux.ServeHTTP(w, req)
+
+					if altUser == 1 {
+						if w.Code != http.StatusForbidden {
+							t.Errorf("Expected status %d, got %d", http.StatusForbidden, w.Code)
+						}
+						return
+					}
+					if w.Code != http.StatusOK {
+						t.Errorf("Expected status %d, got %d", http.StatusOK, w.Code)
+						return
+					}
+
+					var got, want map[string]any
+
+					_ = json.NewDecoder(w.Body).Decode(&got)
+					_ = json.NewDecoder(bytes.NewBufferString(payload)).Decode(&want)
+
+					if !reflect.DeepEqual(got, want) {
+						t.Errorf("Want %v, got %v", want, got)
+					}
+				})
+				t.Run("Update share should fail without auth", func(t *testing.T) {
+					var (
+						req *http.Request
+						w   *httptest.ResponseRecorder
+					)
+
+					j := `{"exposure":"download","validity":10,"description":"new description","message":"new message"}`
+
+					req = httptest.NewRequest("PATCH", path.Join("/api/v1/shares", "testupdate"), bytes.NewBufferString(j))
+
+					w = httptest.NewRecorder()
+
+					api.Mux.ServeHTTP(w, req)
+
+					if w.Code != http.StatusUnauthorized {
+						t.Errorf("Expected status %d, got %d", http.StatusOK, w.Code)
+						return
+					}
+				})
+
+				t.Run("Update share should fail on invalid share name", func(t *testing.T) {
+					var (
+						req *http.Request
+						w   *httptest.ResponseRecorder
+					)
+
+					j := `{"exposure":"download","validity":10,"description":"new description","message":"new message"}`
+
+					req = httptest.NewRequest("PATCH", path.Join("/api/v1/shares", url.QueryEscape("../test")), bytes.NewBufferString(j))
+					req.SetBasicAuth(username, "hupload")
+
+					w = httptest.NewRecorder()
+
+					api.Mux.ServeHTTP(w, req)
+
+					if w.Code != http.StatusBadRequest {
+						t.Errorf("Expected status %d, got %d", http.StatusBadRequest, w.Code)
+						return
+					}
+				})
+
+				t.Run("Update share should fail on inexistant share", func(t *testing.T) {
+					var (
+						req *http.Request
+						w   *httptest.ResponseRecorder
+					)
+
+					j := `{"exposure":"download","validity":10,"description":"new description","message":"new message"}`
+
+					req = httptest.NewRequest("PATCH", path.Join("/api/v1/shares", "inexistant"), bytes.NewBufferString(j))
+					req.SetBasicAuth(username, "hupload")
+
+					w = httptest.NewRecorder()
+
+					api.Mux.ServeHTTP(w, req)
+
+					if w.Code != http.StatusNotFound {
+						t.Errorf("Expected status %d, got %d", http.StatusNotFound, w.Code)
+						return
+					}
+				})
 			})
-			t.Cleanup(func() {
-				_ = h.Config.Storage.DeleteShare(context.Background(), "testupdate")
-			})
-			t.Run("Update share should succeed", func(t *testing.T) {
-				var (
-					req *http.Request
-					w   *httptest.ResponseRecorder
-				)
-
-				j := `{"exposure":"download","validity":10,"description":"new description","message":"new message"}`
-
-				req = httptest.NewRequest("PATCH", path.Join("/api/v1/shares", "testupdate"), bytes.NewBufferString(j))
-				req.SetBasicAuth("admin", "hupload")
-
-				w = httptest.NewRecorder()
-
-				api.Mux.ServeHTTP(w, req)
-
-				if w.Code != http.StatusOK {
-					t.Errorf("Expected status %d, got %d", http.StatusOK, w.Code)
-					return
-				}
-
-				var got, want map[string]any
-
-				_ = json.NewDecoder(w.Body).Decode(&got)
-				_ = json.NewDecoder(bytes.NewBufferString(j)).Decode(&want)
-
-				if !reflect.DeepEqual(got, want) {
-					t.Errorf("Want %v, got %v", want, got)
-				}
-			})
-			t.Run("Update share should fail without auth", func(t *testing.T) {
-				var (
-					req *http.Request
-					w   *httptest.ResponseRecorder
-				)
-
-				j := `{"exposure":"download","validity":10,"description":"new description","message":"new message"}`
-
-				req = httptest.NewRequest("PATCH", path.Join("/api/v1/shares", "testupdate"), bytes.NewBufferString(j))
-
-				w = httptest.NewRecorder()
-
-				api.Mux.ServeHTTP(w, req)
-
-				if w.Code != http.StatusUnauthorized {
-					t.Errorf("Expected status %d, got %d", http.StatusOK, w.Code)
-					return
-				}
-			})
-
-			t.Run("Update share should fail on invalid share name", func(t *testing.T) {
-				var (
-					req *http.Request
-					w   *httptest.ResponseRecorder
-				)
-
-				j := `{"exposure":"download","validity":10,"description":"new description","message":"new message"}`
-
-				req = httptest.NewRequest("PATCH", path.Join("/api/v1/shares", url.QueryEscape("../test")), bytes.NewBufferString(j))
-				req.SetBasicAuth("admin", "hupload")
-
-				w = httptest.NewRecorder()
-
-				api.Mux.ServeHTTP(w, req)
-
-				if w.Code != http.StatusBadRequest {
-					t.Errorf("Expected status %d, got %d", http.StatusBadRequest, w.Code)
-					return
-				}
-			})
-
-			t.Run("Update share should fail on inexistant share", func(t *testing.T) {
-				var (
-					req *http.Request
-					w   *httptest.ResponseRecorder
-				)
-
-				j := `{"exposure":"download","validity":10,"description":"new description","message":"new message"}`
-
-				req = httptest.NewRequest("PATCH", path.Join("/api/v1/shares", "inexistant"), bytes.NewBufferString(j))
-				req.SetBasicAuth("admin", "hupload")
-
-				w = httptest.NewRecorder()
-
-				api.Mux.ServeHTTP(w, req)
-
-				if w.Code != http.StatusNotFound {
-					t.Errorf("Expected status %d, got %d", http.StatusNotFound, w.Code)
-					return
-				}
-			})
-		})
+		}
 	}
 }
 
@@ -389,305 +405,330 @@ func TestGetShare(t *testing.T) {
 		if !cfg.Enabled {
 			continue
 		}
-		t.Run(name, func(t *testing.T) {
-			h := getHupload(t, cfg.Config)
-			t.Cleanup(func() { cfg.Cleanup(h) })
-			api := h.API
 
-			makeShare(t, h, "test", storage.Options{
-				Exposure:    "upload",
-				Validity:    7,
-				Description: "description",
-				Message:     "message",
-			})
+		for altUser := range 2 {
+			var username = "admin"
+			if altUser == 1 {
+				username = "admin2"
+			}
 
-			makeShare(t, h, "test2", storage.Options{
-				Exposure:    "upload",
-				Validity:    7,
-				Description: "description",
-				Message:     "message",
-			})
+			t.Run(name, func(t *testing.T) {
+				h := getHupload(t, cfg.Config)
+				h.Config.Values.HideOtherShares = (altUser == 1)
 
-			t.Cleanup(func() {
-				_ = h.Config.Storage.DeleteShare(context.Background(), "test")
-				_ = h.Config.Storage.DeleteShare(context.Background(), "test2")
-			})
+				t.Cleanup(func() { cfg.Cleanup(h) })
+				api := h.API
 
-			t.Run("Get shares should succeed", func(t *testing.T) {
-				var (
-					req *http.Request
-					w   *httptest.ResponseRecorder
-				)
-				req = httptest.NewRequest("GET", "/api/v1/shares", nil)
-				req.SetBasicAuth("admin", "hupload")
-				w = httptest.NewRecorder()
-
-				api.Mux.ServeHTTP(w, req)
-
-				if w.Code != http.StatusOK {
-					t.Errorf("Expected status %d, got %d", http.StatusOK, w.Code)
-					return
-				}
-
-				var shares []*storage.Share
-
-				_ = json.NewDecoder(w.Body).Decode(&shares)
-
-				if len(shares) != 2 {
-					t.Errorf("Expected 2 shares, got %d", len(shares))
-					return
-				}
-			})
-
-			t.Run("Get shares without authentication should fail", func(t *testing.T) {
-				var (
-					req *http.Request
-					w   *httptest.ResponseRecorder
-				)
-				req = httptest.NewRequest("GET", "/api/v1/shares", nil)
-
-				w = httptest.NewRecorder()
-
-				api.Mux.ServeHTTP(w, req)
-
-				if w.Code != http.StatusUnauthorized {
-					t.Errorf("Expected status %d, got %d", http.StatusUnauthorized, w.Code)
-					return
-				}
-
-				got := string(w.Body.String())
-				want := `{"errors":["JWTAuthMiddleware: no Authorization header"]}`
-				if want != got {
-					t.Errorf("Want %s, got %s", want, got)
-				}
-			})
-
-			t.Run("Get share should succeed", func(t *testing.T) {
-				var (
-					req *http.Request
-					w   *httptest.ResponseRecorder
-				)
-				req = httptest.NewRequest("GET", path.Join("/api/v1/shares/", "test"), nil)
-				req.SetBasicAuth("admin", "hupload")
-				w = httptest.NewRecorder()
-
-				api.Mux.ServeHTTP(w, req)
-
-				if w.Code != http.StatusOK {
-					t.Errorf("Expected status %d, got %d", http.StatusOK, w.Code)
-					return
-				}
-
-				var share *storage.Share
-
-				_ = json.NewDecoder(w.Body).Decode(&share)
-				share.DateCreated = time.Time{}
-
-				want := &storage.Share{
-					Version: 1,
-					Name:    "test",
-					Owner:   "admin",
-					Options: storage.Options{
-						Validity:    7,
-						Exposure:    "upload",
-						Description: "description",
-						Message:     "message",
-					},
-					Count: 0,
-					Size:  0,
-				}
-
-				if !reflect.DeepEqual(share, want) {
-					t.Errorf("Want %v, got %v", want, share)
-				}
-
-				if share.Options.Description != "description" {
-					t.Errorf("Expected description to be 'description', got %s", share.Options.Description)
-					return
-				}
-			})
-
-			t.Run("Get share without authentication should succeed with filtered properties", func(t *testing.T) {
-				var (
-					req *http.Request
-					w   *httptest.ResponseRecorder
-				)
-				req = httptest.NewRequest("GET", path.Join("/api/v1/shares/", "test"), nil)
-
-				w = httptest.NewRecorder()
-
-				api.Mux.ServeHTTP(w, req)
-
-				if w.Code != http.StatusOK {
-					t.Errorf("Expected status %d, got %d", http.StatusOK, w.Code)
-					return
-				}
-
-				var share *storage.Share
-
-				_ = json.NewDecoder(w.Body).Decode(&share)
-
-				share.DateCreated = time.Time{}
-
-				want := &storage.Share{
-					Name: "test",
-					Options: storage.Options{
-						Exposure: "upload",
-						Message:  "message",
-					},
-				}
-
-				if !reflect.DeepEqual(share, want) {
-					t.Errorf("Want %v, got %v", want, share)
-				}
-			})
-
-			t.Run("Get share with invalid name should fail", func(t *testing.T) {
-				var (
-					req *http.Request
-					w   *httptest.ResponseRecorder
-				)
-				req = httptest.NewRequest("GET", path.Join("/api/v1/shares/", url.QueryEscape("../test")), nil)
-
-				w = httptest.NewRecorder()
-
-				api.Mux.ServeHTTP(w, req)
-
-				if w.Code != http.StatusBadRequest {
-					t.Errorf("Expected status %d, got %d", http.StatusOK, w.Code)
-					return
-				}
-
-				var result APIResult
-
-				_ = json.NewDecoder(w.Body).Decode(&result)
-
-				if result.Status != "error" {
-					t.Errorf("Expected error, got %s", result.Status)
-				}
-			})
-
-			t.Run("Get inexistant share should fail", func(t *testing.T) {
-				var (
-					req *http.Request
-					w   *httptest.ResponseRecorder
-				)
-				req = httptest.NewRequest("GET", path.Join("/api/v1/shares/", "nonexistant"), nil)
-
-				w = httptest.NewRecorder()
-
-				api.Mux.ServeHTTP(w, req)
-
-				if w.Code != http.StatusNotFound {
-					t.Errorf("Expected status %d, got %d", http.StatusNotFound, w.Code)
-					return
-				}
-
-				var result APIResult
-
-				_ = json.NewDecoder(w.Body).Decode(&result)
-
-				if result.Status != "error" {
-					t.Errorf("Expected error, got %s", result.Status)
-				}
-			})
-
-			t.Run("Get share items should work", func(t *testing.T) {
-				var (
-					req *http.Request
-					w   *httptest.ResponseRecorder
-				)
-
-				shareName := "itemstest"
-
-				makeShare(t, h, shareName, storage.Options{})
-				t.Cleanup(func() {
-					_ = h.Config.Storage.DeleteShare(context.Background(), shareName)
+				makeShare(t, h, "test", "admin", storage.Options{
+					Exposure:    "upload",
+					Validity:    7,
+					Description: "description",
+					Message:     "message",
 				})
 
-				makeItem(t, h, shareName, "newfile.txt", 1*1024*1024)
-				time.Sleep(1 * time.Second)
-				makeItem(t, h, shareName, "newfile2.txt", 2*1024*1024)
+				makeShare(t, h, "test2", "admin", storage.Options{
+					Exposure:    "upload",
+					Validity:    7,
+					Description: "description",
+					Message:     "message",
+				})
 
-				req = httptest.NewRequest("GET", path.Join("/api/v1/shares/", shareName, "items"), nil)
+				makeShare(t, h, "test3", "admin2", storage.Options{
+					Exposure:    "upload",
+					Validity:    7,
+					Description: "description",
+					Message:     "message",
+				})
 
-				w = httptest.NewRecorder()
+				t.Cleanup(func() {
+					_ = h.Config.Storage.DeleteShare(context.Background(), "test")
+					_ = h.Config.Storage.DeleteShare(context.Background(), "test2")
+					_ = h.Config.Storage.DeleteShare(context.Background(), "test3")
+				})
 
-				api.Mux.ServeHTTP(w, req)
+				t.Run("Get shares should succeed", func(t *testing.T) {
+					var (
+						req *http.Request
+						w   *httptest.ResponseRecorder
+					)
+					req = httptest.NewRequest("GET", "/api/v1/shares", nil)
+					req.SetBasicAuth(username, "hupload")
+					w = httptest.NewRecorder()
 
-				if w.Code != http.StatusOK {
-					t.Errorf("Expected status %d, got %d", http.StatusOK, w.Code)
-					return
-				}
+					api.Mux.ServeHTTP(w, req)
 
-				var result []storage.Item
+					if w.Code != http.StatusOK {
+						t.Errorf("Expected status %d, got %d", http.StatusOK, w.Code)
+						return
+					}
 
-				_ = json.NewDecoder(w.Body).Decode(&result)
+					var shares []*storage.Share
 
-				if len(result) != 2 {
-					t.Errorf("Expected 2 items, got %d", len(result))
-					return
-				}
+					_ = json.NewDecoder(w.Body).Decode(&shares)
 
-				if result[0].Path != path.Join(shareName, "newfile2.txt") {
-					t.Errorf("Expected %s, got %s", path.Join(shareName, "newfile2.txt"), result[0].Path)
-					return
-				}
-				if result[1].Path != path.Join(shareName, "newfile.txt") {
-					t.Errorf("Expected newfile.txt, got %s", result[0].Path)
-					return
-				}
+					if altUser == 1 {
+						if len(shares) != 1 {
+							t.Errorf("Expected 1 shares, got %d", len(shares))
+						}
+						return
+					}
 
-				if result[0].ItemInfo.Size != 2*1024*1024 {
-					t.Errorf("Expected size 2*1024*1024, got %d", result[0].ItemInfo.Size)
-					return
-				}
-				if result[1].ItemInfo.Size != 1*1024*1024 {
-					t.Errorf("Expected size 1*1024*1024, got %d", result[0].ItemInfo.Size)
-					return
-				}
+					if len(shares) != 3 {
+						t.Errorf("Expected 3 shares, got %d", len(shares))
+						return
+					}
+				})
+
+				t.Run("Get shares without authentication should fail", func(t *testing.T) {
+					var (
+						req *http.Request
+						w   *httptest.ResponseRecorder
+					)
+					req = httptest.NewRequest("GET", "/api/v1/shares", nil)
+
+					w = httptest.NewRecorder()
+
+					api.Mux.ServeHTTP(w, req)
+
+					if w.Code != http.StatusUnauthorized {
+						t.Errorf("Expected status %d, got %d", http.StatusUnauthorized, w.Code)
+						return
+					}
+
+					got := string(w.Body.String())
+					want := `{"errors":["JWTAuthMiddleware: no Authorization header"]}`
+					if want != got {
+						t.Errorf("Want %s, got %s", want, got)
+					}
+				})
+
+				t.Run("Get share should succeed", func(t *testing.T) {
+					var (
+						req *http.Request
+						w   *httptest.ResponseRecorder
+					)
+					req = httptest.NewRequest("GET", path.Join("/api/v1/shares/", "test"), nil)
+					req.SetBasicAuth(username, "hupload")
+					w = httptest.NewRecorder()
+
+					api.Mux.ServeHTTP(w, req)
+
+					if w.Code != http.StatusOK {
+						t.Errorf("Expected status %d, got %d", http.StatusOK, w.Code)
+						return
+					}
+
+					var share *storage.Share
+
+					_ = json.NewDecoder(w.Body).Decode(&share)
+					share.DateCreated = time.Time{}
+
+					want := &storage.Share{
+						Version: 1,
+						Name:    "test",
+						Owner:   "admin",
+						Options: storage.Options{
+							Validity:    7,
+							Exposure:    "upload",
+							Description: "description",
+							Message:     "message",
+						},
+						Count: 0,
+						Size:  0,
+					}
+
+					if !reflect.DeepEqual(share, want) {
+						t.Errorf("Want %v, got %v", want, share)
+					}
+
+					if share.Options.Description != "description" {
+						t.Errorf("Expected description to be 'description', got %s", share.Options.Description)
+						return
+					}
+				})
+
+				t.Run("Get share without authentication should succeed with filtered properties", func(t *testing.T) {
+					var (
+						req *http.Request
+						w   *httptest.ResponseRecorder
+					)
+					req = httptest.NewRequest("GET", path.Join("/api/v1/shares/", "test"), nil)
+
+					w = httptest.NewRecorder()
+
+					api.Mux.ServeHTTP(w, req)
+
+					if w.Code != http.StatusOK {
+						t.Errorf("Expected status %d, got %d", http.StatusOK, w.Code)
+						return
+					}
+
+					var share *storage.Share
+
+					_ = json.NewDecoder(w.Body).Decode(&share)
+
+					share.DateCreated = time.Time{}
+
+					want := &storage.Share{
+						Name: "test",
+						Options: storage.Options{
+							Exposure: "upload",
+							Message:  "message",
+						},
+					}
+
+					if !reflect.DeepEqual(share, want) {
+						t.Errorf("Want %v, got %v", want, share)
+					}
+				})
+
+				t.Run("Get share with invalid name should fail", func(t *testing.T) {
+					var (
+						req *http.Request
+						w   *httptest.ResponseRecorder
+					)
+					req = httptest.NewRequest("GET", path.Join("/api/v1/shares/", url.QueryEscape("../test")), nil)
+
+					w = httptest.NewRecorder()
+
+					api.Mux.ServeHTTP(w, req)
+
+					if w.Code != http.StatusBadRequest {
+						t.Errorf("Expected status %d, got %d", http.StatusOK, w.Code)
+						return
+					}
+
+					var result APIResult
+
+					_ = json.NewDecoder(w.Body).Decode(&result)
+
+					if result.Status != "error" {
+						t.Errorf("Expected error, got %s", result.Status)
+					}
+				})
+
+				t.Run("Get inexistant share should fail", func(t *testing.T) {
+					var (
+						req *http.Request
+						w   *httptest.ResponseRecorder
+					)
+					req = httptest.NewRequest("GET", path.Join("/api/v1/shares/", "nonexistant"), nil)
+
+					w = httptest.NewRecorder()
+
+					api.Mux.ServeHTTP(w, req)
+
+					if w.Code != http.StatusNotFound {
+						t.Errorf("Expected status %d, got %d", http.StatusNotFound, w.Code)
+						return
+					}
+
+					var result APIResult
+
+					_ = json.NewDecoder(w.Body).Decode(&result)
+
+					if result.Status != "error" {
+						t.Errorf("Expected error, got %s", result.Status)
+					}
+				})
+
+				t.Run("Get share items should work", func(t *testing.T) {
+					var (
+						req *http.Request
+						w   *httptest.ResponseRecorder
+					)
+
+					shareName := "itemstest"
+
+					makeShare(t, h, shareName, "admin", storage.Options{})
+					t.Cleanup(func() {
+						_ = h.Config.Storage.DeleteShare(context.Background(), shareName)
+					})
+
+					makeItem(t, h, shareName, "newfile.txt", 1*1024*1024)
+					time.Sleep(1 * time.Second)
+					makeItem(t, h, shareName, "newfile2.txt", 2*1024*1024)
+
+					req = httptest.NewRequest("GET", path.Join("/api/v1/shares/", shareName, "items"), nil)
+
+					w = httptest.NewRecorder()
+
+					api.Mux.ServeHTTP(w, req)
+
+					if w.Code != http.StatusOK {
+						t.Errorf("Expected status %d, got %d", http.StatusOK, w.Code)
+						return
+					}
+
+					var result []storage.Item
+
+					_ = json.NewDecoder(w.Body).Decode(&result)
+
+					if len(result) != 2 {
+						t.Errorf("Expected 2 items, got %d", len(result))
+						return
+					}
+
+					if result[0].Path != path.Join(shareName, "newfile2.txt") {
+						t.Errorf("Expected %s, got %s", path.Join(shareName, "newfile2.txt"), result[0].Path)
+						return
+					}
+					if result[1].Path != path.Join(shareName, "newfile.txt") {
+						t.Errorf("Expected newfile.txt, got %s", result[0].Path)
+						return
+					}
+
+					if result[0].ItemInfo.Size != 2*1024*1024 {
+						t.Errorf("Expected size 2*1024*1024, got %d", result[0].ItemInfo.Size)
+						return
+					}
+					if result[1].ItemInfo.Size != 1*1024*1024 {
+						t.Errorf("Expected size 1*1024*1024, got %d", result[0].ItemInfo.Size)
+						return
+					}
+				})
+
+				t.Run("Get share items on inexistant share shouldn't work", func(t *testing.T) {
+					var (
+						req *http.Request
+						w   *httptest.ResponseRecorder
+					)
+
+					shareName := "notexistant"
+
+					req = httptest.NewRequest("GET", path.Join("/api/v1/shares/", shareName, "items"), nil)
+
+					w = httptest.NewRecorder()
+
+					api.Mux.ServeHTTP(w, req)
+
+					if w.Code != http.StatusNotFound {
+						t.Errorf("Expected status %d, got %d", http.StatusNotFound, w.Code)
+						return
+					}
+				})
+
+				t.Run("Get share items on invalid share shouldn't work", func(t *testing.T) {
+					var (
+						req *http.Request
+						w   *httptest.ResponseRecorder
+					)
+
+					shareName := url.QueryEscape("../notexistant")
+
+					req = httptest.NewRequest("GET", path.Join("/api/v1/shares/", shareName, "items"), nil)
+
+					w = httptest.NewRecorder()
+
+					api.Mux.ServeHTTP(w, req)
+
+					if w.Code != http.StatusBadRequest {
+						t.Errorf("Expected status %d, got %d", http.StatusBadRequest, w.Code)
+						return
+					}
+				})
 			})
-
-			t.Run("Get share items on inexistant share shouldn't work", func(t *testing.T) {
-				var (
-					req *http.Request
-					w   *httptest.ResponseRecorder
-				)
-
-				shareName := "notexistant"
-
-				req = httptest.NewRequest("GET", path.Join("/api/v1/shares/", shareName, "items"), nil)
-
-				w = httptest.NewRecorder()
-
-				api.Mux.ServeHTTP(w, req)
-
-				if w.Code != http.StatusNotFound {
-					t.Errorf("Expected status %d, got %d", http.StatusNotFound, w.Code)
-					return
-				}
-			})
-
-			t.Run("Get share items on invalid share shouldn't work", func(t *testing.T) {
-				var (
-					req *http.Request
-					w   *httptest.ResponseRecorder
-				)
-
-				shareName := url.QueryEscape("../notexistant")
-
-				req = httptest.NewRequest("GET", path.Join("/api/v1/shares/", shareName, "items"), nil)
-
-				w = httptest.NewRecorder()
-
-				api.Mux.ServeHTTP(w, req)
-
-				if w.Code != http.StatusBadRequest {
-					t.Errorf("Expected status %d, got %d", http.StatusBadRequest, w.Code)
-					return
-				}
-			})
-		})
+		}
 	}
 }
 
@@ -700,7 +741,7 @@ func TestDownloadShare(t *testing.T) {
 		shareName := "downloadshare"
 		h := getHupload(t, cfg.Config)
 
-		makeShare(t, h, shareName, storage.Options{Exposure: "download"})
+		makeShare(t, h, shareName, "admin", storage.Options{Exposure: "download"})
 		t.Cleanup(func() {
 			_ = h.Config.Storage.DeleteShare(context.Background(), shareName)
 		})
@@ -742,7 +783,7 @@ func TestDeleteShare(t *testing.T) {
 				)
 
 				shareName := "deleteshare"
-				makeShare(t, h, shareName, storage.Options{Exposure: "download"})
+				makeShare(t, h, shareName, "admin", storage.Options{Exposure: "download"})
 				t.Cleanup(func() {
 					_ = h.Config.Storage.DeleteShare(context.Background(), shareName)
 				})
@@ -766,7 +807,7 @@ func TestDeleteShare(t *testing.T) {
 				)
 
 				shareName := "deleteshare"
-				makeShare(t, h, shareName, storage.Options{Exposure: "download"})
+				makeShare(t, h, shareName, "admin", storage.Options{Exposure: "download"})
 
 				req = httptest.NewRequest("DELETE", path.Join("/api/v1/shares/", shareName), nil)
 				w = httptest.NewRecorder()
@@ -842,7 +883,7 @@ func TestGetItems(t *testing.T) {
 				for _, exp := range []string{"download", "both"} {
 					shareName := "getitem" + exp
 					fileSize := 1 * 1024 * 1024
-					makeShare(t, h, shareName, storage.Options{Exposure: exp})
+					makeShare(t, h, shareName, "admin", storage.Options{Exposure: exp})
 					t.Cleanup(func() {
 						_ = h.Config.Storage.DeleteShare(context.Background(), shareName)
 					})
@@ -899,7 +940,7 @@ func TestGetItems(t *testing.T) {
 
 				shareName := "invaliditem"
 
-				makeShare(t, h, shareName, storage.Options{Exposure: "download"})
+				makeShare(t, h, shareName, "admin", storage.Options{Exposure: "download"})
 				t.Cleanup(func() {
 					_ = h.Config.Storage.DeleteShare(context.Background(), shareName)
 				})
@@ -926,7 +967,7 @@ func TestGetItems(t *testing.T) {
 
 				shareName := "notexistitem"
 
-				makeShare(t, h, shareName, storage.Options{Exposure: "download"})
+				makeShare(t, h, shareName, "admin", storage.Options{Exposure: "download"})
 				t.Cleanup(func() {
 					_ = h.Config.Storage.DeleteShare(context.Background(), shareName)
 				})
@@ -951,7 +992,7 @@ func TestGetItems(t *testing.T) {
 
 				shareName := "uploadauth"
 
-				makeShare(t, h, shareName, storage.Options{Exposure: "upload"})
+				makeShare(t, h, shareName, "admin", storage.Options{Exposure: "upload"})
 				t.Cleanup(func() {
 					_ = h.Config.Storage.DeleteShare(context.Background(), shareName)
 				})
@@ -1042,7 +1083,7 @@ func TestUpload(t *testing.T) {
 
 			t.Run("Upload a file without authentication should work", func(t *testing.T) {
 				// Create upload share
-				makeShare(t, h, "upload", storage.Options{
+				makeShare(t, h, "upload", "admin", storage.Options{
 					Exposure: "upload",
 					Validity: 7,
 				})
@@ -1073,7 +1114,7 @@ func TestUpload(t *testing.T) {
 			})
 
 			t.Run("Upload a file without authentication should not work (download share)", func(t *testing.T) {
-				makeShare(t, h, "download", storage.Options{
+				makeShare(t, h, "download", "admin", storage.Options{
 					Exposure: "download",
 					Validity: 7,
 				})
@@ -1107,7 +1148,7 @@ func TestUpload(t *testing.T) {
 
 			t.Run("Upload a file without authentication should work authenticated (download share)", func(t *testing.T) {
 				shareName := "uploadondownloadwithauth"
-				makeShare(t, h, shareName, storage.Options{
+				makeShare(t, h, shareName, "admin", storage.Options{
 					Exposure: "download",
 					Validity: 7,
 				})
@@ -1143,7 +1184,7 @@ func TestUpload(t *testing.T) {
 			})
 
 			t.Run("Upload a file too big should not work", func(t *testing.T) {
-				makeShare(t, h, "toobig", storage.Options{
+				makeShare(t, h, "toobig", "admin", storage.Options{
 					Exposure: "upload",
 					Validity: 7,
 				})
@@ -1181,7 +1222,7 @@ func TestUpload(t *testing.T) {
 			})
 
 			t.Run("Upload too much data on a share shouldn't work", func(t *testing.T) {
-				makeShare(t, h, "sharetoobig", storage.Options{
+				makeShare(t, h, "sharetoobig", "admin", storage.Options{
 					Exposure: "upload",
 					Validity: 7,
 				})
@@ -1259,7 +1300,7 @@ func TestUpload(t *testing.T) {
 			})
 
 			t.Run("Upload malformed data should fail", func(t *testing.T) {
-				makeShare(t, h, "malformed", storage.Options{})
+				makeShare(t, h, "malformed", "admin", storage.Options{})
 				t.Cleanup(func() {
 					_ = h.Config.Storage.DeleteShare(context.Background(), "malformed")
 				})
@@ -1281,7 +1322,7 @@ func TestUpload(t *testing.T) {
 
 			t.Run("Upload a file without file size should fail", func(t *testing.T) {
 				// Create upload share
-				makeShare(t, h, "nofilesize", storage.Options{
+				makeShare(t, h, "nofilesize", "admin", storage.Options{
 					Exposure: "upload",
 					Validity: 7,
 				})
@@ -1310,7 +1351,7 @@ func TestUpload(t *testing.T) {
 
 			t.Run("Upload a file with invalid file name should fail", func(t *testing.T) {
 				// Create upload share
-				makeShare(t, h, "upload", storage.Options{
+				makeShare(t, h, "upload", "admin", storage.Options{
 					Exposure: "upload",
 					Validity: 7,
 				})
@@ -1358,7 +1399,7 @@ func TestDeleteItem(t *testing.T) {
 
 			t.Run("delete a file as admin should work", func(t *testing.T) {
 				// Create upload share
-				share := makeShare(t, h, "uploadadmin", storage.Options{
+				share := makeShare(t, h, "uploadadmin", "admin", storage.Options{
 					Exposure: "upload",
 					Validity: 7,
 				})
@@ -1383,7 +1424,7 @@ func TestDeleteItem(t *testing.T) {
 			})
 			t.Run("delete a file as guest should work on a upload share", func(t *testing.T) {
 				// Create upload share
-				share := makeShare(t, h, "upload", storage.Options{
+				share := makeShare(t, h, "upload", "admin", storage.Options{
 					Exposure: "upload",
 					Validity: 7,
 				})
@@ -1406,7 +1447,7 @@ func TestDeleteItem(t *testing.T) {
 
 			t.Run("delete a file as guest should work on a both share", func(t *testing.T) {
 				// Create upload share
-				share := makeShare(t, h, "both", storage.Options{
+				share := makeShare(t, h, "both", "admin", storage.Options{
 					Exposure: "both",
 					Validity: 7,
 				})
@@ -1430,7 +1471,7 @@ func TestDeleteItem(t *testing.T) {
 
 			t.Run("delete a file as guest should fail on a download share", func(t *testing.T) {
 				// Create upload share
-				share := makeShare(t, h, "download", storage.Options{
+				share := makeShare(t, h, "download", "admin", storage.Options{
 					Exposure: "download",
 					Validity: 7,
 				})
@@ -1486,7 +1527,7 @@ func TestDeleteItem(t *testing.T) {
 			})
 
 			t.Run("delete an invalid file name should fail", func(t *testing.T) {
-				makeShare(t, h, "invaliditem", storage.Options{})
+				makeShare(t, h, "invaliditem", "admin", storage.Options{})
 				t.Cleanup(func() {
 					_ = h.Config.Storage.DeleteShare(context.Background(), "invaliditem")
 				})
@@ -1505,7 +1546,7 @@ func TestDeleteItem(t *testing.T) {
 			})
 
 			t.Run("delete an inexistant file should fail", func(t *testing.T) {
-				makeShare(t, h, "inexistantfile", storage.Options{})
+				makeShare(t, h, "inexistantfile", "admin", storage.Options{})
 				t.Cleanup(func() {
 					_ = h.Config.Storage.DeleteShare(context.Background(), "inexistantfile")
 				})

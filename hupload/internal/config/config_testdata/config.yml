@@ -1,6 +1,7 @@
 title: Hupload
 default_validity_days: 12
 default_exposure: download
+hide_other_shares: true
 auth:
   type: file
   options:
