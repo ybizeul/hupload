@@ -52,6 +52,9 @@ export function ShareComponent(props: {share: Share}) {
         return
     }
     
+    const localeStorage = window.localStorage.getItem("i18nextLng")
+    const locales: string[] = localeStorage===null?[]:[localeStorage]
+    
     return (
         <>
         <Paper id={share.name} key={key} withBorder shadow="xs" radius="md" mt={10} pos="relative" className={classes.paper}>
@@ -112,7 +115,7 @@ export function ShareComponent(props: {share: Share}) {
                                         <Text w="100%" size="xs" c="gray">
                                             {share.options.description?share.options.description
                                         :
-                                            t("created") + " " + new Date(share.created).toLocaleString([],{dateStyle:"long",timeStyle:"short"})
+                                            t("created") + " " + new Date(share.created).toLocaleString(locales,{dateStyle:"long",timeStyle:"short"})
                                         }
                                         </Text>
                                     </Stack>
