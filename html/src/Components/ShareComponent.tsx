@@ -57,7 +57,9 @@ export function ShareComponent(props: {share: Share}) {
     
     return (
         <>
-        <Paper id={share.name} key={key} withBorder shadow="xs" radius="md" mt={10} pos="relative" className={classes.paper}>
+        <Paper id={share.name} key={key} withBorder shadow="xs" radius="md" 
+            mt={10} pos="relative" className={classes.paper} 
+            style={(uploading || uploadPercent > 0)?{ borderBottomLeftRadius: "0", borderBottomRightRadius: "0"}:{}}>
             <Dropzone p={0} m={0} activateOnClick={false} enablePointerEvents={true} w={"100%"} h={"100%"} style={{border:"none", backgroundColor:"transparent"}}
                 onDrop={(files) => {
                     const updateProgress = (progress: QueueItem[]) => {
@@ -86,86 +88,88 @@ export function ShareComponent(props: {share: Share}) {
                 }}
 
                 onReject={(files) => console.log('rejected files', files)}
-                >
-                    {/* Share component footer */}
-                    <Group wrap="nowrap" flex={1} w="100%" pos="absolute" bottom="0.1em" style={{justifyContent:"center"}} align="center" gap="0.2em">
-                        <IconClock color={(remaining===null || remaining > 0 )?"gray":"red"} size="0.8em"  width={"1em"}/>
-                        <Text style={{ whiteSpace: "nowrap"}} size="xs" c="gray">{
-                            (remaining === null)?
-                            t("unlimited")
-                            :
-                            (remaining<0)?
-                            t("expired")
-                            :
-                            prettyfiedCount(remaining,t("day_left"),t("days_left"),null)} | {share.options.exposure==="download"?t("guests_can_download"):(share.options.exposure==="both"?t("guests_can_upload_and_download"):t("guests_can_upload"))}
-                        </Text>
-                    </Group>
-                    {(uploading || uploadPercent > 0) &&
-                            <Progress pos="absolute" bottom="0" w="100%" size="xs" color={error?"red":(uploading?"blue":"green")} value={uploadPercent} />
-                        }
-                    {/* Share informations */}
-                    <Box p="md">
-                        <Stack gap="0">
-                            <Flex align={"center"}>
+                > 
+                    <Flex justify={"center"}>
+                        {/* Share component footer */}
+                        <Group wrap="nowrap" flex={1} w="100%" pos="absolute" bottom="0.1em" style={{justifyContent:"center"}} align="center" gap="0.2em">
+                            <IconClock color={(remaining===null || remaining > 0 )?"gray":"red"} size="0.8em"  width={"1em"}/>
+                            <Text style={{ whiteSpace: "nowrap"}} size="xs" c="gray">{
+                                (remaining === null)?
+                                t("unlimited")
+                                :
+                                (remaining<0)?
+                                t("expired")
+                                :
+                                prettyfiedCount(remaining,t("day_left"),t("days_left"),null)} | {share.options.exposure==="download"?t("guests_can_download"):(share.options.exposure==="both"?t("guests_can_upload_and_download"):t("guests_can_upload"))}
+                            </Text>
+                        </Group>
+                        {(uploading || uploadPercent > 0) &&
+                                <Progress radius="0" w="100%" pos="absolute" bottom="0" size="xs" color={error?"red":(uploading?"blue":"green")} value={uploadPercent} />
+                            }
+                        {/* Share informations */}
+                        <Box flex="1" p="md">
+                            <Stack gap="0">
+                                <Flex align={"center"}>
 
-                                {/* Share name */}
-                                <Group flex="1" gap="0" align="center">
-                                    <Stack flex="1" gap={0}>
-                                        <Anchor style={{ whiteSpace: "nowrap"}} component={Link} to={'/'+name}><Text>{name}</Text></Anchor>
-                                        <Text w="100%" size="xs" c="gray">
-                                            {share.options.description?share.options.description
-                                        :
-                                            t("created") + " " + new Date(share.created).toLocaleString(locales,{dateStyle:"long",timeStyle:"short"})
-                                        }
-                                        </Text>
-                                    </Stack>
-                                    <Stack gap="0" align="flex-end">
-                                        <Text mr="xs" size="xs" c="gray">{countString + (size?(' | ' + humanFileSize(size)):'')}</Text>
-                                    </Stack>
-                                </Group>
+                                    {/* Share name */}
+                                    <Group flex="1" gap="0" align="center">
+                                        <Stack flex="1" gap={0}>
+                                            <Anchor style={{ whiteSpace: "nowrap"}} component={Link} to={'/'+name}><Text>{name}</Text></Anchor>
+                                            <Text w="100%" size="xs" c="gray">
+                                                {share.options.description?share.options.description
+                                            :
+                                                t("created") + " " + new Date(share.created).toLocaleString(locales,{dateStyle:"long",timeStyle:"short"})
+                                            }
+                                            </Text>
+                                        </Stack>
+                                        <Stack gap="0" align="flex-end">
+                                            <Text mr="xs" size="xs" c="gray">{countString + (size?(' | ' + humanFileSize(size)):'')}</Text>
+                                        </Stack>
+                                    </Group>
 
-                                {/* Share component tail with actions */}
-                                <ActionIconGroup >
-                                    {/* Copy button */}
-                                    <CopyButton value={window.location.protocol + '//' + window.location.host + '/' + name}>
-                                    {({ copied, copy }) => (
-                                        <Tooltip withArrow arrowOffset={10} arrowSize={4} label={copied?t("copied"):t("copy_url")}>
-                                            <ActionIcon id="copy" variant="light" color={copied ? 'teal' : 'blue'} onClick={copy} >
-                                                <IconLink style={{ width: '70%', height: '70%' }} stroke={1.5}/>
-                                            </ActionIcon>
-                                        </Tooltip>
-                                    )}
-                                    </CopyButton>
-
-                                    {/* Delete button with confirmation Popover */}
-                                    <Popover width={200} position="bottom" withArrow shadow="md">
-                                        <Popover.Target>
-                                            <Tooltip withArrow arrowOffset={10} arrowSize={4} label={t("delete_share")}>
-                                                <ActionIcon id="delete" variant="light" color="red" >
-                                                    <IconTrash style={{ width: '70%', height: '70%' }} stroke={1.5}/>
+                                    {/* Share component tail with actions */}
+                                    <ActionIconGroup >
+                                        {/* Copy button */}
+                                        <CopyButton value={window.location.protocol + '//' + window.location.host + '/' + name}>
+                                        {({ copied, copy }) => (
+                                            <Tooltip withArrow arrowOffset={10} arrowSize={4} label={copied?t("copied"):t("copy_url")}>
+                                                <ActionIcon id="copy" variant="light" color={copied ? 'teal' : 'blue'} onClick={copy} >
+                                                    <IconLink style={{ width: '70%', height: '70%' }} stroke={1.5}/>
                                                 </ActionIcon>
                                             </Tooltip>
-                                        </Popover.Target>
-                                        <Popover.Dropdown className={classes.popover}>
-                                            <Text ta="center" size="xs" mb="xs">Delete this share ?</Text>
-                                            <Button aria-description="delete" w="100%" variant='default' c='red' size="xs" onClick={deleteShare}>Delete</Button>
-                                        </Popover.Dropdown>
-                                    </Popover>
-                                    
-                                    {/* Edit share properties button */}
-                                    <ResponsivePopover withDrawer={!isBrowser}>
-                                        <Tooltip withArrow arrowOffset={10} arrowSize={4} label={t("edit_share")}>
-                                            <ActionIcon id="edit" variant="light" color="blue" >
-                                                <IconDots style={{ width: '70%', height: '70%' }} stroke={1.5}/>
-                                            </ActionIcon>
-                                        </Tooltip>
-                                        <ShareEditor buttonTitle={t("update")} onChange={setNewOptions} onClick={updateShare} options={newOptions}/>
-                                    </ResponsivePopover>
-                                </ActionIconGroup>
-                            </Flex>
-                            
-                        </Stack>
-                    </Box>
+                                        )}
+                                        </CopyButton>
+
+                                        {/* Delete button with confirmation Popover */}
+                                        <Popover width={200} position="bottom" withArrow shadow="md">
+                                            <Popover.Target>
+                                                <Tooltip withArrow arrowOffset={10} arrowSize={4} label={t("delete_share")}>
+                                                    <ActionIcon id="delete" variant="light" color="red" >
+                                                        <IconTrash style={{ width: '70%', height: '70%' }} stroke={1.5}/>
+                                                    </ActionIcon>
+                                                </Tooltip>
+                                            </Popover.Target>
+                                            <Popover.Dropdown className={classes.popover}>
+                                                <Text ta="center" size="xs" mb="xs">Delete this share ?</Text>
+                                                <Button aria-description="delete" w="100%" variant='default' c='red' size="xs" onClick={deleteShare}>Delete</Button>
+                                            </Popover.Dropdown>
+                                        </Popover>
+                                        
+                                        {/* Edit share properties button */}
+                                        <ResponsivePopover withDrawer={!isBrowser}>
+                                            <Tooltip withArrow arrowOffset={10} arrowSize={4} label={t("edit_share")}>
+                                                <ActionIcon id="edit" variant="light" color="blue" >
+                                                    <IconDots style={{ width: '70%', height: '70%' }} stroke={1.5}/>
+                                                </ActionIcon>
+                                            </Tooltip>
+                                            <ShareEditor buttonTitle={t("update")} onChange={setNewOptions} onClick={updateShare} options={newOptions}/>
+                                        </ResponsivePopover>
+                                    </ActionIconGroup>
+                                </Flex>
+                                
+                            </Stack>
+                        </Box>
+                    </Flex>
                 </Dropzone>
             {/* Share component footer */}
         </Paper>
