@@ -195,10 +195,6 @@ func (b *S3Backend) CreateItem(ctx context.Context, name, item string, size int6
 		return nil, err
 	}
 
-	if size == 0 {
-		return nil, ErrEmptyFile
-	}
-
 	// Check amount of free capacity in share according to current limits
 	maxWrite := int64(0)
 
@@ -472,9 +468,12 @@ func (b *S3Backend) GetItem(ctx context.Context, share, item string) (*Item, err
 	result := &Item{
 		Path: path,
 		ItemInfo: ItemInfo{
-			Size:         *aOutput.ObjectSize,
 			DateModified: *aOutput.LastModified,
 		},
+	}
+
+	if aOutput.ObjectSize != nil {
+		result.ItemInfo.Size = *aOutput.ObjectSize
 	}
 
 	return result, nil
