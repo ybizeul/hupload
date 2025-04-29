@@ -163,25 +163,41 @@ func TestCreateItem(t *testing.T) {
 		t.Errorf("Expected no error, got %v", err)
 	}
 
-	reader := bufio.NewReader(bytes.NewReader([]byte("test")))
-	item, err := f.CreateItem(context.Background(), share.Name, "test.txt", 0, reader)
-
-	if err != nil {
-		t.Errorf("Expected no error, got %v", err)
-		return
+	tests := []struct {
+		FileName string
+		Bytes    []byte
+	}{
+		{
+			FileName: "test.txt",
+			Bytes:    []byte("test"),
+		},
+		{
+			FileName: "test2.txt",
+			Bytes:    []byte(""),
+		},
 	}
 
-	// Test item result
-	if item.ItemInfo.Size != 4 {
-		t.Errorf("Expected 4, got %v", item.ItemInfo.Size)
-		return
-	}
+	for _, test := range tests {
+		reader := bufio.NewReader(bytes.NewReader(test.Bytes))
+		item, err := f.CreateItem(context.Background(), share.Name, test.FileName, 0, reader)
 
-	// Test file on disk
-	content, _ := os.ReadFile("data/test/test.txt")
-	if !bytes.Equal(content, []byte("test")) {
-		t.Errorf("Expected test, got %v", string(content))
-		return
+		if err != nil {
+			t.Errorf("Expected no error, got %v", err)
+			return
+		}
+
+		// Test item result
+		if item.ItemInfo.Size != int64(len(test.Bytes)) {
+			t.Errorf("Expected 4, got %v", item.ItemInfo.Size)
+			return
+		}
+
+		// Test file on disk
+		content, _ := os.ReadFile("data/test/test.txt")
+		if !bytes.Equal(content, []byte("test")) {
+			t.Errorf("Expected test, got %v", string(content))
+			return
+		}
 	}
 }
 
@@ -269,20 +285,36 @@ func TestGetItemData(t *testing.T) {
 		t.Errorf("Expected FileStorage to be created")
 	}
 
-	r, err := f.GetItemData(context.Background(), "test", "test.txt")
-	if err != nil {
-		t.Errorf("Expected no error, got %v", err)
+	tests := []struct {
+		FileName string
+		Bytes    []byte
+	}{
+		{
+			FileName: "test.txt",
+			Bytes:    []byte("test"),
+		},
+		{
+			FileName: "test2.txt",
+			Bytes:    []byte(""),
+		},
 	}
 
-	b, err := io.ReadAll(r)
-	if err != nil {
-		t.Errorf("Expected no error, got %v", err)
-	}
+	for _, test := range tests {
+		r, err := f.GetItemData(context.Background(), "test", test.FileName)
+		if err != nil {
+			t.Errorf("Expected no error, got %v", err)
+		}
 
-	r.Close()
+		b, err := io.ReadAll(r)
+		if err != nil {
+			t.Errorf("Expected no error, got %v", err)
+		}
 
-	if !bytes.Equal(b, []byte("test")) {
-		t.Errorf("Expected test, got %v", string(b))
+		r.Close()
+
+		if !bytes.Equal(b, test.Bytes) {
+			t.Errorf("Expected %s, got %v", string(test.Bytes), string(b))
+		}
 	}
 }
 
@@ -310,7 +342,7 @@ func TestGetShare(t *testing.T) {
 		Owner:       "admin",
 		Options:     storage.Options{Validity: 10, Exposure: "upload", Description: "description", Message: "message"},
 		Size:        4,
-		Count:       1,
+		Count:       2,
 		DateCreated: parsedTime,
 	}
 
@@ -334,8 +366,16 @@ func TestListShare(t *testing.T) {
 	}
 
 	items[0].ItemInfo.DateModified = time.Time{}
+	items[1].ItemInfo.DateModified = time.Time{}
 
 	want := []storage.Item{
+		{
+			Path: "test/test2.txt",
+			ItemInfo: storage.ItemInfo{
+				Size:         0,
+				DateModified: time.Time{},
+			},
+		},
 		{
 			Path: "test/test.txt",
 			ItemInfo: storage.ItemInfo{
@@ -375,7 +415,7 @@ func TestListShares(t *testing.T) {
 			Owner:       "admin",
 			Options:     storage.Options{Validity: 10, Exposure: "upload", Description: "description", Message: "message"},
 			Size:        4,
-			Count:       1,
+			Count:       2,
 			DateCreated: parsedTime,
 		},
 		{

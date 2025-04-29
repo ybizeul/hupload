@@ -91,13 +91,27 @@ func TestCreateS3Item(t *testing.T) {
 		return
 	}
 
-	content := []byte("test")
-	b := bufio.NewReader(bytes.NewBuffer([]byte("test")))
+	tests := []struct {
+		FileName string
+		Bytes    []byte
+	}{
+		{
+			FileName: "test.txt",
+			Bytes:    []byte("test"),
+		},
+		{
+			FileName: "test2.txt",
+			Bytes:    []byte(""),
+		},
+	}
+	for _, test := range tests {
+		b := bufio.NewReader(bytes.NewBuffer(test.Bytes))
 
-	// Test create item
-	_, err = f.CreateItem(context.Background(), "Test", "test.txt", int64(len(content)), b)
-	if err != nil {
-		t.Errorf("Expected no error, got %v", err)
+		// Test create item
+		_, err = f.CreateItem(context.Background(), "Test", test.FileName, int64(len(test.Bytes)), b)
+		if err != nil {
+			t.Errorf("Expected no error, got %v", err)
+		}
 	}
 }
 
