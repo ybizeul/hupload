@@ -1,4 +1,4 @@
-Title: Hupload Test
+title: Hupload Test
 storage:
   type: file
   options:

@@ -67,7 +67,7 @@ func TestLoadGoodConfig(t *testing.T) {
 	}
 
 	expect := ConfigValues{
-		Title:               "Hupload",
+		Title:               "Hupload Title",
 		DefaultValidityDays: 12,
 		DefaultExposure:     "download",
 		HideOtherShares:     true,

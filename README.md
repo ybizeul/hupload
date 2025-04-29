@@ -76,7 +76,7 @@ Sample configuration file :
 
 ```
 # Web site name for the title bar
-Title: Hupload
+title: Hupload
 
 # By default shares will be created for upload only
 default_exposure: upload
