@@ -285,20 +285,36 @@ func TestGetItemData(t *testing.T) {
 		t.Errorf("Expected FileStorage to be created")
 	}
 
-	r, err := f.GetItemData(context.Background(), "test", "test.txt")
-	if err != nil {
-		t.Errorf("Expected no error, got %v", err)
+	tests := []struct {
+		FileName string
+		Bytes    []byte
+	}{
+		{
+			FileName: "test.txt",
+			Bytes:    []byte("test"),
+		},
+		{
+			FileName: "test2.txt",
+			Bytes:    []byte(""),
+		},
 	}
 
-	b, err := io.ReadAll(r)
-	if err != nil {
-		t.Errorf("Expected no error, got %v", err)
-	}
+	for _, test := range tests {
+		r, err := f.GetItemData(context.Background(), "test", test.FileName)
+		if err != nil {
+			t.Errorf("Expected no error, got %v", err)
+		}
 
-	r.Close()
+		b, err := io.ReadAll(r)
+		if err != nil {
+			t.Errorf("Expected no error, got %v", err)
+		}
 
-	if !bytes.Equal(b, []byte("test")) {
-		t.Errorf("Expected test, got %v", string(b))
+		r.Close()
+
+		if !bytes.Equal(b, test.Bytes) {
+			t.Errorf("Expected %s, got %v", string(test.Bytes), string(b))
+		}
 	}
 }
 
