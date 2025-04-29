@@ -342,7 +342,7 @@ func TestGetShare(t *testing.T) {
 		Owner:       "admin",
 		Options:     storage.Options{Validity: 10, Exposure: "upload", Description: "description", Message: "message"},
 		Size:        4,
-		Count:       1,
+		Count:       2,
 		DateCreated: parsedTime,
 	}
 
@@ -366,8 +366,16 @@ func TestListShare(t *testing.T) {
 	}
 
 	items[0].ItemInfo.DateModified = time.Time{}
+	items[1].ItemInfo.DateModified = time.Time{}
 
 	want := []storage.Item{
+		{
+			Path: "test/test2.txt",
+			ItemInfo: storage.ItemInfo{
+				Size:         0,
+				DateModified: time.Time{},
+			},
+		},
 		{
 			Path: "test/test.txt",
 			ItemInfo: storage.ItemInfo{
@@ -407,7 +415,7 @@ func TestListShares(t *testing.T) {
 			Owner:       "admin",
 			Options:     storage.Options{Validity: 10, Exposure: "upload", Description: "description", Message: "message"},
 			Size:        4,
-			Count:       1,
+			Count:       2,
 			DateCreated: parsedTime,
 		},
 		{
