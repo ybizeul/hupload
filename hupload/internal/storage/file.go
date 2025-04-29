@@ -286,7 +286,7 @@ func (b *FileBackend) CreateItem(ctx context.Context, s string, i string, size i
 
 	// If nothing was written or if the max write limit was reached, remove the
 	// temporary file and return an error
-	if written == 0 || written == maxWrite {
+	if written == maxWrite {
 		os.Remove(p + suffix)
 		return nil, ErrMaxShareSizeReached
 	}

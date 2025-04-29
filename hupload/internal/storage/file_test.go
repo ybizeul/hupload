@@ -163,25 +163,41 @@ func TestCreateItem(t *testing.T) {
 		t.Errorf("Expected no error, got %v", err)
 	}
 
-	reader := bufio.NewReader(bytes.NewReader([]byte("test")))
-	item, err := f.CreateItem(context.Background(), share.Name, "test.txt", 0, reader)
-
-	if err != nil {
-		t.Errorf("Expected no error, got %v", err)
-		return
+	tests := []struct {
+		FileName string
+		Bytes    []byte
+	}{
+		{
+			FileName: "test.txt",
+			Bytes:    []byte("test"),
+		},
+		{
+			FileName: "test2.txt",
+			Bytes:    []byte(""),
+		},
 	}
 
-	// Test item result
-	if item.ItemInfo.Size != 4 {
-		t.Errorf("Expected 4, got %v", item.ItemInfo.Size)
-		return
-	}
+	for _, test := range tests {
+		reader := bufio.NewReader(bytes.NewReader(test.Bytes))
+		item, err := f.CreateItem(context.Background(), share.Name, test.FileName, 0, reader)
 
-	// Test file on disk
-	content, _ := os.ReadFile("data/test/test.txt")
-	if !bytes.Equal(content, []byte("test")) {
-		t.Errorf("Expected test, got %v", string(content))
-		return
+		if err != nil {
+			t.Errorf("Expected no error, got %v", err)
+			return
+		}
+
+		// Test item result
+		if item.ItemInfo.Size != int64(len(test.Bytes)) {
+			t.Errorf("Expected 4, got %v", item.ItemInfo.Size)
+			return
+		}
+
+		// Test file on disk
+		content, _ := os.ReadFile("data/test/test.txt")
+		if !bytes.Equal(content, []byte("test")) {
+			t.Errorf("Expected test, got %v", string(content))
+			return
+		}
 	}
 }
 
