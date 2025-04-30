@@ -1,6 +1,6 @@
 import { Alert, Button, Container, FocusTrap, Paper, PasswordInput, TextInput } from "@mantine/core";
 import { useEffect, useState } from "react";
-import { APIServerError, AuthInfo, H } from "../APIClient";
+import { APIServerError, H } from "../APIClient";
 
 import { IconExclamationCircle } from "@tabler/icons-react";
 import { useNavigate } from "react-router-dom";
@@ -12,13 +12,12 @@ export function Login() {
     const [username, setUsername] = useState<undefined|string>("")
     const [password, setPassword] = useState<undefined|string>("")
     const [error, setError] = useState<APIServerError|undefined>()
-    const [showLoginForm, setShowLoginForm] = useState<boolean|undefined>(undefined)
 
     // Initialize hooks
     const navigate = useNavigate();
 
     // Initialize contexts
-    const { authInfo, setAuthInfo } = useAuthContext()
+    const { authInfo, check } = useAuthContext()
     
     // Functions
     function authenticate(event:React.FormEvent<HTMLFormElement>) {
@@ -27,12 +26,7 @@ export function Login() {
             H.login(username,password)
             .then(() => {
                 setError(undefined)
-                navigate("/shares")
-                if (setAuthInfo !== null) {
-                    if (authInfo) {
-                        setAuthInfo({...authInfo, ...{user: username}})
-                    }
-                }
+                check && check()
             })
             .catch(e => {
                 setError(e)
@@ -41,17 +35,18 @@ export function Login() {
     }
 
     useEffect(() => {
-        H.auth()
-            .then((r) => {
-                const resp = r as AuthInfo
-                setShowLoginForm(resp.showLoginForm)
-                if (resp.loginUrl !== document.location.pathname) {
-                window.location.href = resp.loginUrl
-                }
-        })
-    },[navigate])
+        if (authInfo !== undefined) {
+            if (!authInfo.showLoginForm && authInfo.loginUrl !== document.location.pathname) {
+                window.location.href=authInfo.loginUrl
+                return
+            }
+            if (authInfo.user) {
+                navigate("/shares")
+            }
+        }
+    },[navigate, authInfo])
 
-    if (showLoginForm !== true) {
+    if (!authInfo?.showLoginForm) {
         return
     }
 
@@ -62,15 +57,15 @@ export function Login() {
                     <Alert mb="md" variant="light" color="red" title="Error" icon={<IconExclamationCircle/>}>
                         {error.message}
                     </Alert>}
-                <form onSubmit={authenticate}>
-                    <FocusTrap active={true}>
-                        <TextInput id="username" label="Username" placeholder="Username" value={username} onChange={(e) => setUsername(e.target.value)} required data-autofocus/>
-                        <PasswordInput id="password" label="Password" placeholder="Your password" value={password} onChange={(e) => setPassword(e.target.value)} required mt="md" />
-                        <Button type="submit" fullWidth mt="xl" disabled={!(username && password)}>
-                            Login
-                        </Button>
-                    </FocusTrap>
-                </form>
+                    <form onSubmit={authenticate}>
+                        <FocusTrap active={true}>
+                            <TextInput id="username" label="Username" placeholder="Username" value={username} onChange={(e) => setUsername(e.target.value)} required data-autofocus/>
+                            <PasswordInput id="password" label="Password" placeholder="Your password" value={password} onChange={(e) => setPassword(e.target.value)} required mt="md" />
+                            <Button type="submit" fullWidth mt="xl" disabled={!(username && password)}>
+                                Login
+                            </Button>
+                        </FocusTrap>
+                    </form>
             </Paper>
         </Container>
       );

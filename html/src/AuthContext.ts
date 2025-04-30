@@ -1,11 +1,31 @@
-import { createContext, useContext } from "react";
-import { AuthInfo } from "./APIClient";
+import { createContext, useContext, useEffect, useState } from "react";
+import { AuthInfo, H } from "./APIClient";
 
 
+export const useAuthInfo = ():[AuthInfo|undefined,() => void] => {
+    const [authInfo, setAuthInfo] = useState<AuthInfo|undefined>(undefined)
+
+    const check = () => {
+        H.auth().then((r) => {
+            const l = r as AuthInfo
+            setAuthInfo(l)
+        })
+        .catch((e) => {
+            setAuthInfo(undefined)
+            console.log(e)
+        })
+    }
+
+    useEffect(() => {
+        check()
+    },[])
+
+    return [authInfo, check]
+}
 
 interface AuthContextValue {
-    authInfo: AuthInfo | null;
-    setAuthInfo: React.Dispatch<React.SetStateAction<AuthInfo | null>>;
+    authInfo?: AuthInfo | undefined;
+    check?: () => void;
 }
 
 export const AuthContext = createContext<AuthContextValue|undefined>(undefined);
