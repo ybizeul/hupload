@@ -1,5 +1,7 @@
 // Interfaces
 
+import { QueueItem } from "./UploadQueue";
+
 export interface ShareOptions {
   exposure?: string;
   validity?: number;
@@ -22,8 +24,13 @@ export interface Item {
   ItemInfo: ItemInfo;
 }
 
+export interface UploadableItem extends Item {
+    QueueItem?: QueueItem
+}
+
 export interface ItemInfo {
     Size: number;
+    Name: string
 }
 
 export interface Message {
