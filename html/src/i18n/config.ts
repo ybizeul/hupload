@@ -102,7 +102,7 @@ i18n
           logout: "Logout",
         },
       },
-      // Arabic
+      // French
       fr: {
         translation: {
             // Generic
@@ -165,6 +165,73 @@ i18n
             // Haffix
             shares: "Partages",
             logout: "Quitter",
+        },
+      },
+      // German
+      de: {
+        // `translation` is the default namespace.
+        // More details about namespaces shortly.
+        translation: {
+          // Generic
+          copy_url: "URL kopieren",
+          copied: "Kopiert!",
+          download_button: "Download",
+
+          // Share page
+          drag_area: "Dateien hierhin ziehen oder auswählen",
+
+          sorry_share_expired: "Entschuldigung, diese Freigabe ist abgelaufen.",
+          share_does_not_exists: "Freigabe existiert nicht.",
+          please_check_link: "Bitte überprüfen Sie den für diesen Aufruf verwendeten Link auf Fehler.",
+          reload: "Aktualisieren",
+
+          download_all: "Alles downloaden",
+
+          // Shares page
+          no_shares: "Es sind derzeit keine Freigaben vorhanden.",
+          create_share: "Freigabe erstellen",
+          your_shares: "Ihre Freigaben",
+          other_shares: "Andere Freigaben",
+          create: "Erstellen",
+
+          // Share component
+          guests_can_upload: "Empfänger darf uploaden",
+          guests_can_download: "Empfänger darf downloaden",
+          guests_can_upload_and_download: "Empfänger darf uploaden & downloaden",
+          item: "Datei",
+          items: "Dateien",
+          empty: "leer",
+          day_left: "Tag übrig",
+          days_left: "Tage übrig",
+          unlimited: "Unbegrenzt",
+          expired: "Abgelaufen",
+          created: "Erstellt",
+          delete_share: "Freigabe löschen",
+          edit_share: "Bearbeiten",
+          update: "Aktualisieren",
+
+          // Item Component
+          delete_file: "Löschen",
+          delete_this_item: "Diese Datei löschen?",
+
+          // Share editor
+          exposure: "Art der Freigabe",
+          you_want_to: "Sie wollen Dateien :",
+          send: "Versenden",
+          receive: "Empfangen",
+          both: "Beides",
+
+          validity: "Dauer der Gültigkeit",
+          number_of_days_the_share_is_valid: "Anzahl der Tage bis die Freigabe abläuft. 0 bedeutet unbegrenzt.",
+          description: "Beschreibung",
+
+          // Markdown Editor
+          message: "Nachricht",
+          markdown_description: "Diese Markdown-Nachricht wird dem Empfänger angezeigt",
+
+          // Haffix
+          shares: "Freigaben",
+          logout: "Abmelden",
         },
       },
     },
