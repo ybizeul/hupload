@@ -32,7 +32,7 @@ export interface Message {
 }
 
 export interface ShareDefaults {
-  expiration: number;
+  validity: number;
   exposure: string;
 }
 
