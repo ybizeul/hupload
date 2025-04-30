@@ -22,16 +22,18 @@ export class UploadQueue {
         this.path = path
         this.progressCallback = progress
     }
+
     addFiles(files: File[]) {
         files.map((f) => {
-            this.files[f.name] = {
+            const qi = {
                 file: f,
                 loaded: 0,
                 total: f.size,
                 finished: false,
                 failed: false,
                 error:'',
-            }
+            } as QueueItem
+            this.files[f.name] = qi
         })
 
         const promises=Object.keys(this.files).map((k) => {

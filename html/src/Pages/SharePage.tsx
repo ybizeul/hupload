@@ -5,7 +5,7 @@ import { useCallback, useEffect, useState } from "react";
 import { H } from "../APIClient";
 import { UploadQueue, QueueItem } from "../UploadQueue";
 import {ItemComponent} from "@/Components";
-import { Item } from "../hupload";
+import { UploadableItem } from "../hupload";
 import { useAuthContext } from "@/AuthContext";
 import { Message } from "@/Components/Message";
 import { useShare } from "@/hooks";
@@ -16,9 +16,7 @@ import { ErrorPage } from "./ErrorPage";
 export function SharePage() {
     const { t } = useTranslation();
 
-    const [items, setItems] = useState<Item[]|undefined>(undefined)
-    const [queueItems, setQueueItems] = useState<QueueItem[]>([])
-    //const [expired,setExpired] = useState(false)
+    const [items, setItems] = useState<UploadableItem[]>([])
     const [error, setError] = useState<undefined|AxiosError>(undefined)
 
     // Initialize hooks
@@ -29,17 +27,41 @@ export function SharePage() {
     const expired = (shareError?.response?.status === 410)
 
     const updateProgress = useCallback((progress: QueueItem[]) => {
-        setQueueItems((currentQueue) => {
-            const j = currentQueue.map((currentItem) => {
-                const p = progress.find((p) => p.file.name === currentItem.file.name)
+        setItems((currentItems) => {
+            const i = currentItems.map((currentItem) => {
+                const p = progress.find((p) => p.file.name === currentItem.Path.split("/")[1])
                 if (p) {
-                    return p
+                    if (p.finished) {
+                        setTimeout(() => {
+                            setItems((currentItems) => {
+                                return currentItems.map((currentItem) => {
+                                    if (currentItem.ItemInfo.Name === p.file.name) {
+                                        return {...currentItem, QueueItem: undefined}
+                                    }
+                                    return currentItem
+                                })
+                         })
+                        },2000)
+                    }
+                    return {...currentItem, QueueItem: p}
                 }
                 return currentItem
             })
-            const k = progress.filter((p) => !j.some((i) => i.file.name === p.file.name))
-            return [...k, ...j]
-    })
+            return i
+        })
+
+
+    //     setQueueItems((currentQueue) => {
+    //         const j = currentQueue.map((currentItem) => {
+    //             const p = progress.find((p) => p.file.name === currentItem.file.name)
+    //             if (p) {
+    //                 return p
+    //             }
+    //             return currentItem
+    //         })
+    //         const k = progress.filter((p) => !j.some((i) => i.file.name === p.file.name))
+    //         return [...k, ...j]
+    // })
     },[])
 
     const queue = new UploadQueue(H,"/shares/"+share?.name, updateProgress)
@@ -50,7 +72,7 @@ export function SharePage() {
         // Get items from share
         if (share) {
             H.get('/shares/' + share.name + '/items').then((res) => {
-                setItems(res as Item[])
+                setItems(res as UploadableItem[])
             })
             .catch((e) => {
                 setError(e)
@@ -153,10 +175,10 @@ export function SharePage() {
     // deleteItem deletes an item from the share.
     const deleteItem = (item: string) => {
         H.delete('/shares/' + share.name + '/items/' + item).then(() => {
-        setItems(items?.filter((i) => i.Path !== share.name + "/" + item))
+            setItems(items?.filter((i) => i.Path !== share.name + "/" + item))
         })
         .catch((e) => {
-        console.log(e)
+            console.log(e)
         })
     }
 
@@ -172,7 +194,7 @@ export function SharePage() {
                         </Tooltip>
                         )}
                     </CopyButton>
-                    {canDownload() && items.length + queueItems.filter((i) => i.failed === false && i.finished === true ).length > 0 &&
+                    {canDownload() && items.length &&
                         <Tooltip withArrow arrowOffset={10} arrowSize={4} label={t("download_all")}>
                             <Button component="a" href={'/d/'+share.name} justify="center" variant="outline" size="xs"><IconDownload style={{ width: '70%', height: '70%' }} stroke={1.5}/>{t("download_button")}</Button>
                         </Tooltip>
@@ -193,24 +215,32 @@ export function SharePage() {
             <>
                 <Dropzone
                 onDrop={(files) => {
-                    // Filter out files that are already uploaded
-                    const newItems = items.filter((i) => {
-                        return !files.some((f) => f.name === i.Path.split("/")[1])
+                    const uploadableItems = files.map((f) => {
+                        return {
+                            Path: share.name + "/" + f.name,
+                            ItemInfo: {
+                                Name: f.name,
+                                Size: f.size,
+                            },
+                            QueueItem: {},
+                        } as UploadableItem
                     })
 
-                    setItems(newItems)
+                    setItems((currentItems) => {
+                        const i = [...currentItems, ...uploadableItems]
+                        return i
+                    })
+                    // // Filter out files that are already uploaded
+                    // const newItems = items.filter((i) => {
+                    //     return !files.some((f) => f.name === i.Path.split("/")[1])
+                    // })
+
+                    // setItems(newItems)
 
                     queue.addFiles(files)
-                        // .then((r) => {
-                            
-                        //     //const finishedItems = r as Item[]
-
-                        //     //setQueueItems([])
-                        //     setItems([...finishedItems, ...newItems])
-                        // })
-                        .catch((e) => {
-                            console.log(e)
-                        })
+                    .catch((e) => {
+                        console.log(e)
+                    })
                 }}
 
                 onReject={(files) => console.log('rejected files', files)}
@@ -242,14 +272,6 @@ export function SharePage() {
                 </Group>
                 </Dropzone>
             </>}
-
-            {
-                // Display upload queue items (queue items uploading or finished 
-                // uploading)
-                queueItems.map((q) => (
-                <ItemComponent  download={false} canDelete={false} key={'up_' + q.file.name} queueItem={q} />
-                ))
-            }
 
             {
                 // Display share items

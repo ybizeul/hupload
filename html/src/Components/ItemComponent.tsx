@@ -1,25 +1,22 @@
-import { ActionIcon, Box, Button, Center, Flex, Paper, Popover, rem, RingProgress, Text, Tooltip } from "@mantine/core";
+import { ActionIcon, Box, Button, Center, Flex, Paper, Popover, rem, RingProgress, Text, ThemeIcon, Tooltip } from "@mantine/core";
 import { IconCheck, IconDownload, IconTrash, IconX } from "@tabler/icons-react";
-import { QueueItem } from "../UploadQueue";
-import { humanFileSize, Item } from "../hupload";
+import { humanFileSize, UploadableItem } from "../hupload";
 import classes from './ItemComponent.module.css';
 import { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 
-export function ItemComponent(props: {download: boolean, onDelete?: (item:string) => void, canDelete: boolean, item?: Item, queueItem?: QueueItem}) {
+export function ItemComponent(props: {download: boolean, onDelete?: (item:string) => void, canDelete: boolean, item: UploadableItem}) {
     const { t } = useTranslation();
 
     // Initialize props
-    const {download, canDelete, onDelete, item, queueItem} = props
-
-    // Other initializations
+    const {download, canDelete, onDelete, item} = props
 
     // key is item Path, or file name for files being added
-    const key = item?item.Path:queueItem?.file.name
+    const key = item.Path
 
     // fileName is item Path last path component, or file name for files being 
     // added
-    const fileName = item?item.Path.split('/')[1]:queueItem?.file.name
+    const fileName = item.Path.split('/')[1]
     
     // Function to add tooltip to an element, used to display error message
     const addTooltip = (tooltip: string,element: ReactNode) => {
@@ -39,34 +36,34 @@ export function ItemComponent(props: {download: boolean, onDelete?: (item:string
             <Text truncate="end">{fileName}</Text>
             <Box flex={1} ta={"right"}>
             <Flex align={"center"} justify={"right"}>
-            {queueItem?
-            addTooltip(queueItem.failed?queueItem.error:"",<RingProgress
+            {item.QueueItem?
+            addTooltip(item.QueueItem.failed?item.QueueItem.error:"",<RingProgress
                 size={45}
                 thickness={3}
                 sections={[
-                { value: (queueItem.finished)?(100):(100*queueItem.loaded/queueItem.total), color: (queueItem.failed)?('red'):((queueItem.finished)?'teal':'blue')},
+                { value: (item.QueueItem.finished)?(100):(100*item.QueueItem.loaded/item.QueueItem.total), color: (item.QueueItem.failed)?('red'):((item.QueueItem.finished)?'teal':'blue')},
                 ]}
                 label={
-                (queueItem.failed)?
+                (item.QueueItem.failed)?
                 (<Center>
-                    <ActionIcon color="red" variant="light" radius="xl" size="xl">
+                    <ThemeIcon color="red" variant="light" radius="xl" size="xl">
                         <IconX style={{ width: rem(20), height: rem(20) }} />
-                    </ActionIcon>
-                </Center>) // queueItem.failed
+                    </ThemeIcon>
+                </Center>) // item.QueueItem.failed
                 :
-                ((queueItem.finished)?
+                ((item.QueueItem.finished)?
                 (<Center>
-                    <ActionIcon color="teal" variant="light" radius="xl" size="xl">
+                    <ThemeIcon color="teal" variant="light" radius="xl" size="xl">
                         <IconCheck style={{ width: rem(20), height: rem(20) }} />
-                    </ActionIcon>
-                </Center>) // queueItem.finished
+                    </ThemeIcon>
+                </Center>) // item.QueueItem.finished
                 :
                 <Text c="blue" fw={700} size="xs" ta="center" >
-                    {(100*queueItem.loaded/queueItem.total).toFixed(0) + '%'}
-                </Text>) // queueItem not finished
+                    {(100*item.QueueItem.loaded/item.QueueItem.total).toFixed(0) + '%'}
+                </Text>) // item.QueueItem not finished
                 }
             />)
-            :item&&
+            :
             <>
                 <Text size="xs" c="gray" style={{whiteSpace: "nowrap"}}>{humanFileSize(item.ItemInfo.Size)}</Text>
                 {canDelete &&
