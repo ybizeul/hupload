@@ -1,5 +1,5 @@
 import { ActionIcon, ActionIconGroup, Anchor, Box, Button, CopyButton, Flex, Group, Paper, Popover, Progress, Stack, Text, Tooltip, useMantineTheme } from "@mantine/core";
-import { humanFileSize, prettyfiedCount, Share } from "../hupload";
+import { humanFileSize, prettyfiedCount, Share, ShareDefaults } from "../hupload";
 import { Link } from "react-router-dom";
 import classes from './ShareComponent.module.css';
 import { IconClock, IconDots, IconLink, IconTrash } from "@tabler/icons-react";
@@ -45,6 +45,17 @@ export function ShareComponent(props: {share: Share}) {
     const updateShare = () => {
         H.patch('/shares/'+name, newOptions).then(() => {
             setShare({...share, options: newOptions})
+        })
+    }
+
+    const renew = () => {
+        H.get('/defaults').then((r) => {
+            const d = r as ShareDefaults
+            const shareStartDate = new Date(share.created).getTime()
+            const shareEndDate = Date.now() + d.validity*1000*60*60*24
+            const newValidity = Math.ceil((shareEndDate-shareStartDate) / 1000 / 60 / 60 / 24)
+
+            setNewOptions({ ...newOptions, validity: newValidity})
         })
     }
 
@@ -172,7 +183,7 @@ export function ShareComponent(props: {share: Share}) {
                                                     <IconDots style={{ width: '70%', height: '70%' }} stroke={1.5}/>
                                                 </ActionIcon>
                                             </Tooltip>
-                                            <ShareEditor buttonTitle={t("update")} onChange={setNewOptions} onClick={updateShare} options={newOptions}/>
+                                            <ShareEditor buttonTitle={t("update")} onChange={setNewOptions} onClick={updateShare} onRenew={renew} options={newOptions}/>
                                         </ResponsivePopover>
                                     </ActionIconGroup>
                                 </Flex>

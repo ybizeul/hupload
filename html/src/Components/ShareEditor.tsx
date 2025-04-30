@@ -1,6 +1,6 @@
 import { Share } from "@/hupload";
-import { ActionIcon, Box, BoxComponentProps, Button, Flex, Input, NumberInput, rem, SegmentedControl, Stack, TextInput, useMantineTheme } from "@mantine/core";
-import { IconChevronLeft, IconChevronRight } from "@tabler/icons-react";
+import { ActionIcon, Box, BoxComponentProps, Button, Flex, Group, Input, NumberInput, rem, SegmentedControl, Stack, TextInput, Tooltip, useMantineTheme } from "@mantine/core";
+import { IconChevronLeft, IconChevronRight, IconClockPlus } from "@tabler/icons-react";
 import { useDisclosure, useMediaQuery, useUncontrolled } from "@mantine/hooks";
 import classes from './ShareEditor.module.css';
 import { MarkDownEditor } from "./MarkdownEditor";
@@ -10,6 +10,7 @@ import { useTranslation } from "react-i18next";
 interface ShareEditorProps {
   onChange: (options: Share["options"]) => void;
   onClick: () => void;
+  onRenew?: () => void;
   close?: () => void;
   options: Share["options"];
   buttonTitle: string;
@@ -18,7 +19,7 @@ interface ShareEditorProps {
 export function ShareEditor(props: ShareEditorProps&BoxComponentProps) {
     const { t } = useTranslation()
     // Initialize props
-    const { onChange, onClick, close, buttonTitle } = props;
+    const { onChange, onClick, onRenew, close, buttonTitle } = props;
 
     // Initialize state
     const [options, setOptions] = useUncontrolled({
@@ -40,6 +41,9 @@ export function ShareEditor(props: ShareEditorProps&BoxComponentProps) {
         onChange(o)
     }
 
+    const renew = () => {
+        onRenew && onRenew();
+    }
     return (
         <Box miw={rem(200)} h="100%" w="100%" display={"flex"}>
             <Flex direction="column" gap="sm" w="100%" justify={"space-between"}>
@@ -73,15 +77,25 @@ export function ShareEditor(props: ShareEditorProps&BoxComponentProps) {
                         </Input.Wrapper>
 
                         {/* Share validity */}
-                        <NumberInput
-                            label={t("validity")}
-                            description={t("number_of_days_the_share_is_valid")}
-                            value={options.validity}
-                            min={0}
-                            classNames={{wrapper: classes.numberInput}}
-                            onChange={(v) => { notifyChange({...options, validity:v as number}); }}
-                        />
-
+                            <NumberInput
+                                label={t("validity")}
+                                description={t("number_of_days_the_share_is_valid")}
+                                value={options.validity}
+                                min={0}
+                                classNames={{wrapper: classes.numberInput}}
+                                onChange={(v) => { notifyChange({...options, validity:v as number}); }}
+                                inputContainer={(children) => (
+                                    <>
+                                    <Group gap="xs" align="center">
+                                        {children}
+                                        <Tooltip label={t("renew_share")} withArrow>
+                                        <ActionIcon mt="xs" variant="light" radius="xl" onClick={renew} >
+                                            <IconClockPlus style={{ width: '70%', height: '70%' }} stroke={1.5}/>
+                                        </ActionIcon>
+                                        </Tooltip>
+                                    </Group>
+                                    </>)}
+                            />
                         {/* Share description */}
                         <TextInput label={t("description")} value={options.description}
                             onChange={(v) => { notifyChange({...options, description:v.target.value}); }}

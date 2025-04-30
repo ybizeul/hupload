@@ -88,6 +88,7 @@ i18n
           send: "Send",
           receive: "Receive",
           both: "Both",
+          renew_share: "Renew validity",
 
           validity: "Validity",
           number_of_days_the_share_is_valid: "Number of days the share is valid. 0 is unlimited.",
@@ -153,6 +154,7 @@ i18n
             send: "Envoyer",
             receive: "Reçevoir",
             both: "Les deux",
+            renew_share: "Étendre la validité",
 
             validity: "Expiration",
             number_of_days_the_share_is_valid: "Nombre de jours pendant lesquels le partage est valide. 0 signifie illimité.",
