@@ -48,6 +48,16 @@ export function ShareComponent(props: {share: Share}) {
         })
     }
 
+    const linkify = (text: string) => {
+        const urlRegex = /[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_+.~#?&//=]*)/
+        if (urlRegex.test(text)) {
+            return <Anchor href={text} target="_blank" rel="noopener noreferrer">{text}</Anchor>
+        }
+        else {
+            return text
+        }
+    }
+
     if (deleted) {
         return
     }
@@ -107,16 +117,16 @@ export function ShareComponent(props: {share: Share}) {
                                 <Progress radius="0" w="100%" pos="absolute" bottom="0" size="xs" color={error?"red":(uploading?"blue":"green")} value={uploadPercent} />
                             }
                         {/* Share informations */}
-                        <Box flex="1" p="md">
-                            <Stack gap="0">
-                                <Flex align={"center"}>
+                        <Box w="100%" flex="1" p="md" >
+                            <Stack w="100%" gap="0" >
+                                <Flex w="100%" align={"center"} >
 
                                     {/* Share name */}
-                                    <Group flex="1" gap="0" align="center">
-                                        <Stack flex="1" gap={0}>
+                                    <Group wrap="nowrap" w="100%" flex="1" gap="0" align="center" style={{overflow:"hidden"}}>
+                                        <Stack w="100%" flex="1" gap={0} align="flex-start" style={{overflow:"hidden"}}>
                                             <Anchor style={{ whiteSpace: "nowrap"}} component={Link} to={'/'+name}><Text>{name}</Text></Anchor>
-                                            <Text w="100%" size="xs" c="gray">
-                                                {share.options.description?share.options.description
+                                            <Text w="100%" flex="1" size="xs" c="gray" style={{overflow:"hidden",textOverflow: "ellipsis",whiteSpace: "nowrap"}}>
+                                                {share.options.description?linkify(share.options.description)
                                             :
                                                 t("created") + " " + new Date(share.created).toLocaleString(locales,{dateStyle:"long",timeStyle:"short"})
                                             }
