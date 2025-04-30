@@ -3,7 +3,7 @@ module github.com/ybizeul/hupload
 go 1.23.0
 
 require (
-	github.com/golang-jwt/jwt v3.2.2+incompatible
+	github.com/golang-jwt/jwt v3.2.2+incompatible // indirect
 	gopkg.in/yaml.v3 v3.0.1
 )
 
@@ -11,10 +11,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/config v1.27.30
 	github.com/aws/aws-sdk-go-v2/credentials v1.17.29
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.60.1
-	github.com/coreos/go-oidc v2.2.1+incompatible
-	golang.org/x/crypto v0.25.0
-	golang.org/x/oauth2 v0.21.0
-	gopkg.in/square/go-jose.v2 v2.6.0
+	github.com/ybizeul/apiws v0.9.2
 )
 
 require (
@@ -33,6 +30,10 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.26.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sts v1.30.5 // indirect
 	github.com/aws/smithy-go v1.20.4 // indirect
+	github.com/coreos/go-oidc v2.2.1+incompatible // indirect
+	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/pquerna/cachecontrol v0.2.0 // indirect
-	github.com/stretchr/testify v1.8.2 // indirect
+	golang.org/x/crypto v0.30.0 // indirect
+	golang.org/x/oauth2 v0.24.0 // indirect
+	gopkg.in/square/go-jose.v2 v2.6.0 // indirect
 )

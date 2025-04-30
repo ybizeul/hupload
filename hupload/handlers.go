@@ -12,8 +12,8 @@ import (
 	"path"
 	"strconv"
 
+	"github.com/ybizeul/apiws/middleware/auth"
 	"github.com/ybizeul/hupload/internal/storage"
-	"github.com/ybizeul/hupload/pkg/apiws/middleware/auth"
 )
 
 // type ShareParameters struct {
@@ -53,9 +53,6 @@ func (h *Hupload) postShare(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		slog.Error("postShare", slog.String("error", err.Error()))
 		switch {
-		case errors.Is(err, storage.ErrInvalidShareName):
-			writeError(w, http.StatusBadRequest, "invalid share name")
-			return
 		case errors.Is(err, storage.ErrShareAlreadyExists):
 			writeError(w, http.StatusConflict, "share already exists")
 			return
@@ -89,9 +86,6 @@ func (h *Hupload) patchShare(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		slog.Error("patchShare", slog.String("error", err.Error()))
 		switch {
-		case errors.Is(err, storage.ErrInvalidShareName):
-			writeError(w, http.StatusBadRequest, "invalid share name")
-			return
 		case errors.Is(err, storage.ErrShareNotFound):
 			writeError(w, http.StatusNotFound, "share not found")
 			return
@@ -122,9 +116,6 @@ func (h *Hupload) postItem(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		slog.Error("postItem", slog.String("error", err.Error()))
 		switch {
-		case errors.Is(err, storage.ErrInvalidShareName):
-			writeError(w, http.StatusBadRequest, "invalid share name")
-			return
 		case errors.Is(err, storage.ErrShareNotFound):
 			writeError(w, http.StatusNotFound, "share not found")
 			return
@@ -167,9 +158,6 @@ func (h *Hupload) postItem(w http.ResponseWriter, r *http.Request) {
 	item, err := h.Config.Storage.CreateItem(r.Context(), r.PathValue("share"), r.PathValue("item"), int64(cl), b)
 	if err != nil {
 		switch {
-		case errors.Is(err, storage.ErrInvalidItemName):
-			writeError(w, http.StatusBadRequest, "invalid item name")
-			return
 		case errors.Is(err, storage.ErrMaxShareSizeReached):
 			writeError(w, http.StatusInsufficientStorage, "max share size reached")
 			return
@@ -190,9 +178,6 @@ func (h *Hupload) deleteItem(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		slog.Error("postItem", slog.String("error", err.Error()))
 		switch {
-		case errors.Is(err, storage.ErrInvalidShareName):
-			writeError(w, http.StatusBadRequest, "invalid share name")
-			return
 		case errors.Is(err, storage.ErrShareNotFound):
 			writeError(w, http.StatusNotFound, "share not found")
 			return
@@ -210,9 +195,6 @@ func (h *Hupload) deleteItem(w http.ResponseWriter, r *http.Request) {
 	err = h.Config.Storage.DeleteItem(r.Context(), r.PathValue("share"), r.PathValue("item"))
 	if err != nil {
 		switch {
-		case errors.Is(err, storage.ErrInvalidItemName):
-			writeError(w, http.StatusBadRequest, "invalid item name")
-			return
 		case errors.Is(err, storage.ErrItemNotFound):
 			writeError(w, http.StatusNotFound, "item does not exists")
 			return
@@ -259,9 +241,6 @@ func (h *Hupload) getShare(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		slog.Error("getShare", slog.String("error", err.Error()))
 		switch {
-		case errors.Is(err, storage.ErrInvalidShareName):
-			writeError(w, http.StatusBadRequest, "invalid share name")
-			return
 		case errors.Is(err, storage.ErrShareNotFound):
 			writeError(w, http.StatusNotFound, "share not found")
 			return
@@ -289,9 +268,6 @@ func (h *Hupload) getShareItems(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		slog.Error("getShareItems", slog.String("error", err.Error()))
 		switch {
-		case errors.Is(err, storage.ErrInvalidShareName):
-			writeError(w, http.StatusBadRequest, "invalid share name")
-			return
 		case errors.Is(err, storage.ErrShareNotFound):
 			writeError(w, http.StatusNotFound, "share not found")
 			return
@@ -321,9 +297,6 @@ func (h *Hupload) deleteShare(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		slog.Error("deleteShare", slog.String("error", err.Error()))
 		switch {
-		case errors.Is(err, storage.ErrInvalidShareName):
-			writeError(w, http.StatusBadRequest, "invalid share name")
-			return
 		case errors.Is(err, storage.ErrShareNotFound):
 			writeError(w, http.StatusNotFound, "share not found")
 			return
@@ -343,9 +316,6 @@ func (h *Hupload) getItem(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		slog.Error("getItem", slog.String("error", err.Error()))
 		switch {
-		case errors.Is(err, storage.ErrInvalidShareName):
-			writeError(w, http.StatusBadRequest, "invalid share name")
-			return
 		case errors.Is(err, storage.ErrShareNotFound):
 			writeError(w, http.StatusNotFound, "share not found")
 			return
@@ -366,9 +336,6 @@ func (h *Hupload) getItem(w http.ResponseWriter, r *http.Request) {
 		switch {
 		case errors.Is(err, storage.ErrItemNotFound):
 			writeError(w, http.StatusNotFound, err.Error())
-			return
-		case errors.Is(err, storage.ErrInvalidItemName):
-			writeError(w, http.StatusBadRequest, err.Error())
 			return
 		}
 		writeError(w, http.StatusInternalServerError, err.Error())
@@ -404,9 +371,6 @@ func (h *Hupload) downloadShare(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		slog.Error("getItem", slog.String("error", err.Error()))
 		switch {
-		case errors.Is(err, storage.ErrInvalidShareName):
-			writeError(w, http.StatusBadRequest, "invalid share name")
-			return
 		case errors.Is(err, storage.ErrShareNotFound):
 			writeError(w, http.StatusNotFound, "share not found")
 			return

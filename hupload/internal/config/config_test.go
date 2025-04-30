@@ -5,8 +5,8 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/ybizeul/apiws/authentication"
 	"github.com/ybizeul/hupload/internal/storage"
-	"github.com/ybizeul/hupload/pkg/apiws/authentication"
 )
 
 func TestLoadEmptyConfig(t *testing.T) {

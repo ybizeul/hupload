@@ -6,8 +6,8 @@ import (
 
 	"gopkg.in/yaml.v3"
 
+	"github.com/ybizeul/apiws/authentication"
 	"github.com/ybizeul/hupload/internal/storage"
-	"github.com/ybizeul/hupload/pkg/apiws/authentication"
 )
 
 // TypeOption is a Type as a string and a map of options for the yaml

@@ -920,7 +920,7 @@ func TestGetItems(t *testing.T) {
 
 				shareName := "inexistant"
 
-				req = httptest.NewRequest("GET", path.Join("/api/v1/shares/", shareName, "items", url.QueryEscape(".metadata")), nil)
+				req = httptest.NewRequest("GET", path.Join("/api/v1/shares/", shareName, "items", url.QueryEscape("item")), nil)
 
 				w = httptest.NewRecorder()
 
