@@ -13,6 +13,7 @@ import { useMediaQuery } from "@mantine/hooks";
 import classes from './SharesPage.module.css';
 
 import { useTranslation } from "react-i18next";
+import { SearchField } from "@/Components/SearchField";
 
 export function SharesPage(props: {owner: string|null}) {
     const { t } = useTranslation();
@@ -24,7 +25,8 @@ export function SharesPage(props: {owner: string|null}) {
     const [shares, setShares] = useState<Share[]|undefined>(undefined)
     const [newShareOptions, setNewShareOptions] = useState<Share["options"]>({exposure: "upload", validity: 7, description: "", message: ""})
     const [error, setError] = useState<AxiosError|undefined>(undefined)
-    
+    const [filter, setFilter] = useState("")
+
     // Initialize hooks
     const navigate = useNavigate();
     const theme = useMantineTheme();
@@ -36,6 +38,7 @@ export function SharesPage(props: {owner: string|null}) {
 
     // Functions
     const createShare = () => {
+        setFilter("")
         H.post('/shares', newShareOptions).then(
         () => {
             updateShares()
@@ -60,6 +63,26 @@ export function SharesPage(props: {owner: string|null}) {
         })
     },[navigate])
 
+    const deleteShare = (name: string) => {
+        H.delete('/shares/'+name).then(() => {
+            setShares((s) => s?.filter((s) => s.name !== name))
+        })
+    }
+
+    const matchFilter = (share: Share) => {
+        if (filter === "") {
+            return true
+        }
+        if (share.name.toLowerCase().includes(filter.toLowerCase())) {
+            return true
+        }
+        if (share.options.description&&share.options.description.toLowerCase().includes(filter.toLowerCase())) {
+            return true
+        }
+        if (share.options.message&&share.options.message.toLowerCase().includes(filter.toLowerCase())) {
+            return true
+        }
+    }
     useEffect(() => {
         updateShares()
     },[updateShares])
@@ -112,16 +135,20 @@ export function SharesPage(props: {owner: string|null}) {
             </Box>
 
             { shares.length == 0 ?
-                <Text ta="center" mt="xl">{t("no_shares")}</Text>
+                <Text ta="center" fw={700} c="gray" mt="xl">{t("no_shares")}</Text>
                 :
                 <>
+                {/* Search bar */}
+                <Center>
+                    <SearchField onChange={setFilter} value={filter}/>
+                </Center>
                 {/* Currently logged in user shares */}
                 {shares.some((s) => s.owner === owner) &&
                     <>
                     {shares.some((s) => s.owner !== owner)&&<Text size="xl" fw="700">{t("your_shares")}</Text>}
                     {shares.map((s) => (
-                    s.owner === owner &&
-                    <ShareComponent key={s.name} share={s} />
+                    (s.owner === owner) && matchFilter(s) &&
+                    <ShareComponent key={s.name} share={s} onDelete={deleteShare} />
                     ))}
                     </>
                 }
@@ -131,8 +158,8 @@ export function SharesPage(props: {owner: string|null}) {
                     <>
                     <Text mt="md" size="xl" fw="700">{t("other_shares")}</Text>
                     {shares.map((s) => (
-                    s.owner === owner ||
-                    <ShareComponent key={s.name} share={s} />
+                    ((s.owner !== owner) && matchFilter(s)) &&
+                    <ShareComponent key={s.name} share={s} onDelete={deleteShare}/>
                     ))}
                     </>
                 }

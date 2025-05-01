@@ -13,12 +13,11 @@ import { QueueItem, UploadQueue } from "@/UploadQueue";
 
 import { useTranslation } from "react-i18next";
 
-export function ShareComponent(props: {share: Share}) {
+export function ShareComponent(props: {share: Share, onDelete?: (name: string) => void}) {
     const { t } = useTranslation();
     
     // Initialize States
     const [share,setShare] = useState(props.share)
-    const [deleted,setDeleted] = useState(false)
     const [newOptions, setNewOptions] = useState<Share["options"]>(share.options)
     const [uploadPercent, setUploadPercent] = useState(0)
     const [uploading, setUploading] = useState(false)
@@ -35,12 +34,7 @@ export function ShareComponent(props: {share: Share}) {
     const countString = prettyfiedCount(count,t("item"), t("items"),t("empty"))
     const remaining = (share.options.validity===0||share.options.validity===undefined)?null:(new Date(share.created).getTime() + share.options.validity*1000*60*60*24 - Date.now()) / 1000 / 60 / 60 / 24
 
-    // Function
-    const deleteShare = () => {
-        H.delete('/shares/'+name).then(() => {
-            setDeleted(true)
-        })
-    }
+    // Functions
 
     const updateShare = () => {
         H.patch('/shares/'+name, newOptions).then(() => {
@@ -67,10 +61,6 @@ export function ShareComponent(props: {share: Share}) {
         else {
             return text
         }
-    }
-
-    if (deleted) {
-        return
     }
     
     const localeStorage = window.localStorage.getItem("i18nextLng")
@@ -172,7 +162,7 @@ export function ShareComponent(props: {share: Share}) {
                                             </Popover.Target>
                                             <Popover.Dropdown className={classes.popover}>
                                                 <Text ta="center" size="xs" mb="xs">Delete this share ?</Text>
-                                                <Button aria-description="delete" w="100%" variant='default' c='red' size="xs" onClick={deleteShare}>Delete</Button>
+                                                <Button aria-description="delete" w="100%" variant='default' c='red' size="xs" onClick={() => props.onDelete&&props.onDelete(share.name)}>Delete</Button>
                                             </Popover.Dropdown>
                                         </Popover>
                                         
