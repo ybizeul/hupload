@@ -1,0 +1,7 @@
+auth:
+  type: oidc
+  options:
+    provider_url: https://auth.tynsoe.org/application/o/hupload/
+    client_id: iU8Tc1frhFLzklNZgmwmVihjsWncBHtZvAJAPp1u
+    client_secret: rXHFrnHUcUIwiT5ueeKDhNMwMp3YNINEECdrp11pTGpjMFkiAZGaFUC4iSnFTmoYJLEUftuoETq06jslahQXxUkIvhpnVQTagbUkeJRlM7kZ8ZqckfBxRfNU17V5hljC
+    redirect_url: http://localhost:5173/oidc
