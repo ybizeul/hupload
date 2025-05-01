@@ -15,7 +15,7 @@ Screenshot Login Page
 
 Screenshot Home Page
     FOR    ${theme}    IN    light  dark
-        New Context          colorScheme=${theme}  viewport={'width': 800, 'height': 589}
+        New Context          colorScheme=${theme}  viewport={'width': 800, 'height': 604}
         New Page             http://localhost:5173/
         Fill Text            id=username  admin
         Fill Text            id=password  hupload
@@ -27,9 +27,9 @@ Screenshot Home Page
         Sleep            0.5 second
         Click            css=\#showEditor
         Sleep            0.5 second
-        Take Screenshot  ${CURDIR}/../readme_images/properties-${theme}.png  crop={'x': 0, 'y': 222, 'width': 800, 'height': 346}
+        Take Screenshot  ${CURDIR}/../readme_images/properties-${theme}.png  crop={'x': 0, 'y': 258, 'width': 800, 'height': 346}
         Click            css=\#preview
-        Take Screenshot  ${CURDIR}/../readme_images/properties-preview-${theme}.png  crop={'x': 0, 'y': 222, 'width': 800, 'height': 346}
+        Take Screenshot  ${CURDIR}/../readme_images/properties-preview-${theme}.png  crop={'x': 0, 'y': 258, 'width': 800, 'height': 346}
 
 
         Click            css=\#kuva-yibi-bata \#edit
