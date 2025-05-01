@@ -147,7 +147,7 @@ export function SharesPage(props: {owner: string|null}) {
                     <>
                     {shares.some((s) => s.owner !== owner)&&<Text size="xl" fw="700">{t("your_shares")}</Text>}
                     {shares.map((s) => (
-                    s.owner === owner  && matchFilter(s) &&
+                    (s.owner === owner) && matchFilter(s) &&
                     <ShareComponent key={s.name} share={s} onDelete={deleteShare} />
                     ))}
                     </>
@@ -158,7 +158,7 @@ export function SharesPage(props: {owner: string|null}) {
                     <>
                     <Text mt="md" size="xl" fw="700">{t("other_shares")}</Text>
                     {shares.map((s) => (
-                    (s.owner === owner && matchFilter(s)) ||
+                    ((s.owner !== owner) && matchFilter(s)) &&
                     <ShareComponent key={s.name} share={s} onDelete={deleteShare}/>
                     ))}
                     </>
