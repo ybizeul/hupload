@@ -10,11 +10,11 @@ interface ResponsivePopoverProps {
 
 export function ResponsivePopover(props: ResponsivePopoverProps) {
     const { children } = props;
-    const [_actionIcon, child] = children;
+    const [_actionIcon, child] = children
 
     const [opened, { close, open }] = useDisclosure(false);
 
-    const actionIcon = React.cloneElement(_actionIcon, {onClick: () => {opened?close():open()}})
+    const actionIcon = React.cloneElement(_actionIcon as React.ReactElement<any>, {onClick: () => {opened?close():open()}})
 
     // Share properties is displayed as a Popover if withDrawer is false
     const popover = (
@@ -23,7 +23,7 @@ export function ResponsivePopover(props: ResponsivePopoverProps) {
                 {actionIcon}
             </Popover.Target>
             <Popover.Dropdown>
-                {child && React.cloneElement(child, {close: close})}
+                {child && React.cloneElement(child as React.ReactElement<any>, {close: close})}
             </Popover.Dropdown>
         </Popover>
     )
@@ -41,7 +41,7 @@ export function ResponsivePopover(props: ResponsivePopoverProps) {
                     </Drawer.Header>
                     <Flex flex="1" align={"stretch"}>
                         <Drawer.Body flex="1" pt="0">
-                            {child&&React.cloneElement(child, {close: close})}
+                            {child&&React.cloneElement(child as React.ReactElement<any>, {close: close})}
                         </Drawer.Body>
                     </Flex>
                     </Drawer.Content>
