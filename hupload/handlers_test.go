@@ -102,7 +102,7 @@ func TestCreateShare(t *testing.T) {
 
 				w = httptest.NewRecorder()
 
-				api.Mux.ServeHTTP(w, req)
+				api.ServeHTTP(w, req)
 
 				if w.Code != http.StatusUnauthorized {
 					t.Errorf("Expected status %d, got %d", http.StatusUnauthorized, w.Code)
@@ -130,7 +130,7 @@ func TestCreateShare(t *testing.T) {
 
 				w = httptest.NewRecorder()
 
-				api.Mux.ServeHTTP(w, req)
+				api.ServeHTTP(w, req)
 
 				if w.Code != http.StatusOK {
 					t.Errorf("Expected status %d, got %d", http.StatusOK, w.Code)
@@ -174,7 +174,7 @@ func TestCreateShare(t *testing.T) {
 
 				w = httptest.NewRecorder()
 
-				api.Mux.ServeHTTP(w, req)
+				api.ServeHTTP(w, req)
 
 				if w.Code != http.StatusOK {
 					t.Errorf("Expected status %d, got %d", http.StatusOK, w.Code)
@@ -219,7 +219,7 @@ func TestCreateShare(t *testing.T) {
 
 				w = httptest.NewRecorder()
 
-				api.Mux.ServeHTTP(w, req)
+				api.ServeHTTP(w, req)
 
 				if w.Code != http.StatusConflict {
 					t.Errorf("Expected status %d, got %d", http.StatusOK, w.Code)
@@ -237,7 +237,7 @@ func TestCreateShare(t *testing.T) {
 
 				w = httptest.NewRecorder()
 
-				api.Mux.ServeHTTP(w, req)
+				api.ServeHTTP(w, req)
 
 				if w.Code != http.StatusOK {
 					t.Errorf("Expected status %d, got %d", http.StatusOK, w.Code)
@@ -260,7 +260,7 @@ func TestCreateShare(t *testing.T) {
 
 				w = httptest.NewRecorder()
 
-				api.Mux.ServeHTTP(w, req)
+				api.ServeHTTP(w, req)
 
 				if w.Code != http.StatusBadRequest {
 					t.Errorf("Expected status %d, got %d", http.StatusBadRequest, w.Code)
@@ -312,7 +312,7 @@ func TestUpdateShare(t *testing.T) {
 
 					w = httptest.NewRecorder()
 
-					api.Mux.ServeHTTP(w, req)
+					api.ServeHTTP(w, req)
 
 					if altUser == 1 {
 						if w.Code != http.StatusForbidden {
@@ -346,7 +346,7 @@ func TestUpdateShare(t *testing.T) {
 
 					w = httptest.NewRecorder()
 
-					api.Mux.ServeHTTP(w, req)
+					api.ServeHTTP(w, req)
 
 					if w.Code != http.StatusUnauthorized {
 						t.Errorf("Expected status %d, got %d", http.StatusOK, w.Code)
@@ -367,7 +367,7 @@ func TestUpdateShare(t *testing.T) {
 
 					w = httptest.NewRecorder()
 
-					api.Mux.ServeHTTP(w, req)
+					api.ServeHTTP(w, req)
 
 					if w.Code != http.StatusBadRequest {
 						t.Errorf("Expected status %d, got %d", http.StatusBadRequest, w.Code)
@@ -388,7 +388,7 @@ func TestUpdateShare(t *testing.T) {
 
 					w = httptest.NewRecorder()
 
-					api.Mux.ServeHTTP(w, req)
+					api.ServeHTTP(w, req)
 
 					if w.Code != http.StatusNotFound {
 						t.Errorf("Expected status %d, got %d", http.StatusNotFound, w.Code)
@@ -455,7 +455,7 @@ func TestGetShare(t *testing.T) {
 					req.SetBasicAuth(username, "hupload")
 					w = httptest.NewRecorder()
 
-					api.Mux.ServeHTTP(w, req)
+					api.ServeHTTP(w, req)
 
 					if w.Code != http.StatusOK {
 						t.Errorf("Expected status %d, got %d", http.StatusOK, w.Code)
@@ -488,7 +488,7 @@ func TestGetShare(t *testing.T) {
 
 					w = httptest.NewRecorder()
 
-					api.Mux.ServeHTTP(w, req)
+					api.ServeHTTP(w, req)
 
 					if w.Code != http.StatusUnauthorized {
 						t.Errorf("Expected status %d, got %d", http.StatusUnauthorized, w.Code)
@@ -511,7 +511,7 @@ func TestGetShare(t *testing.T) {
 					req.SetBasicAuth(username, "hupload")
 					w = httptest.NewRecorder()
 
-					api.Mux.ServeHTTP(w, req)
+					api.ServeHTTP(w, req)
 
 					if w.Code != http.StatusOK {
 						t.Errorf("Expected status %d, got %d", http.StatusOK, w.Code)
@@ -556,7 +556,7 @@ func TestGetShare(t *testing.T) {
 
 					w = httptest.NewRecorder()
 
-					api.Mux.ServeHTTP(w, req)
+					api.ServeHTTP(w, req)
 
 					if w.Code != http.StatusOK {
 						t.Errorf("Expected status %d, got %d", http.StatusOK, w.Code)
@@ -591,7 +591,7 @@ func TestGetShare(t *testing.T) {
 
 					w = httptest.NewRecorder()
 
-					api.Mux.ServeHTTP(w, req)
+					api.ServeHTTP(w, req)
 
 					if w.Code != http.StatusBadRequest {
 						t.Errorf("Expected status %d, got %d", http.StatusOK, w.Code)
@@ -616,7 +616,7 @@ func TestGetShare(t *testing.T) {
 
 					w = httptest.NewRecorder()
 
-					api.Mux.ServeHTTP(w, req)
+					api.ServeHTTP(w, req)
 
 					if w.Code != http.StatusNotFound {
 						t.Errorf("Expected status %d, got %d", http.StatusNotFound, w.Code)
@@ -653,7 +653,7 @@ func TestGetShare(t *testing.T) {
 
 					w = httptest.NewRecorder()
 
-					api.Mux.ServeHTTP(w, req)
+					api.ServeHTTP(w, req)
 
 					if w.Code != http.StatusOK {
 						t.Errorf("Expected status %d, got %d", http.StatusOK, w.Code)
@@ -700,7 +700,7 @@ func TestGetShare(t *testing.T) {
 
 					w = httptest.NewRecorder()
 
-					api.Mux.ServeHTTP(w, req)
+					api.ServeHTTP(w, req)
 
 					if w.Code != http.StatusNotFound {
 						t.Errorf("Expected status %d, got %d", http.StatusNotFound, w.Code)
@@ -720,7 +720,7 @@ func TestGetShare(t *testing.T) {
 
 					w = httptest.NewRecorder()
 
-					api.Mux.ServeHTTP(w, req)
+					api.ServeHTTP(w, req)
 
 					if w.Code != http.StatusBadRequest {
 						t.Errorf("Expected status %d, got %d", http.StatusBadRequest, w.Code)
@@ -757,7 +757,7 @@ func TestDownloadShare(t *testing.T) {
 
 			w := httptest.NewRecorder()
 
-			api.Mux.ServeHTTP(w, req)
+			api.ServeHTTP(w, req)
 
 			if w.Code != http.StatusOK {
 				t.Errorf("Expected status %d, got %d", http.StatusOK, w.Code)
@@ -791,7 +791,7 @@ func TestDeleteShare(t *testing.T) {
 				req.SetBasicAuth("admin", "hupload")
 				w = httptest.NewRecorder()
 
-				api.Mux.ServeHTTP(w, req)
+				api.ServeHTTP(w, req)
 
 				if w.Code != http.StatusOK {
 					t.Errorf("Expected status %d, got %d", http.StatusOK, w.Code)
@@ -812,7 +812,7 @@ func TestDeleteShare(t *testing.T) {
 				req = httptest.NewRequest("DELETE", path.Join("/api/v1/shares/", shareName), nil)
 				w = httptest.NewRecorder()
 
-				api.Mux.ServeHTTP(w, req)
+				api.ServeHTTP(w, req)
 
 				if w.Code != http.StatusUnauthorized {
 					t.Errorf("Expected status %d, got %d", http.StatusUnauthorized, w.Code)
@@ -834,7 +834,7 @@ func TestDeleteShare(t *testing.T) {
 
 				w = httptest.NewRecorder()
 
-				api.Mux.ServeHTTP(w, req)
+				api.ServeHTTP(w, req)
 
 				if w.Code != http.StatusBadRequest {
 					t.Errorf("Expected status %d, got %d", http.StatusBadRequest, w.Code)
@@ -853,7 +853,7 @@ func TestDeleteShare(t *testing.T) {
 
 				w = httptest.NewRecorder()
 
-				api.Mux.ServeHTTP(w, req)
+				api.ServeHTTP(w, req)
 
 				if w.Code != http.StatusNotFound {
 					t.Errorf("Expected status %d, got %d", http.StatusNotFound, w.Code)
@@ -898,7 +898,7 @@ func TestGetItems(t *testing.T) {
 
 					w = httptest.NewRecorder()
 
-					api.Mux.ServeHTTP(w, req)
+					api.ServeHTTP(w, req)
 
 					if w.Code != http.StatusOK {
 						t.Errorf("Expected status %d, got %d", http.StatusOK, w.Code)
@@ -924,7 +924,7 @@ func TestGetItems(t *testing.T) {
 
 				w = httptest.NewRecorder()
 
-				api.Mux.ServeHTTP(w, req)
+				api.ServeHTTP(w, req)
 
 				if w.Code != http.StatusNotFound {
 					t.Errorf("Expected status %d, got %d", http.StatusNotFound, w.Code)
@@ -951,7 +951,7 @@ func TestGetItems(t *testing.T) {
 
 				w = httptest.NewRecorder()
 
-				api.Mux.ServeHTTP(w, req)
+				api.ServeHTTP(w, req)
 
 				if w.Code != http.StatusBadRequest {
 					t.Errorf("Expected status %d, got %d", http.StatusBadRequest, w.Code)
@@ -976,7 +976,7 @@ func TestGetItems(t *testing.T) {
 
 				w = httptest.NewRecorder()
 
-				api.Mux.ServeHTTP(w, req)
+				api.ServeHTTP(w, req)
 
 				if w.Code != http.StatusNotFound {
 					t.Errorf("Expected status %d, got %d", http.StatusNotFound, w.Code)
@@ -1004,7 +1004,7 @@ func TestGetItems(t *testing.T) {
 
 				w = httptest.NewRecorder()
 
-				api.Mux.ServeHTTP(w, req)
+				api.ServeHTTP(w, req)
 
 				if w.Code != http.StatusOK {
 					t.Errorf("Expected status %d, got %d", http.StatusOK, w.Code)
@@ -1105,7 +1105,7 @@ func TestUpload(t *testing.T) {
 
 				w = httptest.NewRecorder()
 
-				api.Mux.ServeHTTP(w, req)
+				api.ServeHTTP(w, req)
 
 				if w.Code != http.StatusOK {
 					t.Errorf("Expected status %d, got %d", http.StatusOK, w.Code)
@@ -1132,7 +1132,7 @@ func TestUpload(t *testing.T) {
 
 				w = httptest.NewRecorder()
 
-				api.Mux.ServeHTTP(w, req)
+				api.ServeHTTP(w, req)
 
 				if w.Code != http.StatusUnauthorized {
 					t.Errorf("Expected status %d, got %d", http.StatusUnauthorized, w.Code)
@@ -1169,7 +1169,7 @@ func TestUpload(t *testing.T) {
 
 				w = httptest.NewRecorder()
 
-				api.Mux.ServeHTTP(w, req)
+				api.ServeHTTP(w, req)
 
 				if w.Code != http.StatusOK {
 					t.Errorf("Expected status %d, got %d", http.StatusOK, w.Code)
@@ -1207,7 +1207,7 @@ func TestUpload(t *testing.T) {
 
 				w = httptest.NewRecorder()
 
-				api.Mux.ServeHTTP(w, req)
+				api.ServeHTTP(w, req)
 
 				if w.Code != http.StatusInsufficientStorage {
 					t.Errorf("Expected status %d, got %d", http.StatusInsufficientStorage, w.Code)
@@ -1241,7 +1241,7 @@ func TestUpload(t *testing.T) {
 
 				w = httptest.NewRecorder()
 
-				api.Mux.ServeHTTP(w, req)
+				api.ServeHTTP(w, req)
 
 				fileSize = 3 * 1024 * 1024
 				pr, ct = multipartWriter(fileSize)
@@ -1253,7 +1253,7 @@ func TestUpload(t *testing.T) {
 
 				w = httptest.NewRecorder()
 
-				api.Mux.ServeHTTP(w, req)
+				api.ServeHTTP(w, req)
 
 				if w.Code != http.StatusInsufficientStorage {
 					t.Errorf("Expected status %d, got %d", http.StatusInsufficientStorage, w.Code)
@@ -1272,7 +1272,7 @@ func TestUpload(t *testing.T) {
 
 				w = httptest.NewRecorder()
 
-				api.Mux.ServeHTTP(w, req)
+				api.ServeHTTP(w, req)
 
 				if w.Code != http.StatusBadRequest {
 					t.Errorf("Expected status %d, got %d", http.StatusBadRequest, w.Code)
@@ -1291,7 +1291,7 @@ func TestUpload(t *testing.T) {
 
 				w = httptest.NewRecorder()
 
-				api.Mux.ServeHTTP(w, req)
+				api.ServeHTTP(w, req)
 
 				if w.Code != http.StatusNotFound {
 					t.Errorf("Expected status %d, got %d", http.StatusNotFound, w.Code)
@@ -1312,7 +1312,7 @@ func TestUpload(t *testing.T) {
 
 				w = httptest.NewRecorder()
 
-				api.Mux.ServeHTTP(w, req)
+				api.ServeHTTP(w, req)
 
 				if w.Code != http.StatusBadRequest {
 					t.Errorf("Expected status %d, got %d", http.StatusBadRequest, w.Code)
@@ -1341,7 +1341,7 @@ func TestUpload(t *testing.T) {
 
 				w = httptest.NewRecorder()
 
-				api.Mux.ServeHTTP(w, req)
+				api.ServeHTTP(w, req)
 
 				if w.Code != http.StatusBadRequest {
 					t.Errorf("Expected status %d, got %d", http.StatusBadRequest, w.Code)
@@ -1371,7 +1371,7 @@ func TestUpload(t *testing.T) {
 
 				w = httptest.NewRecorder()
 
-				api.Mux.ServeHTTP(w, req)
+				api.ServeHTTP(w, req)
 
 				if w.Code != http.StatusBadRequest {
 					t.Errorf("Expected status %d, got %d", http.StatusBadRequest, w.Code)
@@ -1415,7 +1415,7 @@ func TestDeleteItem(t *testing.T) {
 
 				w = httptest.NewRecorder()
 
-				api.Mux.ServeHTTP(w, req)
+				api.ServeHTTP(w, req)
 
 				if w.Code != http.StatusOK {
 					t.Errorf("Expected status %d, got %d", http.StatusOK, w.Code)
@@ -1437,7 +1437,7 @@ func TestDeleteItem(t *testing.T) {
 
 				w = httptest.NewRecorder()
 
-				api.Mux.ServeHTTP(w, req)
+				api.ServeHTTP(w, req)
 
 				if w.Code != http.StatusOK {
 					t.Errorf("Expected status %d, got %d", http.StatusOK, w.Code)
@@ -1461,7 +1461,7 @@ func TestDeleteItem(t *testing.T) {
 
 				w = httptest.NewRecorder()
 
-				api.Mux.ServeHTTP(w, req)
+				api.ServeHTTP(w, req)
 
 				if w.Code != http.StatusOK {
 					t.Errorf("Expected status %d, got %d", http.StatusOK, w.Code)
@@ -1484,7 +1484,7 @@ func TestDeleteItem(t *testing.T) {
 
 				w = httptest.NewRecorder()
 
-				api.Mux.ServeHTTP(w, req)
+				api.ServeHTTP(w, req)
 
 				if w.Code != http.StatusUnauthorized {
 					t.Errorf("Expected status %d, got %d", http.StatusOK, w.Code)
@@ -1501,7 +1501,7 @@ func TestDeleteItem(t *testing.T) {
 
 				w = httptest.NewRecorder()
 
-				api.Mux.ServeHTTP(w, req)
+				api.ServeHTTP(w, req)
 
 				if w.Code != http.StatusBadRequest {
 					t.Errorf("Expected status %d, got %d", http.StatusBadRequest, w.Code)
@@ -1518,7 +1518,7 @@ func TestDeleteItem(t *testing.T) {
 
 				w = httptest.NewRecorder()
 
-				api.Mux.ServeHTTP(w, req)
+				api.ServeHTTP(w, req)
 
 				if w.Code != http.StatusNotFound {
 					t.Errorf("Expected status %d, got %d", http.StatusNotFound, w.Code)
@@ -1537,7 +1537,7 @@ func TestDeleteItem(t *testing.T) {
 
 				w = httptest.NewRecorder()
 
-				api.Mux.ServeHTTP(w, req)
+				api.ServeHTTP(w, req)
 
 				if w.Code != http.StatusBadRequest {
 					t.Errorf("Expected status %d, got %d", http.StatusBadRequest, w.Code)
@@ -1556,7 +1556,7 @@ func TestDeleteItem(t *testing.T) {
 
 				w = httptest.NewRecorder()
 
-				api.Mux.ServeHTTP(w, req)
+				api.ServeHTTP(w, req)
 
 				if w.Code != http.StatusNotFound {
 					t.Errorf("Expected status %d, got %d", http.StatusNotFound, w.Code)
@@ -1582,7 +1582,7 @@ func TestMessages(t *testing.T) {
 
 		w := httptest.NewRecorder()
 
-		h.API.Mux.ServeHTTP(w, req)
+		h.API.ServeHTTP(w, req)
 
 		if w.Code != http.StatusOK {
 			t.Errorf("Expected status %d, got %d", http.StatusOK, w.Code)
@@ -1605,7 +1605,7 @@ func TestMessages(t *testing.T) {
 
 		w := httptest.NewRecorder()
 
-		h.API.Mux.ServeHTTP(w, req)
+		h.API.ServeHTTP(w, req)
 
 		if w.Code != http.StatusUnauthorized {
 			t.Errorf("Expected status %d, got %d", http.StatusOK, w.Code)
@@ -1637,7 +1637,7 @@ func TestMessages(t *testing.T) {
 
 		w := httptest.NewRecorder()
 
-		h.API.Mux.ServeHTTP(w, req)
+		h.API.ServeHTTP(w, req)
 
 		if w.Code != http.StatusOK {
 			t.Errorf("Expected status %d, got %d", http.StatusOK, w.Code)
@@ -1664,7 +1664,7 @@ func TestMessages(t *testing.T) {
 
 		w := httptest.NewRecorder()
 
-		h.API.Mux.ServeHTTP(w, req)
+		h.API.ServeHTTP(w, req)
 
 		if w.Code != http.StatusUnauthorized {
 			t.Errorf("Expected status %d, got %d", http.StatusUnauthorized, w.Code)
@@ -1707,7 +1707,7 @@ func TestVersion(t *testing.T) {
 		req.SetBasicAuth("admin", "hupload")
 		w = httptest.NewRecorder()
 
-		api.Mux.ServeHTTP(w, req)
+		api.ServeHTTP(w, req)
 
 		if w.Code != http.StatusOK {
 			t.Errorf("Expected status %d, got %d", http.StatusOK, w.Code)
@@ -1734,7 +1734,7 @@ func TestVersion(t *testing.T) {
 
 		w = httptest.NewRecorder()
 
-		api.Mux.ServeHTTP(w, req)
+		api.ServeHTTP(w, req)
 
 		if w.Code != http.StatusUnauthorized {
 			t.Errorf("Expected status %d, got %d", http.StatusOK, w.Code)
@@ -1766,7 +1766,7 @@ func TestDefaults(t *testing.T) {
 		req.SetBasicAuth("admin", "hupload")
 		w = httptest.NewRecorder()
 
-		api.Mux.ServeHTTP(w, req)
+		api.ServeHTTP(w, req)
 
 		if w.Code != http.StatusOK {
 			t.Errorf("Expected status %d, got %d", http.StatusOK, w.Code)
@@ -1803,7 +1803,7 @@ func TestDefaults(t *testing.T) {
 
 		w = httptest.NewRecorder()
 
-		api.Mux.ServeHTTP(w, req)
+		api.ServeHTTP(w, req)
 
 		if w.Code != http.StatusUnauthorized {
 			t.Errorf("Expected status %d, got %d", http.StatusUnauthorized, w.Code)

@@ -26,7 +26,7 @@ func NewHupload(c *config.Config) (*Hupload, error) {
 	// Load configuration
 	found, err := c.Load()
 	if !found {
-		slog.Warn("No configuration file found, using default values", slog.String("path", c.Path))
+		slog.Warn("No configuration file found, using default values", "path", c.Path)
 	}
 	if err != nil {
 		return nil, err
@@ -65,11 +65,11 @@ func (h *Hupload) setup() {
 
 	var authenticator auth.AuthMiddleware
 	switch h.Config.Authentication.(type) {
-	case *authentication.AuthenticationFile, *authentication.AuthenticationDefault:
+	case *authentication.File, *authentication.Basic:
 		authenticator = auth.BasicAuthMiddleware{
 			Authentication: api.Authentication,
 		}
-	case *authentication.AuthenticationOIDC:
+	case *authentication.OIDC:
 		authenticator = auth.OIDCAuthMiddleware{
 			Authentication: api.Authentication,
 		}
@@ -119,7 +119,7 @@ func (h *Hupload) setup() {
 			slog.Error("Unable to use HTTP_PORT")
 			panic(err)
 		}
-		api.HTTPPort = p
+		api.WithPort(p)
 	}
 }
 

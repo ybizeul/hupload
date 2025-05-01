@@ -194,7 +194,7 @@ func (c *Config) authentication() (authentication.Authentication, error) {
 
 	switch a.Type {
 	case "file":
-		var options authentication.FileAuthenticationConfig
+		var options authentication.FileConfig
 
 		b, err := yaml.Marshal(a.Options)
 		if err != nil {
@@ -205,9 +205,9 @@ func (c *Config) authentication() (authentication.Authentication, error) {
 		if err != nil {
 			return nil, err
 		}
-		return authentication.NewAuthenticationFile(options)
+		return authentication.NewFile(options)
 	case "oidc":
-		var options authentication.AuthenticationOIDCConfig
+		var options authentication.OIDCConfig
 
 		b, err := yaml.Marshal(a.Options)
 		if err != nil {
@@ -218,9 +218,9 @@ func (c *Config) authentication() (authentication.Authentication, error) {
 		if err != nil {
 			return nil, err
 		}
-		return authentication.NewAuthenticationOIDC(options)
+		return authentication.NewOIDC(options)
 	case "default":
-		return authentication.NewAuthenticationDefault(), nil
+		return authentication.NewBasic("admin", nil), nil
 	}
 
 	return nil, ErrUnknownAuthenticationBackend
