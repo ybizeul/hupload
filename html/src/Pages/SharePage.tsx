@@ -49,19 +49,6 @@ export function SharePage() {
             })
             return i
         })
-
-
-    //     setQueueItems((currentQueue) => {
-    //         const j = currentQueue.map((currentItem) => {
-    //             const p = progress.find((p) => p.file.name === currentItem.file.name)
-    //             if (p) {
-    //                 return p
-    //             }
-    //             return currentItem
-    //         })
-    //         const k = progress.filter((p) => !j.some((i) => i.file.name === p.file.name))
-    //         return [...k, ...j]
-    // })
     },[])
 
     const queue = new UploadQueue(H,"/shares/"+share?.name, updateProgress)
@@ -265,7 +252,7 @@ export function SharePage() {
                     />
                     </Dropzone.Idle>
                     <div>
-                    <Text size="xl" inline>
+                    <Text ta="center" size="xl" inline>
                         {t("drag_area")}
                     </Text>
                     </div>
