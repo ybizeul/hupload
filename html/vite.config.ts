@@ -14,4 +14,5 @@ export default defineConfig({
       '/auth': 'http://127.0.0.1:8080/',
     }
   },
+  resolve: { alias: { '@tabler/icons-react': '@tabler/icons-react/dist/esm/icons/index.mjs', }, },
 })

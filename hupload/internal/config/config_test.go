@@ -5,7 +5,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/ybizeul/apiws/authentication"
+	"github.com/ybizeul/apiws/auth/file"
 	"github.com/ybizeul/hupload/internal/storage"
 )
 
@@ -146,7 +146,7 @@ func TestMissingUsersFile(t *testing.T) {
 	}
 	b, err := c.Load()
 
-	if err != authentication.ErrAuthenticationMissingUsersFile {
+	if err != file.ErrMissingUsersFile {
 		t.Errorf("Expected ErrAuthenticationMissingUsersFile, got %v", err)
 	}
 

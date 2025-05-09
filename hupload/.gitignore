@@ -2,3 +2,5 @@ admin-ui
 __*
 local
 hupload
+data
+config.yml

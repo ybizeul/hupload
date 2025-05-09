@@ -1,6 +1,7 @@
 package storage_test
 
 import (
+	"bufio"
 	"bytes"
 	"context"
 	"os"
@@ -11,19 +12,19 @@ import (
 	"github.com/ybizeul/hupload/internal/storage"
 )
 
-func createS3Backend(t *testing.T) *storage.S3Backend {
-	c := storage.S3StorageConfig{
-		Endpoint:     os.Getenv("AWS_ENDPOINT_URL"),
-		Region:       os.Getenv("AWS_DEFAULT_REGION"),
-		AWSKey:       os.Getenv("AWS_ACCESS_KEY_ID"),
-		AWSSecret:    os.Getenv("AWS_SECRET_ACCESS_KEY"),
+func createMinioBackend(t *testing.T) *storage.MinioBackend {
+	c := storage.MinioStorageConfig{
+		Endpoint:     os.Getenv("MINIO_ENDPOINT"),
+		Region:       os.Getenv("MINIO_DEFAULT_REGION"),
+		AWSKey:       os.Getenv("MINIO_ACCESS_KEY_ID"),
+		AWSSecret:    os.Getenv("MINIO_SECRET_ACCESS_KEY"),
 		UsePathStyle: true,
 		Bucket:       os.Getenv("BUCKET"),
 		MaxFileSize:  4,
 		MaxShareSize: 5,
 	}
 
-	f := storage.NewS3Storage(c)
+	f := storage.NewMinioStorage(c)
 	if f == nil {
 		t.Errorf("Expected S3 Storage to be created")
 	}
@@ -31,8 +32,8 @@ func createS3Backend(t *testing.T) *storage.S3Backend {
 	return f
 }
 
-func TestS3CreateShare(t *testing.T) {
-	f := createS3Backend(t)
+func TestMinioCreateShare(t *testing.T) {
+	f := createMinioBackend(t)
 
 	t.Cleanup(func() {
 		_ = f.DeleteShare(context.Background(), "Test")
@@ -45,8 +46,8 @@ func TestS3CreateShare(t *testing.T) {
 	}
 }
 
-func TestS3UpdateShare(t *testing.T) {
-	f := createS3Backend(t)
+func TestMinioUpdateShare(t *testing.T) {
+	f := createMinioBackend(t)
 
 	t.Cleanup(func() {
 		_ = f.DeleteShare(context.Background(), "Test")
@@ -77,8 +78,8 @@ func TestS3UpdateShare(t *testing.T) {
 	}
 }
 
-func TestCreateS3Item(t *testing.T) {
-	f := createS3Backend(t)
+func TestCreateMinioItem(t *testing.T) {
+	f := createMinioBackend(t)
 
 	t.Cleanup(func() {
 		_ = f.DeleteShare(context.Background(), "Test")
@@ -104,19 +105,18 @@ func TestCreateS3Item(t *testing.T) {
 		},
 	}
 	for _, test := range tests {
-		b := bytes.NewReader(test.Bytes)
+		b := bufio.NewReader(bytes.NewBuffer(test.Bytes))
 
-		size := len(test.Bytes)
 		// Test create item
-		_, err = f.CreateItem(context.Background(), "Test", test.FileName, int64(size), b)
+		_, err = f.CreateItem(context.Background(), "Test", test.FileName, int64(len(test.Bytes)), b)
 		if err != nil {
 			t.Errorf("Expected no error, got %v", err)
 		}
 	}
 }
 
-func TestS3GetShare(t *testing.T) {
-	f := createS3Backend(t)
+func TestMinioGetShare(t *testing.T) {
+	f := createMinioBackend(t)
 
 	t.Cleanup(func() {
 		_ = f.DeleteShare(context.Background(), "Test")
@@ -154,8 +154,8 @@ func TestS3GetShare(t *testing.T) {
 	}
 }
 
-func TestS3ListShares(t *testing.T) {
-	f := createS3Backend(t)
+func TestMinioListShares(t *testing.T) {
+	f := createMinioBackend(t)
 
 	t.Cleanup(func() {
 		_ = f.DeleteShare(context.Background(), "Test1")

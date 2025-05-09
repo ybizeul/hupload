@@ -9,7 +9,7 @@ export function SearchField(props: { value?: string, onChange?: (e: string) => v
         rightSection={<ActionIcon size={16} radius="xl" variant="subtle" color="gray" onClick={() => {onChange && onChange("")}}><IconX size={16} stroke={1.5} /></ActionIcon>}
         placeholder="Search"
         value={value}
-        radius={30}
+        radius="xl"
         w={{base: "100%",xs:"50%"}}
         onChange={(event) => {
           onChange && onChange(event.currentTarget.value);

@@ -12,7 +12,7 @@ import (
 	"path"
 	"strconv"
 
-	"github.com/ybizeul/apiws/middleware/auth"
+	"github.com/ybizeul/apiws/auth"
 	"github.com/ybizeul/hupload/internal/storage"
 )
 
@@ -25,7 +25,7 @@ import (
 
 // postShare creates a new share with a randomly generate name
 func (h *Hupload) postShare(w http.ResponseWriter, r *http.Request) {
-	user, _ := auth.AuthForRequest(r)
+	user, _ := auth.UserForRequest(r)
 
 	// This should never happen as authentication is checked before in the
 	// middleware
@@ -66,7 +66,7 @@ func (h *Hupload) postShare(w http.ResponseWriter, r *http.Request) {
 
 // patchShare updates an existing share
 func (h *Hupload) patchShare(w http.ResponseWriter, r *http.Request) {
-	user, _ := auth.AuthForRequest(r)
+	user, _ := auth.UserForRequest(r)
 
 	// This should never happen as authentication is checked before in the
 	// middleware
@@ -123,7 +123,7 @@ func (h *Hupload) postItem(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
-	user, _ := auth.AuthForRequest(r)
+	user, _ := auth.UserForRequest(r)
 
 	if user == "" && (share.Options.Exposure != "both" && share.Options.Exposure != "upload") {
 		writeError(w, http.StatusUnauthorized, "unauthorized")
@@ -185,7 +185,7 @@ func (h *Hupload) deleteItem(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
-	user, _ := auth.AuthForRequest(r)
+	user, _ := auth.UserForRequest(r)
 
 	if user == "" && (share.Options.Exposure != "both" && share.Options.Exposure != "upload") {
 		writeError(w, http.StatusUnauthorized, "unauthorized")
@@ -215,7 +215,7 @@ func (h *Hupload) getShares(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
-	user, _ := auth.AuthForRequest(r)
+	user, _ := auth.UserForRequest(r)
 
 	if h.Config.Values.HideOtherShares {
 		tmpShares := []storage.Share{}
@@ -248,7 +248,7 @@ func (h *Hupload) getShare(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
-	user, _ := auth.AuthForRequest(r)
+	user, _ := auth.UserForRequest(r)
 
 	if user == "" && !share.IsValid() {
 		writeError(w, http.StatusGone, "Share expired")
@@ -275,7 +275,7 @@ func (h *Hupload) getShareItems(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
-	user, _ := auth.AuthForRequest(r)
+	user, _ := auth.UserForRequest(r)
 
 	if user == "" && !share.IsValid() {
 		writeError(w, http.StatusGone, "Share expired")
@@ -324,7 +324,7 @@ func (h *Hupload) getItem(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, _ := auth.AuthForRequest(r)
+	user, _ := auth.UserForRequest(r)
 
 	if user == "" && (share.Options.Exposure != "both" && share.Options.Exposure != "download") {
 		writeError(w, http.StatusUnauthorized, "unauthorized")
@@ -379,7 +379,7 @@ func (h *Hupload) downloadShare(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, _ := auth.AuthForRequest(r)
+	user, _ := auth.UserForRequest(r)
 
 	if user == "" && (share.Options.Exposure != "both" && share.Options.Exposure != "download") {
 		writeError(w, http.StatusUnauthorized, "unauthorized")
@@ -429,14 +429,14 @@ func (h *Hupload) downloadShare(w http.ResponseWriter, r *http.Request) {
 
 // postLogin returns the user name for the current session
 func (h *Hupload) postLogin(w http.ResponseWriter, r *http.Request) {
-	user, _ := auth.AuthForRequest(r)
-
+	user, _ := auth.UserForRequest(r)
+	//	_, loginURL := h.Config.Authentication.LoginURL(nil)
 	u := struct {
-		User      string `json:"user"`
-		LoginPage string `json:"loginPage"`
+		User string `json:"user"`
+		//		LoginPage string `json:"loginPage"`
 	}{
-		User:      user,
-		LoginPage: h.Config.Authentication.LoginURL(),
+		User: user,
+		//		LoginPage: loginURL,
 	}
 	writeSuccessJSON(w, u)
 }

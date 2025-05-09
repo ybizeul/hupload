@@ -280,7 +280,7 @@ export class APIClient {
 
 export interface AuthInfo {
     user: string
-    showLoginForm: boolean
+    skipLoginForm: boolean
     loginUrl: string
 }
 

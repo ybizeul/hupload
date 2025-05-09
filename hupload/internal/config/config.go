@@ -6,7 +6,11 @@ import (
 
 	"gopkg.in/yaml.v3"
 
-	"github.com/ybizeul/apiws/authentication"
+	"github.com/ybizeul/apiws/auth"
+	"github.com/ybizeul/apiws/auth/basic"
+	"github.com/ybizeul/apiws/auth/file"
+	"github.com/ybizeul/apiws/auth/oidc"
+
 	"github.com/ybizeul/hupload/internal/storage"
 )
 
@@ -45,7 +49,7 @@ type Config struct {
 	Values ConfigValues
 
 	Storage        storage.Storage
-	Authentication authentication.Authentication
+	Authentication auth.Authentication
 }
 
 // Load reads the configuration file and populates the Config struct
@@ -179,6 +183,47 @@ func (c *Config) storage() (storage.Storage, error) {
 		}
 
 		return storage.NewS3Storage(options), nil
+	case "minio":
+		var options storage.MinioStorageConfig
+		b, err := yaml.Marshal(s.Options)
+		if err != nil {
+			return nil, err
+		}
+
+		err = yaml.Unmarshal(b, &options)
+		if err != nil {
+			return nil, err
+		}
+
+		if options.Region == "" {
+			if os.Getenv("AWS_DEFAULT_REGION") == "" {
+				panic("missing region parameter or AWS_DEFAULT_REGION environment for s3 config !")
+			}
+			options.Region = os.Getenv("AWS_DEFAULT_REGION")
+		}
+
+		if options.AWSKey == "" {
+			if os.Getenv("AWS_ACCESS_KEY_ID") == "" {
+				panic("missing aws_key parameter or AWS_ACCESS_KEY_ID environment for s3 config !")
+			}
+			options.AWSKey = os.Getenv("AWS_ACCESS_KEY_ID")
+		}
+
+		if options.AWSSecret == "" {
+			if os.Getenv("AWS_SECRET_ACCESS_KEY") == "" {
+				panic("missing aws_secret parameter or AWS_SECRET_ACCESS_KEY environment for s3 config !")
+			}
+			options.AWSSecret = os.Getenv("AWS_SECRET_ACCESS_KEY")
+		}
+
+		if options.Bucket == "" {
+			if os.Getenv("BUCKET") == "" {
+				panic("missing bucket parameter or BUCKET environment for s3 config !")
+			}
+			options.Bucket = os.Getenv("BUCKET")
+		}
+
+		return storage.NewMinioStorage(options), nil
 	}
 
 	return nil, ErrUnknownStorageBackend
@@ -189,25 +234,19 @@ func (c *Config) storage() (storage.Storage, error) {
 // populated with the values from the yaml configuration file. It returns an
 // authentication.Authentication interface and an error if something failed
 
-func (c *Config) authentication() (authentication.Authentication, error) {
+func (c *Config) authentication() (auth.Authentication, error) {
 	a := c.Values.Authentication
 
 	switch a.Type {
 	case "file":
-		var options authentication.FileConfig
-
-		b, err := yaml.Marshal(a.Options)
-		if err != nil {
-			return nil, err
+		filePath, ok := a.Options["path"].(string)
+		if !ok {
+			return nil, errors.New("missing path: parameter for file authentication backend")
 		}
 
-		err = yaml.Unmarshal(b, &options)
-		if err != nil {
-			return nil, err
-		}
-		return authentication.NewFile(options)
+		return file.NewFile(filePath)
 	case "oidc":
-		var options authentication.OIDCConfig
+		var options oidc.OIDCConfig
 
 		b, err := yaml.Marshal(a.Options)
 		if err != nil {
@@ -218,9 +257,9 @@ func (c *Config) authentication() (authentication.Authentication, error) {
 		if err != nil {
 			return nil, err
 		}
-		return authentication.NewOIDC(options)
+		return oidc.NewOIDC(options)
 	case "default":
-		return authentication.NewBasic("admin", nil), nil
+		return basic.NewBasic("admin", nil), nil
 	}
 
 	return nil, ErrUnknownAuthenticationBackend

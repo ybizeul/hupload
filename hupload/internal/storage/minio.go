@@ -1,28 +1,25 @@
 package storage
 
 import (
+	"bufio"
 	"bytes"
 	"context"
 	"encoding/json"
-	"errors"
 	"io"
-	"net/http"
 	"path"
 	"sort"
 	"time"
 
-	"github.com/aws/aws-sdk-go-v2/config"
-	"github.com/aws/aws-sdk-go-v2/credentials"
-	"github.com/aws/aws-sdk-go-v2/service/s3"
-	"github.com/aws/aws-sdk-go-v2/service/s3/types"
+	"github.com/minio/minio-go/v7"
+	"github.com/minio/minio-go/v7/pkg/credentials"
 )
 
-// S3StorageConfig is the configuration structure for the s3 backend
+// MinioStorageConfig is the configuration structure for the s3 backend
 // AWSKey and AWSSecret are the credentials to access the bucket
 // Bucket is the Bucket name
 // MaxFileSize is the maximum size in MB for an item
 // MaxShareSize is the maximum size in MB for a share
-type S3StorageConfig struct {
+type MinioStorageConfig struct {
 	Endpoint     string `yaml:"endpoint,omitempty"`
 	UsePathStyle bool   `yaml:"use_path_style,omitempty"`
 	AWSKey       string `yaml:"aws_key"`
@@ -38,16 +35,16 @@ type S3StorageConfig struct {
 // Options is the configuration for the file storage backend
 // DefaultValidityDays is a global option in the configuration file that
 // sets the default validity of a share in days
-type S3Backend struct {
-	Options             S3StorageConfig
+type MinioBackend struct {
+	Options             MinioStorageConfig
 	DefaultValidityDays int
 
-	Client *s3.Client
+	Client *minio.Client
 }
 
 // NewFileStorage creates a new FileBackend with the provided options o
-func NewS3Storage(o S3StorageConfig) *S3Backend {
-	r := S3Backend{
+func NewMinioStorage(o MinioStorageConfig) *MinioBackend {
+	r := MinioBackend{
 		Options: o,
 	}
 
@@ -59,36 +56,25 @@ func NewS3Storage(o S3StorageConfig) *S3Backend {
 	return &r
 }
 
-func (b *S3Backend) initialize() error {
-	c, err := config.LoadDefaultConfig(
-		context.Background(),
-		config.WithRegion(b.Options.Region),
-		config.WithCredentialsProvider(credentials.NewStaticCredentialsProvider(b.Options.AWSKey, b.Options.AWSSecret, "")),
-		config.WithHTTPClient(&http.Client{
-			Timeout: 0,
-		}),
-	)
+func (b *MinioBackend) initialize() error {
+	c, err := minio.New(b.Options.Endpoint, &minio.Options{
+		Creds:  credentials.NewStaticV4(b.Options.AWSKey, b.Options.AWSSecret, ""),
+		Secure: true,
+	})
 	if err != nil {
 		return err
 	}
 
-	b.Client = s3.NewFromConfig(c, func(o *s3.Options) {
-		if b.Options.UsePathStyle {
-			o.UsePathStyle = true
-		}
-		if b.Options.Endpoint != "" {
-			o.BaseEndpoint = &b.Options.Endpoint
-		}
-	})
+	b.Client = c
 
-	_, err = b.Client.CreateBucket(context.Background(), &s3.CreateBucketInput{
-		Bucket: &b.Options.Bucket,
-	})
+	err = b.Client.MakeBucket(context.Background(), b.Options.Bucket, minio.MakeBucketOptions{
+		Region: b.Options.Region})
 	if err != nil {
-		var bne *types.BucketAlreadyOwnedByYou
-		if errors.As(err, &bne) {
+		errResp := minio.ToErrorResponse(err)
+		if errResp.Code == "BucketAlreadyOwnedByYou" {
 			return nil
 		}
+		return err
 	}
 
 	return nil
@@ -96,12 +82,12 @@ func (b *S3Backend) initialize() error {
 
 // Migrate will be called at initialization to give an opportunity to
 // the backend to migrate data from a previous version to the current one
-func (b *S3Backend) Migrate() error {
+func (b *MinioBackend) Migrate() error {
 	return nil
 }
 
 // CreateShare creates a new share
-func (b *S3Backend) CreateShare(ctx context.Context, name, owner string, options Options) (*Share, error) {
+func (b *MinioBackend) CreateShare(ctx context.Context, name, owner string, options Options) (*Share, error) {
 	if !IsShareNameSafe(name) {
 		return nil, ErrInvalidShareName
 	}
@@ -123,23 +109,18 @@ func (b *S3Backend) CreateShare(ctx context.Context, name, owner string, options
 		DateCreated: time.Now(),
 	}
 	path := path.Join("shares", name, ".metadata")
-	j := bytes.NewBuffer([]byte{})
-	err = json.NewEncoder(j).Encode(share)
+	j, err := json.Marshal(share)
 	if err != nil {
 		return nil, err
 	}
+	r := bytes.NewReader(j)
 
-	_, err = b.Client.PutObject(ctx, &s3.PutObjectInput{
-		Bucket: &b.Options.Bucket,
-		Key:    &path,
-		Body:   j,
-		Metadata: map[string]string{
-			"metadata": "true",
-			"owner":    owner,
-			"name":     name,
-		},
+	_, err = b.Client.PutObject(ctx, b.Options.Bucket, path, r, int64(len(j)), minio.PutObjectOptions{UserMetadata: map[string]string{
+		"metadata": "true",
+		"owner":    owner,
+		"name":     name,
+	},
 	})
-
 	if err != nil {
 		return nil, err
 	}
@@ -148,7 +129,7 @@ func (b *S3Backend) CreateShare(ctx context.Context, name, owner string, options
 }
 
 // UpdateShare updates an existing share
-func (b *S3Backend) UpdateShare(ctx context.Context, name string, options *Options) (*Options, error) {
+func (b *MinioBackend) UpdateShare(ctx context.Context, name string, options *Options) (*Options, error) {
 	if !IsShareNameSafe(name) {
 		return nil, ErrInvalidShareName
 	}
@@ -161,18 +142,18 @@ func (b *S3Backend) UpdateShare(ctx context.Context, name string, options *Optio
 	share.Options = *options
 
 	path := path.Join("shares", name, ".metadata")
-	j := bytes.NewBuffer([]byte{})
-	err = json.NewEncoder(j).Encode(share)
+	j, err := json.Marshal(share)
 	if err != nil {
 		return nil, err
 	}
+	r := bytes.NewReader(j)
 
-	_, err = b.Client.PutObject(ctx, &s3.PutObjectInput{
-		Bucket: &b.Options.Bucket,
-		Key:    &path,
-		Body:   j,
+	_, err = b.Client.PutObject(ctx, b.Options.Bucket, path, r, int64(len(j)), minio.PutObjectOptions{UserMetadata: map[string]string{
+		"metadata": "true",
+		"owner":    share.Owner,
+		"name":     name,
+	},
 	})
-
 	if err != nil {
 		return nil, err
 	}
@@ -181,7 +162,7 @@ func (b *S3Backend) UpdateShare(ctx context.Context, name string, options *Optio
 }
 
 // CreateItem creates a new item in a share
-func (b *S3Backend) CreateItem(ctx context.Context, name, item string, size int64, r io.Reader) (*Item, error) {
+func (b *MinioBackend) CreateItem(ctx context.Context, name, item string, size int64, r io.Reader) (*Item, error) {
 	if !IsShareNameSafe(name) {
 		return nil, ErrInvalidShareName
 	}
@@ -228,21 +209,12 @@ func (b *S3Backend) CreateItem(ctx context.Context, name, item string, size int6
 
 	// Substitute bufio.Reader with a limited reader
 	if maxWrite != 0 {
-		src = io.LimitReader(r, maxWrite)
+		src = bufio.NewReader(io.LimitReader(r, maxWrite))
 	}
 
 	path := path.Join(name, item)
-	input := &s3.PutObjectInput{
-		Bucket:        &b.Options.Bucket,
-		Key:           &path,
-		Body:          src,
-		ContentLength: &size,
-	}
-	_, err = b.Client.PutObject(ctx, input) // s3.WithAPIOptions(
-	// 	v4.AddUnsignedPayloadMiddleware,
-	// 	v4.RemoveComputePayloadSHA256Middleware,
-	// ),
 
+	_, err = b.Client.PutObject(ctx, b.Options.Bucket, path, src, size, minio.PutObjectOptions{})
 	if err != nil {
 		return nil, err
 	}
@@ -261,7 +233,7 @@ func (b *S3Backend) CreateItem(ctx context.Context, name, item string, size int6
 }
 
 // CreateItem creates a new item in a share
-func (b *S3Backend) DeleteItem(ctx context.Context, share, item string) error {
+func (b *MinioBackend) DeleteItem(ctx context.Context, share, item string) error {
 	if !IsShareNameSafe(share) {
 		return ErrInvalidShareName
 	}
@@ -276,16 +248,8 @@ func (b *S3Backend) DeleteItem(ctx context.Context, share, item string) error {
 		return err
 	}
 
-	_, err = b.Client.DeleteObject(ctx, &s3.DeleteObjectInput{
-		Bucket: &b.Options.Bucket,
-		Key:    &path,
-	})
-
+	err = b.Client.RemoveObject(ctx, b.Options.Bucket, path, minio.RemoveObjectOptions{})
 	if err != nil {
-		var bne *types.NoSuchKey
-		if errors.As(err, &bne) {
-			return ErrItemNotFound
-		}
 		return err
 	}
 
@@ -298,25 +262,18 @@ func (b *S3Backend) DeleteItem(ctx context.Context, share, item string) error {
 }
 
 // GetShare returns the share identified by share
-func (b *S3Backend) GetShare(ctx context.Context, name string) (*Share, error) {
+func (b *MinioBackend) GetShare(ctx context.Context, name string) (*Share, error) {
 	if !IsShareNameSafe(name) {
 		return nil, ErrInvalidShareName
 	}
 	path := path.Join("shares", name, ".metadata")
-	output, err := b.Client.GetObject(ctx, &s3.GetObjectInput{
-		Bucket: &b.Options.Bucket,
-		Key:    &path,
-	})
+	output, err := b.Client.GetObject(ctx, b.Options.Bucket, path, minio.GetObjectOptions{})
 	if err != nil {
-		var bne *types.NoSuchKey
-		if errors.As(err, &bne) {
-			return nil, ErrShareNotFound
-		}
 		return nil, err
 	}
 
 	result := &Share{}
-	err = json.NewDecoder(output.Body).Decode(result)
+	err = json.NewDecoder(output).Decode(result)
 	if err != nil {
 		return nil, err
 	}
@@ -325,27 +282,21 @@ func (b *S3Backend) GetShare(ctx context.Context, name string) (*Share, error) {
 }
 
 // ListShares returns the list of shares available
-func (b *S3Backend) ListShares(ctx context.Context) ([]Share, error) {
+func (b *MinioBackend) ListShares(ctx context.Context) ([]Share, error) {
 	prefix := "shares/"
-	output, err := b.Client.ListObjectsV2(ctx, &s3.ListObjectsV2Input{
-		Bucket: &b.Options.Bucket,
-		Prefix: &prefix,
+	output := b.Client.ListObjects(ctx, b.Options.Bucket, minio.ListObjectsOptions{
+		Prefix:    prefix,
+		Recursive: true,
 	})
-	if err != nil {
-		return nil, err
-	}
 
 	result := []Share{}
-	for _, item := range output.Contents {
-		gOutput, err := b.Client.GetObject(ctx, &s3.GetObjectInput{
-			Bucket: &b.Options.Bucket,
-			Key:    item.Key,
-		})
+	for item := range output {
+		gOutput, err := b.Client.GetObject(ctx, b.Options.Bucket, item.Key, minio.GetObjectOptions{})
 		if err != nil {
 			return nil, err
 		}
 		share := &Share{}
-		err = json.NewDecoder(gOutput.Body).Decode(share)
+		err = json.NewDecoder(gOutput).Decode(share)
 		if err != nil {
 			return nil, err
 		}
@@ -360,39 +311,32 @@ func (b *S3Backend) ListShares(ctx context.Context) ([]Share, error) {
 }
 
 // ListShare returns the list of items in a share
-func (b *S3Backend) ListShare(ctx context.Context, name string) ([]Item, error) {
+func (b *MinioBackend) ListShare(ctx context.Context, name string) ([]Item, error) {
 	if !IsShareNameSafe(name) {
 		return nil, ErrInvalidShareName
 	}
-	output, err := b.Client.ListObjectsV2(ctx, &s3.ListObjectsV2Input{
-		Bucket: &b.Options.Bucket,
-		Prefix: &name,
+	output := b.Client.ListObjects(ctx, b.Options.Bucket, minio.ListObjectsOptions{
+		Prefix:    name + "/",
+		Recursive: true,
 	})
-	if err != nil {
-		var bne *types.NoSuchKey
-		if errors.As(err, &bne) {
-			return nil, ErrShareNotFound
-		}
-		return nil, err
-	}
 
 	result := []Item{}
-	for _, item := range output.Contents {
-		inputs := s3.HeadObjectInput{
-			Bucket: &b.Options.Bucket,
-			Key:    item.Key,
-		}
+	for infos := range output {
+		// inputs := s3.HeadObjectInput{
+		// 	Bucket: &b.Options.Bucket,
+		// 	Key:    item.Key,
+		// }
 
-		gOutput, err := b.Client.HeadObject(ctx, &inputs)
-		if err != nil {
-			return nil, err
-		}
+		// gOutput, err := b.Client.StatObject(ctx, &inputs)
+		// if err != nil {
+		// 	return nil, err
+		// }
 
 		item := &Item{
-			Path: *item.Key,
+			Path: infos.Key,
 			ItemInfo: ItemInfo{
-				Size:         *gOutput.ContentLength,
-				DateModified: *gOutput.LastModified,
+				Size:         infos.Size,
+				DateModified: infos.LastModified,
 			},
 		}
 		result = append(result, *item)
@@ -407,7 +351,7 @@ func (b *S3Backend) ListShare(ctx context.Context, name string) ([]Item, error) 
 }
 
 // ListShare returns the list of items in a share
-func (b *S3Backend) DeleteShare(ctx context.Context, name string) error {
+func (b *MinioBackend) DeleteShare(ctx context.Context, name string) error {
 	if !IsShareNameSafe(name) {
 		return ErrInvalidShareName
 	}
@@ -430,11 +374,7 @@ func (b *S3Backend) DeleteShare(ctx context.Context, name string) error {
 
 	path := path.Join("shares", name, ".metadata")
 
-	_, err = b.Client.DeleteObject(ctx, &s3.DeleteObjectInput{
-		Bucket: &b.Options.Bucket,
-		Key:    &path,
-	})
-
+	err = b.Client.RemoveObject(ctx, b.Options.Bucket, path, minio.RemoveObjectOptions{})
 	if err != nil {
 		return err
 	}
@@ -443,7 +383,7 @@ func (b *S3Backend) DeleteShare(ctx context.Context, name string) error {
 }
 
 // GetItem returns the item identified by share and item
-func (b *S3Backend) GetItem(ctx context.Context, share, item string) (*Item, error) {
+func (b *MinioBackend) GetItem(ctx context.Context, share, item string) (*Item, error) {
 	if !IsShareNameSafe(share) {
 		return nil, ErrInvalidShareName
 	}
@@ -453,38 +393,25 @@ func (b *S3Backend) GetItem(ctx context.Context, share, item string) (*Item, err
 
 	path := path.Join(share, item)
 
-	aOutput, err := b.Client.GetObjectAttributes(ctx, &s3.GetObjectAttributesInput{
-		Bucket: &b.Options.Bucket,
-		Key:    &path,
-		ObjectAttributes: []types.ObjectAttributes{
-			types.ObjectAttributesObjectSize,
-		},
-	})
+	aOutput, err := b.Client.GetObjectAttributes(ctx, b.Options.Bucket, path, minio.ObjectAttributesOptions{})
 
 	if err != nil {
-		var bne *types.NoSuchKey
-		if errors.As(err, &bne) {
-			return nil, ErrItemNotFound
-		}
 		return nil, err
 	}
 
 	result := &Item{
 		Path: path,
 		ItemInfo: ItemInfo{
-			DateModified: *aOutput.LastModified,
+			DateModified: aOutput.LastModified,
 		},
 	}
-
-	if aOutput.ObjectSize != nil {
-		result.ItemInfo.Size = *aOutput.ObjectSize
-	}
+	result.ItemInfo.Size = int64(aOutput.ObjectSize)
 
 	return result, nil
 }
 
 // GetItem returns the item identified by share and item
-func (b *S3Backend) GetItemData(ctx context.Context, share, item string) (io.ReadCloser, error) {
+func (b *MinioBackend) GetItemData(ctx context.Context, share, item string) (io.ReadCloser, error) {
 	if !IsShareNameSafe(share) {
 		return nil, ErrInvalidShareName
 	}
@@ -499,19 +426,16 @@ func (b *S3Backend) GetItemData(ctx context.Context, share, item string) (io.Rea
 
 	path := path.Join(share, item)
 
-	aOutput, err := b.Client.GetObject(ctx, &s3.GetObjectInput{
-		Bucket: &b.Options.Bucket,
-		Key:    &path,
-	})
+	aOutput, err := b.Client.GetObject(ctx, b.Options.Bucket, path, minio.GetObjectOptions{})
 
 	if err != nil {
 		return nil, err
 	}
 
-	return aOutput.Body, err
+	return aOutput, err
 }
 
-func (b *S3Backend) updateMetadata(ctx context.Context, s string) error {
+func (b *MinioBackend) updateMetadata(ctx context.Context, s string) error {
 	if !IsShareNameSafe(s) {
 		return ErrInvalidShareName
 	}
@@ -535,20 +459,16 @@ func (b *S3Backend) updateMetadata(ctx context.Context, s string) error {
 	share.Count = int64(count)
 	share.Size = capacity
 
-	j := bytes.NewBuffer([]byte{})
-	err = json.NewEncoder(j).Encode(share)
+	j, err := json.Marshal(share)
 	if err != nil {
 		return err
 	}
 
 	path := path.Join("shares", s, ".metadata")
 
-	_, err = b.Client.PutObject(ctx, &s3.PutObjectInput{
-		Bucket: &b.Options.Bucket,
-		Key:    &path,
-		Body:   j,
-	})
+	r := bytes.NewReader(j)
 
+	_, err = b.Client.PutObject(ctx, b.Options.Bucket, path, r, int64(len(j)), minio.PutObjectOptions{})
 	if err != nil {
 		return err
 	}

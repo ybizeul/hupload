@@ -36,7 +36,7 @@ export function Login() {
 
     useEffect(() => {
         if (authInfo !== undefined) {
-            if (!authInfo.user && !authInfo.showLoginForm && authInfo.loginUrl !== document.location.pathname) {
+            if (!authInfo.user && authInfo.skipLoginForm && authInfo.loginUrl !== document.location.pathname) {
                 window.location.href=authInfo.loginUrl
                 return
             }
@@ -46,7 +46,7 @@ export function Login() {
         }
     },[navigate, authInfo])
 
-    if (!authInfo?.showLoginForm) {
+    if (!authInfo || authInfo.skipLoginForm) {
         return
     }
 

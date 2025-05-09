@@ -10,8 +10,6 @@ import (
 	"log/slog"
 
 	"github.com/ybizeul/apiws"
-	"github.com/ybizeul/apiws/authentication"
-	"github.com/ybizeul/apiws/middleware/auth"
 	"github.com/ybizeul/hupload/internal/config"
 	"github.com/ybizeul/hupload/middleware"
 )
@@ -44,7 +42,7 @@ func NewHupload(c *config.Config) (*Hupload, error) {
 		return nil, err
 	}
 
-	api.SetAuthentication(c.Authentication)
+	api.WithAuthentication(c.Authentication)
 	result := &Hupload{
 		Config: c,
 		API:    api,
@@ -63,53 +61,38 @@ func (h *Hupload) setup() {
 
 	api := h.API
 
-	var authenticator auth.AuthMiddleware
-	switch h.Config.Authentication.(type) {
-	case *authentication.File, *authentication.Basic:
-		authenticator = auth.BasicAuthMiddleware{
-			Authentication: api.Authentication,
-		}
-	case *authentication.OIDC:
-		authenticator = auth.OIDCAuthMiddleware{
-			Authentication: api.Authentication,
-		}
-	}
-
 	// Setup routes
 
 	// Guests can access a share and post new files in it
 	// That's Hupload principle, the security is based on the share name
 	// which is usually a random string.
 
-	api.AddPublicRoute("GET    /api/v1/shares/{share}", authenticator, shareCheck(http.HandlerFunc(h.getShare)))
-	api.AddPublicRoute("GET    /api/v1/shares/{share}/items", authenticator, shareCheck(http.HandlerFunc(h.getShareItems)))
-	api.AddPublicRoute("GET    /api/v1/shares/{share}/items/{item}", authenticator, shareAndItemCheck(http.HandlerFunc(h.getItem)))
+	api.AddPublicRoute("GET    /api/v1/shares/{share}", shareCheck(http.HandlerFunc(h.getShare)))
+	api.AddPublicRoute("GET    /api/v1/shares/{share}/items", shareCheck(http.HandlerFunc(h.getShareItems)))
+	api.AddPublicRoute("GET    /api/v1/shares/{share}/items/{item}", shareAndItemCheck(http.HandlerFunc(h.getItem)))
 
-	api.AddPublicRoute("POST   /api/v1/shares/{share}/items/{item}", authenticator, shareAndItemCheck(http.HandlerFunc(h.postItem)))
-	api.AddPublicRoute("DELETE /api/v1/shares/{share}/items/{item}", authenticator, shareAndItemCheck(http.HandlerFunc(h.deleteItem)))
+	api.AddPublicRoute("POST   /api/v1/shares/{share}/items/{item}", shareAndItemCheck(http.HandlerFunc(h.postItem)))
+	api.AddPublicRoute("DELETE /api/v1/shares/{share}/items/{item}", shareAndItemCheck(http.HandlerFunc(h.deleteItem)))
 
-	api.AddPublicRoute("GET    /d/{share}", authenticator, shareCheck(http.HandlerFunc(h.downloadShare)))
-	api.AddPublicRoute("GET    /d/{share}/{item}", authenticator, shareAndItemCheck(http.HandlerFunc(h.getItem)))
+	api.AddPublicRoute("GET    /d/{share}", shareCheck(http.HandlerFunc(h.downloadShare)))
+	api.AddPublicRoute("GET    /d/{share}/{item}", shareAndItemCheck(http.HandlerFunc(h.getItem)))
 
 	// Protected routes
 
-	api.AddRoute("GET    /login", authenticator, http.HandlerFunc(h.postLogin))
-	api.AddRoute("POST   /login", authenticator, http.HandlerFunc(h.postLogin))
+	api.AddRoute("GET    /api/v1/defaults", http.HandlerFunc(h.getDefaults))
 
-	api.AddRoute("GET    /api/v1/defaults", authenticator, http.HandlerFunc(h.getDefaults))
+	api.AddRoute("GET    /api/v1/shares", http.HandlerFunc(h.getShares))
+	api.AddRoute("POST   /api/v1/shares", http.HandlerFunc(h.postShare))
+	api.AddRoute("POST   /api/v1/shares/{share}", shareCheck(http.HandlerFunc(h.postShare)))
+	api.AddRoute("PATCH  /api/v1/shares/{share}", shareCheck(http.HandlerFunc(h.patchShare)))
+	api.AddRoute("DELETE /api/v1/shares/{share}", shareCheck(http.HandlerFunc(h.deleteShare)))
 
-	api.AddRoute("GET    /api/v1/shares", authenticator, http.HandlerFunc(h.getShares))
-	api.AddRoute("POST   /api/v1/shares", authenticator, http.HandlerFunc(h.postShare))
-	api.AddRoute("POST   /api/v1/shares/{share}", authenticator, shareCheck(http.HandlerFunc(h.postShare)))
-	api.AddRoute("PATCH  /api/v1/shares/{share}", authenticator, shareCheck(http.HandlerFunc(h.patchShare)))
-	api.AddRoute("DELETE /api/v1/shares/{share}", authenticator, shareCheck(http.HandlerFunc(h.deleteShare)))
+	api.AddRoute("GET    /api/v1/messages/{index}", http.HandlerFunc(h.getMessage))
+	api.AddRoute("GET    /api/v1/messages", http.HandlerFunc(h.getMessages))
 
-	api.AddRoute("GET    /api/v1/messages/{index}", authenticator, http.HandlerFunc(h.getMessage))
-	api.AddRoute("GET    /api/v1/messages", authenticator, http.HandlerFunc(h.getMessages))
+	api.AddRoute("GET    /api/v1/version", http.HandlerFunc(h.getVersion))
 
-	api.AddRoute("GET    /api/v1/version", authenticator, http.HandlerFunc(h.getVersion))
-
-	api.AddRoute("GET    /api/v1/*", authenticator, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	api.AddRoute("GET    /api/v1/*", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadRequest, "Error")
 	}))
 
