@@ -9,9 +9,14 @@ export function Haffix() {
     const { t } = useTranslation();
     const navigate = useNavigate();
     const location = useMatch('/:share')
-    const { check } = useAuthContext()
+    const { authInfo, check } = useAuthContext()
 
     const logout = () => {
+        if (authInfo?.logoutUrl) {
+            document.cookie = "hupload" +'=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+            window.location.href = authInfo.logoutUrl
+            return
+        }
         H.logoutNow()
         check && check()
         navigate('/')
