@@ -7,14 +7,14 @@ require (
 	gopkg.in/yaml.v3 v3.0.1
 )
 
-//replace github.com/ybizeul/apiws => ../../apiws
+replace github.com/ybizeul/apiws => ../../apiws
 
 require (
 	github.com/aws/aws-sdk-go-v2/config v1.29.14
 	github.com/aws/aws-sdk-go-v2/credentials v1.17.67
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.79.3
 	github.com/minio/minio-go/v7 v7.0.91
-	github.com/ybizeul/apiws v0.9.5
+	github.com/ybizeul/apiws v0.9.6
 )
 
 require (
@@ -38,6 +38,7 @@ require (
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/go-ini/ini v1.67.0 // indirect
 	github.com/goccy/go-json v0.10.5 // indirect
+	github.com/google/go-cmp v0.7.0 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/gorilla/securecookie v1.1.2 // indirect
 	github.com/gorilla/sessions v1.4.0 // indirect

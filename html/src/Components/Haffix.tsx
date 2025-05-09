@@ -9,9 +9,13 @@ export function Haffix() {
     const { t } = useTranslation();
     const navigate = useNavigate();
     const location = useMatch('/:share')
-    const { check } = useAuthContext()
+    const { authInfo, check } = useAuthContext()
 
     const logout = () => {
+        // if (authInfo?.logoutUrl) {
+        //     window.location.href = authInfo.logoutUrl
+        //     return
+        // }
         H.logoutNow()
         check && check()
         navigate('/')

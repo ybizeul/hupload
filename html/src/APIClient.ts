@@ -282,6 +282,7 @@ export interface AuthInfo {
     user: string
     skipLoginForm: boolean
     loginUrl: string
+    logoutUrl: string
 }
 
 class HuploadClient extends APIClient {
