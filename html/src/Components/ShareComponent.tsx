@@ -161,7 +161,7 @@ export function ShareComponent(props: {share: Share, onDelete?: (name: string) =
                                                 </Tooltip>
                                             </Popover.Target>
                                             <Popover.Dropdown className={classes.popover}>
-                                                <Text ta="center" size="xs" mb="xs">Delete this share ?</Text>
+                                                <Text ta="center" size="xs" mb="xs">{t("delete_this_share")}</Text>
                                                 <Button aria-description="delete" w="100%" variant='default' c='red' size="xs" onClick={() => props.onDelete&&props.onDelete(share.name)}>Delete</Button>
                                             </Popover.Dropdown>
                                         </Popover>
