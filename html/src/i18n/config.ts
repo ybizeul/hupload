@@ -61,6 +61,7 @@ i18n
           your_shares: "Your Shares",
           other_shares: "Other Shares",
           create: "Create",
+          delete_this_share: "Delete this share?",
 
           // Share component
           guests_can_upload: "Guests can upload",
@@ -195,6 +196,7 @@ i18n
           your_shares: "Ihre Freigaben",
           other_shares: "Andere Freigaben",
           create: "Erstellen",
+          delete_this_share: "Diese Freigabe löschen?",
 
           // Share component
           guests_can_upload: "Empfänger darf uploaden",
@@ -218,10 +220,11 @@ i18n
 
           // Share editor
           exposure: "Art der Freigabe",
-          you_want_to: "Sie wollen Dateien :",
+          you_want_to: "Sie wollen Dateien:",
           send: "Versenden",
           receive: "Empfangen",
           both: "Beides",
+          renew_share: "Freigabe verlängern",
 
           validity: "Dauer der Gültigkeit",
           number_of_days_the_share_is_valid: "Anzahl der Tage bis die Freigabe abläuft. 0 bedeutet unbegrenzt.",
