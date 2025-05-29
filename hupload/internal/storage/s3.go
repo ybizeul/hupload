@@ -11,6 +11,7 @@ import (
 	"sort"
 	"time"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
@@ -67,6 +68,7 @@ func (b *S3Backend) initialize() error {
 		config.WithHTTPClient(&http.Client{
 			Timeout: 0,
 		}),
+		config.WithRequestChecksumCalculation(aws.RequestChecksumCalculationWhenRequired),
 	)
 	if err != nil {
 		return err

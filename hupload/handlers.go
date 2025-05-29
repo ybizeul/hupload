@@ -12,6 +12,7 @@ import (
 	"path"
 	"strconv"
 
+	"github.com/aws/smithy-go"
 	"github.com/ybizeul/apiws/auth"
 	"github.com/ybizeul/hupload/internal/storage"
 )
@@ -156,6 +157,7 @@ func (h *Hupload) postItem(w http.ResponseWriter, r *http.Request) {
 
 	b := bufio.NewReader(np)
 	item, err := h.Config.Storage.CreateItem(r.Context(), r.PathValue("share"), r.PathValue("item"), int64(cl), b)
+	var apiErr smithy.APIError
 	if err != nil {
 		switch {
 		case errors.Is(err, storage.ErrMaxShareSizeReached):
@@ -163,6 +165,10 @@ func (h *Hupload) postItem(w http.ResponseWriter, r *http.Request) {
 			return
 		case errors.Is(err, storage.ErrMaxFileSizeReached):
 			writeError(w, http.StatusInsufficientStorage, "max item size reached")
+			return
+		}
+		if errors.As(err, &apiErr) {
+			writeError(w, http.StatusBadRequest, apiErr.ErrorMessage())
 			return
 		}
 		writeError(w, http.StatusInternalServerError, err.Error())
