@@ -31,7 +31,7 @@ export function SharePage() {
             const i = currentItems.map((currentItem) => {
                 const p = progress.find((p) => p.file.name === currentItem.Path.split("/")[1])
                 if (p) {
-                    if (p.finished) {
+                    if (p.finished && !p.error) {
                         setTimeout(() => {
                             setItems((currentItems) => {
                                 return currentItems.map((currentItem) => {
