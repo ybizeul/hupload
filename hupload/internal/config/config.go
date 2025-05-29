@@ -6,9 +6,8 @@ import (
 
 	"gopkg.in/yaml.v3"
 
+	"github.com/ybizeul/apiws"
 	"github.com/ybizeul/apiws/auth"
-	"github.com/ybizeul/apiws/auth/basic"
-	"github.com/ybizeul/apiws/auth/file"
 	"github.com/ybizeul/apiws/auth/oidc"
 
 	"github.com/ybizeul/hupload/internal/storage"
@@ -244,7 +243,7 @@ func (c *Config) authentication() (auth.Authentication, error) {
 			return nil, errors.New("missing path: parameter for file authentication backend")
 		}
 
-		return file.NewFile(filePath)
+		return apiws.NewFile(filePath)
 	case "oidc":
 		var options oidc.OIDCConfig
 
@@ -257,9 +256,9 @@ func (c *Config) authentication() (auth.Authentication, error) {
 		if err != nil {
 			return nil, err
 		}
-		return oidc.NewOIDC(options)
+		return apiws.NewOIDC(options)
 	case "default":
-		return basic.NewBasic("admin", nil), nil
+		return apiws.NewBasic("admin", nil), nil
 	}
 
 	return nil, ErrUnknownAuthenticationBackend

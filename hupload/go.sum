@@ -1,3 +1,5 @@
+github.com/aws/aws-sdk-go v1.55.7 h1:UJrkFq7es5CShfBwlWAC8DA077vp8PyVbQd3lqLiztE=
+github.com/aws/aws-sdk-go v1.55.7/go.mod h1:eRwEWoyTWFMVYVQzKMNHWP5/RV4xIUGMQfXQHfHkpNU=
 github.com/aws/aws-sdk-go-v2 v1.36.3 h1:mJoei2CxPutQVxaATCzDUjcZEjVRdpsiiXi2o38yqWM=
 github.com/aws/aws-sdk-go-v2 v1.36.3/go.mod h1:LLXuLpgzEbD766Z5ECcRmi8AzSwfZItDtmABVkRLGzg=
 github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.6.10 h1:zAybnyUQXIZ5mok5Jqwlf58/TFE7uvd3IAsa1aF9cXs=
@@ -80,6 +82,10 @@ github.com/stretchr/testify v1.10.0 h1:Xv5erBjTwe/5IxqUQTdXv5kgmIvbHo3QQyRwhJsOf
 github.com/stretchr/testify v1.10.0/go.mod h1:r2ic/lqez/lEtzL7wO/rwa5dbSLXVDPFyf8C91i36aY=
 github.com/ybizeul/apiws v0.9.6 h1:Fj6DdIng43G9fGKm1tV0uGYm3WLw9/HfcF0OdI8rJMw=
 github.com/ybizeul/apiws v0.9.6/go.mod h1:6nlHNXZkyiopukCa5wsbCgdzW1uxIoUhHNGNtQ9jiL8=
+github.com/ybizeul/apiws v0.9.7 h1:/7ntI2EXkOAqzXPacpct/5+cIiZRTDwODjn8+EIDACI=
+github.com/ybizeul/apiws v0.9.7/go.mod h1:VRMkbH7ytP9jUGH0jpBCnbAgC6ln/EB0fuS9K+4RkVk=
+github.com/ybizeul/apiws v0.9.8 h1:HO1xvEIjefTgN8V4uifhT7UICPV49GR62ev6g/7o+UE=
+github.com/ybizeul/apiws v0.9.8/go.mod h1:VRMkbH7ytP9jUGH0jpBCnbAgC6ln/EB0fuS9K+4RkVk=
 golang.org/x/crypto v0.38.0 h1:jt+WWG8IZlBnVbomuhg2Mdq0+BBQaHbtqHEFEigjUV8=
 golang.org/x/crypto v0.38.0/go.mod h1:MvrbAqul58NNYPKnOra203SB9vpuZW0e+RRZV+Ggqjw=
 golang.org/x/net v0.40.0 h1:79Xs7wF06Gbdcg4kdCCIQArK11Z1hr5POQ6+fIYHNuY=
