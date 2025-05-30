@@ -128,7 +128,8 @@ i18n
             your_shares: "Vos Partages",
             other_shares: "Autres Partages",
             create: "Créer",
-
+            delete_this_share: "Supprimer ce partage ?",
+          
             // Share component
             guests_can_upload: "Les invités peuvent envoyer",
             guests_can_download: "Les invités peuvent télécharger",
