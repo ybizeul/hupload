@@ -22,6 +22,7 @@ export interface Share {
 export interface Item {
   Path: string;
   ItemInfo: ItemInfo;
+  Downloads: number;
 }
 
 export interface UploadableItem extends Item {

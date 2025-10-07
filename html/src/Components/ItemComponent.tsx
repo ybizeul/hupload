@@ -1,4 +1,4 @@
-import { ActionIcon, Box, Button, Center, Flex, Paper, Popover, rem, RingProgress, Text, ThemeIcon, Tooltip } from "@mantine/core";
+import { ActionIcon, Badge, Box, Button, Center, Flex, Paper, Popover, rem, RingProgress, Text, ThemeIcon, Tooltip } from "@mantine/core";
 import { IconCheck, IconDownload, IconTrash, IconX } from "@tabler/icons-react";
 import { humanFileSize, UploadableItem } from "../hupload";
 import classes from './ItemComponent.module.css';
@@ -30,10 +30,11 @@ export function ItemComponent(props: {download: boolean, onDelete?: (item:string
             )
         }
     }
+
     return (
     <Paper key={key} withBorder p="md" shadow="xs" radius="md" mt={10} className={classes.paper}>
         <Flex direction="row" align="center" h={45}>
-            <Text truncate="end">{fileName}</Text>
+            <Text truncate="end">{fileName}</Text>{item.Downloads>0&&<Badge ml="xs" variant="light">{item.Downloads}</Badge>}
             <Box flex={1} ta={"right"}>
             <Flex align={"center"} justify={"right"}>
             {item.QueueItem?

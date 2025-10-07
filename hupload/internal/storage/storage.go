@@ -2,7 +2,10 @@ package storage
 
 import (
 	"context"
+	"encoding/json"
 	"io"
+	"os"
+	"path"
 	"time"
 )
 
@@ -29,8 +32,60 @@ type Share struct {
 
 	Size  int64 `json:"size,omitempty"`
 	Count int64 `json:"count,omitempty"`
+
+	Downloads map[string]int64 `json:"downloads"`
 }
 
+func NewShare() *Share {
+	return &Share{
+		Version:   1,
+		Downloads: map[string]int64{},
+	}
+}
+func (s *Share) WithName(name string) *Share {
+	s.Name = name
+	return s
+}
+func (s *Share) WithDateCreated(t time.Time) *Share {
+	s.DateCreated = t
+	return s
+}
+func (s *Share) WithOwner(owner string) *Share {
+	s.Owner = owner
+	return s
+}
+func (s *Share) WithOptions(options Options) *Share {
+	s.Options = options
+	return s
+}
+func NewShareAtPath(p string) (*Share, error) {
+	fm, err := os.OpenFile(path.Join(p, ".metadata"), os.O_RDWR, 0644)
+	if err != nil {
+		return nil, err
+	}
+	defer fm.Close()
+
+	m := NewShare()
+	err = json.NewDecoder(fm).Decode(&m)
+	if err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
+func SaveShareAtPath(s *Share, p string) error {
+	f, err := os.Create(path.Join(p, ".metadata"))
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	err = json.NewEncoder(f).Encode(s)
+	if err != nil {
+		return err
+	}
+	return nil
+}
 func (s *Share) IsValid() bool {
 	if s.Options.Validity == 0 {
 		return true
@@ -72,8 +127,9 @@ func PublicShares(shares []Share) []PublicShare {
 }
 
 type Item struct {
-	Path     string
-	ItemInfo ItemInfo
+	Path      string
+	Downloads int64
+	ItemInfo  ItemInfo
 }
 
 type ItemInfo struct {
@@ -91,7 +147,7 @@ type Storage interface {
 	CreateShare(ctx context.Context, name, owner string, options Options) (*Share, error)
 
 	// UpdateShare updates an existing share
-	UpdateShare(ctx context.Context, name string, options *Options) (*Options, error)
+	UpdateShare(ctx context.Context, name string, options *Options, downloads *map[string]int64) (*Options, error)
 
 	// CreateItem creates a new item in a share
 	CreateItem(ctx context.Context, share, item string, size int64, reader io.Reader) (*Item, error)

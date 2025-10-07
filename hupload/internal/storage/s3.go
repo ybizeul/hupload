@@ -117,13 +117,12 @@ func (b *S3Backend) CreateShare(ctx context.Context, name, owner string, options
 		options.Exposure = "upload"
 	}
 
-	share := &Share{
-		Version:     1,
-		Name:        name,
-		Owner:       owner,
-		Options:     options,
-		DateCreated: time.Now(),
-	}
+	share := NewShare().
+		WithName(name).
+		WithOwner(owner).
+		WithOptions(options).
+		WithDateCreated(time.Now())
+
 	path := path.Join("shares", name, ".metadata")
 	j := bytes.NewBuffer([]byte{})
 	err = json.NewEncoder(j).Encode(share)
@@ -150,7 +149,7 @@ func (b *S3Backend) CreateShare(ctx context.Context, name, owner string, options
 }
 
 // UpdateShare updates an existing share
-func (b *S3Backend) UpdateShare(ctx context.Context, name string, options *Options) (*Options, error) {
+func (b *S3Backend) UpdateShare(ctx context.Context, name string, options *Options, downloads *map[string]int64) (*Options, error) {
 	if !IsShareNameSafe(name) {
 		return nil, ErrInvalidShareName
 	}
@@ -160,7 +159,13 @@ func (b *S3Backend) UpdateShare(ctx context.Context, name string, options *Optio
 		return nil, err
 	}
 
-	share.Options = *options
+	if options != nil {
+		share.Options = *options
+	}
+
+	if downloads != nil {
+		share.Downloads = *downloads
+	}
 
 	path := path.Join("shares", name, ".metadata")
 	j := bytes.NewBuffer([]byte{})
@@ -317,7 +322,8 @@ func (b *S3Backend) GetShare(ctx context.Context, name string) (*Share, error) {
 		return nil, err
 	}
 
-	result := &Share{}
+	result := NewShare()
+
 	err = json.NewDecoder(output.Body).Decode(result)
 	if err != nil {
 		return nil, err
@@ -346,7 +352,7 @@ func (b *S3Backend) ListShares(ctx context.Context) ([]Share, error) {
 		if err != nil {
 			return nil, err
 		}
-		share := &Share{}
+		share := NewShare()
 		err = json.NewDecoder(gOutput.Body).Decode(share)
 		if err != nil {
 			return nil, err
@@ -378,6 +384,14 @@ func (b *S3Backend) ListShare(ctx context.Context, name string) ([]Item, error) 
 		return nil, err
 	}
 
+	// Get current share downloads statistics
+	share, err := b.GetShare(ctx, name)
+	if err != nil {
+		return nil, err
+	}
+
+	downloads := share.Downloads
+
 	result := []Item{}
 	for _, item := range output.Contents {
 		inputs := s3.HeadObjectInput{
@@ -397,6 +411,11 @@ func (b *S3Backend) ListShare(ctx context.Context, name string) ([]Item, error) 
 				DateModified: *gOutput.LastModified,
 			},
 		}
+
+		if d, ok := downloads[path.Base(item.Path)]; ok {
+			item.Downloads = d
+		}
+
 		result = append(result, *item)
 	}
 
@@ -445,15 +464,15 @@ func (b *S3Backend) DeleteShare(ctx context.Context, name string) error {
 }
 
 // GetItem returns the item identified by share and item
-func (b *S3Backend) GetItem(ctx context.Context, share, item string) (*Item, error) {
-	if !IsShareNameSafe(share) {
+func (b *S3Backend) GetItem(ctx context.Context, s, item string) (*Item, error) {
+	if !IsShareNameSafe(s) {
 		return nil, ErrInvalidShareName
 	}
 	if !isItemNameSafe(item) {
 		return nil, ErrInvalidItemName
 	}
 
-	path := path.Join(share, item)
+	path := path.Join(s, item)
 
 	aOutput, err := b.Client.GetObjectAttributes(ctx, &s3.GetObjectAttributesInput{
 		Bucket: &b.Options.Bucket,
@@ -471,11 +490,17 @@ func (b *S3Backend) GetItem(ctx context.Context, share, item string) (*Item, err
 		return nil, err
 	}
 
+	share, err := b.GetShare(ctx, s)
+	if err != nil {
+		return nil, err
+	}
+
 	result := &Item{
 		Path: path,
 		ItemInfo: ItemInfo{
 			DateModified: *aOutput.LastModified,
 		},
+		Downloads: share.Downloads[item],
 	}
 
 	if aOutput.ObjectSize != nil {

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"os"
+	"path"
 	"reflect"
 	"testing"
 	"time"
@@ -65,7 +66,7 @@ func TestS3UpdateShare(t *testing.T) {
 		Message:     "message",
 		Description: "description",
 	}
-	options, err := f.UpdateShare(context.Background(), "Test", newOptions)
+	options, err := f.UpdateShare(context.Background(), "Test", newOptions, &map[string]int64{"test.txt": 1})
 
 	if err != nil {
 		t.Errorf("Expected no error, got %v", err)
@@ -84,23 +85,26 @@ func TestCreateS3Item(t *testing.T) {
 		_ = f.DeleteShare(context.Background(), "Test")
 	})
 
-	_, err := f.CreateShare(context.Background(), "Test", "admin", storage.DefaultOptions())
+	share, err := f.CreateShare(context.Background(), "Test", "admin", storage.DefaultOptions())
 	if err != nil {
 		t.Errorf("Expected no error, got %v", err)
 		return
 	}
 
 	tests := []struct {
-		FileName string
-		Bytes    []byte
+		FileName  string
+		Bytes     []byte
+		Downloads int64
 	}{
 		{
-			FileName: "test.txt",
-			Bytes:    []byte("test"),
+			FileName:  "test.txt",
+			Bytes:     []byte("test"),
+			Downloads: 5,
 		},
 		{
-			FileName: "test2.txt",
-			Bytes:    []byte(""),
+			FileName:  "test2.txt",
+			Bytes:     []byte(""),
+			Downloads: 0,
 		},
 	}
 	for _, test := range tests {
@@ -111,6 +115,40 @@ func TestCreateS3Item(t *testing.T) {
 		_, err = f.CreateItem(context.Background(), "Test", test.FileName, int64(size), b)
 		if err != nil {
 			t.Errorf("Expected no error, got %v", err)
+		}
+	}
+
+	share.Downloads = map[string]int64{
+		"test.txt":  5,
+		"test2.txt": 0,
+	}
+	_, err = f.UpdateShare(context.Background(), "Test", &share.Options, &share.Downloads)
+	if err != nil {
+		t.Errorf("Expected no error, got %v", err)
+		return
+	}
+
+	// Check items are in share
+	items, err := f.ListShare(context.Background(), "Test")
+	if err != nil {
+		t.Errorf("Expected no error, got %v", err)
+		return
+	}
+
+	if len(items) != len(tests) {
+		t.Errorf("Expected %d items, got %d", len(tests), len(items))
+		return
+	}
+
+	for i, item := range items {
+		if item.Path != path.Join("Test", tests[i].FileName) {
+			t.Errorf("Expected item name to be %s, got %s", path.Join("Test", tests[i].FileName), item.Path)
+		}
+		if item.ItemInfo.Size != int64(len(tests[i].Bytes)) {
+			t.Errorf("Expected item size to be %d, got %d", len(tests[i].Bytes), item.ItemInfo.Size)
+		}
+		if item.Downloads != tests[i].Downloads {
+			t.Errorf("Expected item downloads to be %d, got %d", tests[i].Downloads, item.Downloads)
 		}
 	}
 }
@@ -143,10 +181,11 @@ func TestS3GetShare(t *testing.T) {
 	got.DateCreated = time.Time{}
 
 	want := &storage.Share{
-		Version: 1,
-		Name:    "Test",
-		Owner:   "admin",
-		Options: options,
+		Version:   1,
+		Name:      "Test",
+		Owner:     "admin",
+		Options:   options,
+		Downloads: map[string]int64{},
 	}
 
 	if !reflect.DeepEqual(got, want) {
@@ -190,18 +229,8 @@ func TestS3ListShares(t *testing.T) {
 	}
 
 	want := []storage.Share{
-		{
-			Version: 1,
-			Name:    "Test2",
-			Owner:   "admin",
-			Options: storage.DefaultOptions(),
-		},
-		{
-			Version: 1,
-			Name:    "Test1",
-			Owner:   "admin",
-			Options: storage.DefaultOptions(),
-		},
+		*storage.NewShare().WithName("Test2").WithOwner("admin").WithOptions(storage.DefaultOptions()),
+		*storage.NewShare().WithName("Test1").WithOwner("admin").WithOptions(storage.DefaultOptions()),
 	}
 
 	if !reflect.DeepEqual(got, want) {

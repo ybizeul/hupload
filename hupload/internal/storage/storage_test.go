@@ -9,12 +9,11 @@ import (
 )
 
 func TestShouldBeValid(t *testing.T) {
-	share := storage.Share{
-		Name:        "test",
-		Owner:       "admin",
-		Options:     storage.Options{Validity: 10},
-		DateCreated: time.Now().AddDate(0, 0, -5),
-	}
+	share := storage.NewShare().
+		WithName("test").
+		WithOwner("admin").
+		WithOptions(storage.Options{Validity: 10}).
+		WithDateCreated(time.Now().AddDate(0, 0, -5))
 
 	if share.IsValid() == false {
 		t.Errorf("Expected share to be valid")
@@ -28,12 +27,11 @@ func TestShouldBeValid(t *testing.T) {
 }
 
 func TestShouldBeInvalid(t *testing.T) {
-	share := storage.Share{
-		Name:        "test",
-		Owner:       "admin",
-		Options:     storage.Options{Validity: 10},
-		DateCreated: time.Now().AddDate(0, 0, -12),
-	}
+	share := storage.NewShare().
+		WithName("test").
+		WithOwner("admin").
+		WithOptions(storage.Options{Validity: 10}).
+		WithDateCreated(time.Now().AddDate(0, 0, -12))
 
 	if share.IsValid() == true {
 		t.Errorf("Expected share to be invalid")
@@ -41,17 +39,16 @@ func TestShouldBeInvalid(t *testing.T) {
 }
 
 func TestPublicShare(t *testing.T) {
-	share := storage.Share{
-		Name:  "test",
-		Owner: "admin",
-		Options: storage.Options{
+	share := storage.NewShare().
+		WithName("test").
+		WithOwner("admin").
+		WithOptions(storage.Options{
 			Validity:    10,
 			Exposure:    "upload",
 			Description: "test",
 			Message:     "test",
-		},
-		DateCreated: time.Now(),
-	}
+		}).
+		WithDateCreated(time.Now())
 
 	publicShare := share.PublicShare()
 

@@ -533,8 +533,9 @@ func TestGetShare(t *testing.T) {
 							Description: "description",
 							Message:     "message",
 						},
-						Count: 0,
-						Size:  0,
+						Count:     0,
+						Size:      0,
+						Downloads: map[string]int64{},
 					}
 
 					if !reflect.DeepEqual(share, want) {
@@ -1175,12 +1176,6 @@ func TestUpload(t *testing.T) {
 					t.Errorf("Expected status %d, got %d", http.StatusOK, w.Code)
 					return
 				}
-
-				// _, err := os.Stat(path.Join("tmptest/data/", shareName, "newfile.txt"))
-				// if err != nil {
-				// 	t.Errorf("Expected file to be created")
-				// 	return
-				// }
 			})
 
 			t.Run("Upload a file too big should not work", func(t *testing.T) {
@@ -1192,10 +1187,6 @@ func TestUpload(t *testing.T) {
 				t.Cleanup(func() {
 					_ = h.Config.Storage.DeleteShare(context.Background(), "toobig")
 				})
-
-				// writer := multipart.NewWriter(body)
-				// // create a new form-data header name data and filename data.txt
-				// dataPart, _ := writer.CreateFormFile("data", "file.txt")
 
 				fileSize := 3*1024*1024 + 1
 				pr, ct := multipartWriter(fileSize)
@@ -1213,12 +1204,6 @@ func TestUpload(t *testing.T) {
 					t.Errorf("Expected status %d, got %d", http.StatusInsufficientStorage, w.Code)
 					return
 				}
-
-				// _, err := os.Stat(path.Join("tmptest/data/", "toobig", "newfile.txt"))
-				// if err == nil {
-				// 	t.Errorf("Expected file to be deleted")
-				// 	return
-				// }
 			})
 
 			t.Run("Upload too much data on a share shouldn't work", func(t *testing.T) {

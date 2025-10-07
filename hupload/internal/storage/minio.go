@@ -101,13 +101,12 @@ func (b *MinioBackend) CreateShare(ctx context.Context, name, owner string, opti
 		options.Exposure = "upload"
 	}
 
-	share := &Share{
-		Version:     1,
-		Name:        name,
-		Owner:       owner,
-		Options:     options,
-		DateCreated: time.Now(),
-	}
+	share := NewShare().
+		WithName(name).
+		WithOwner(owner).
+		WithOptions(options).
+		WithDateCreated(time.Now())
+
 	path := path.Join("shares", name, ".metadata")
 	j, err := json.Marshal(share)
 	if err != nil {
@@ -129,7 +128,7 @@ func (b *MinioBackend) CreateShare(ctx context.Context, name, owner string, opti
 }
 
 // UpdateShare updates an existing share
-func (b *MinioBackend) UpdateShare(ctx context.Context, name string, options *Options) (*Options, error) {
+func (b *MinioBackend) UpdateShare(ctx context.Context, name string, options *Options, downloads *map[string]int64) (*Options, error) {
 	if !IsShareNameSafe(name) {
 		return nil, ErrInvalidShareName
 	}
@@ -139,7 +138,13 @@ func (b *MinioBackend) UpdateShare(ctx context.Context, name string, options *Op
 		return nil, err
 	}
 
-	share.Options = *options
+	if options != nil {
+		share.Options = *options
+	}
+
+	if downloads != nil {
+		share.Downloads = *downloads
+	}
 
 	path := path.Join("shares", name, ".metadata")
 	j, err := json.Marshal(share)
@@ -272,7 +277,7 @@ func (b *MinioBackend) GetShare(ctx context.Context, name string) (*Share, error
 		return nil, err
 	}
 
-	result := &Share{}
+	result := NewShare()
 	err = json.NewDecoder(output).Decode(result)
 	if err != nil {
 		return nil, err
@@ -295,7 +300,7 @@ func (b *MinioBackend) ListShares(ctx context.Context) ([]Share, error) {
 		if err != nil {
 			return nil, err
 		}
-		share := &Share{}
+		share := NewShare()
 		err = json.NewDecoder(gOutput).Decode(share)
 		if err != nil {
 			return nil, err
@@ -320,18 +325,16 @@ func (b *MinioBackend) ListShare(ctx context.Context, name string) ([]Item, erro
 		Recursive: true,
 	})
 
+	// Get current share downloads statistics
+	share, err := b.GetShare(ctx, name)
+	if err != nil {
+		return nil, err
+	}
+
+	downloads := share.Downloads
+
 	result := []Item{}
 	for infos := range output {
-		// inputs := s3.HeadObjectInput{
-		// 	Bucket: &b.Options.Bucket,
-		// 	Key:    item.Key,
-		// }
-
-		// gOutput, err := b.Client.StatObject(ctx, &inputs)
-		// if err != nil {
-		// 	return nil, err
-		// }
-
 		item := &Item{
 			Path: infos.Key,
 			ItemInfo: ItemInfo{
@@ -339,6 +342,11 @@ func (b *MinioBackend) ListShare(ctx context.Context, name string) ([]Item, erro
 				DateModified: infos.LastModified,
 			},
 		}
+
+		if d, ok := downloads[path.Base(item.Path)]; ok {
+			item.Downloads = d
+		}
+
 		result = append(result, *item)
 	}
 
@@ -383,18 +391,23 @@ func (b *MinioBackend) DeleteShare(ctx context.Context, name string) error {
 }
 
 // GetItem returns the item identified by share and item
-func (b *MinioBackend) GetItem(ctx context.Context, share, item string) (*Item, error) {
-	if !IsShareNameSafe(share) {
+func (b *MinioBackend) GetItem(ctx context.Context, s, item string) (*Item, error) {
+	if !IsShareNameSafe(s) {
 		return nil, ErrInvalidShareName
 	}
 	if !isItemNameSafe(item) {
 		return nil, ErrInvalidItemName
 	}
 
-	path := path.Join(share, item)
+	path := path.Join(s, item)
 
 	aOutput, err := b.Client.GetObjectAttributes(ctx, b.Options.Bucket, path, minio.ObjectAttributesOptions{})
 
+	if err != nil {
+		return nil, err
+	}
+
+	share, err := b.GetShare(ctx, s)
 	if err != nil {
 		return nil, err
 	}
@@ -404,6 +417,7 @@ func (b *MinioBackend) GetItem(ctx context.Context, share, item string) (*Item, 
 		ItemInfo: ItemInfo{
 			DateModified: aOutput.LastModified,
 		},
+		Downloads: share.Downloads[item],
 	}
 	result.ItemInfo.Size = int64(aOutput.ObjectSize)
 

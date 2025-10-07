@@ -3,6 +3,7 @@ package main
 import (
 	"archive/zip"
 	"bufio"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -102,7 +103,7 @@ func (h *Hupload) patchShare(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	result, err := h.Config.Storage.UpdateShare(r.Context(), share.Name, options)
+	result, err := h.Config.Storage.UpdateShare(r.Context(), share.Name, options, nil)
 	if err != nil {
 		slog.Error("patchShare", slog.String("error", err.Error()))
 		writeError(w, http.StatusInternalServerError, err.Error())
@@ -224,7 +225,7 @@ func (h *Hupload) getShares(w http.ResponseWriter, r *http.Request) {
 	user, _ := auth.UserForRequest(r)
 
 	if h.Config.Values.HideOtherShares {
-		tmpShares := []storage.Share{}
+		tmpShares := make([]storage.Share, 0, len(shares))
 		for s := range shares {
 			if shares[s].Owner == user {
 				tmpShares = append(tmpShares, shares[s])
@@ -365,6 +366,14 @@ func (h *Hupload) getItem(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		slog.Error("getItem", slog.String("error", err.Error()))
 		writeError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	// Update downloads count
+	share.Downloads[itemName]++
+	_, err = h.Config.Storage.UpdateShare(context.Background(), shareName, nil, &share.Downloads)
+	if err != nil {
+		slog.Error("getItem", slog.String("error", err.Error()))
 		return
 	}
 }

@@ -10,6 +10,7 @@ import (
 	"os/exec"
 	"path"
 	"reflect"
+	"slices"
 	"testing"
 	"time"
 
@@ -47,10 +48,11 @@ func TestCreateShare(t *testing.T) {
 				return f.CreateShare(context.Background(), "test", "admin", storage.Options{Validity: 10, Exposure: "upload"})
 			},
 			storage.Share{
-				Version: 1,
-				Name:    "test",
-				Owner:   "admin",
-				Options: storage.Options{Validity: 10, Exposure: "upload"},
+				Version:   1,
+				Name:      "test",
+				Owner:     "admin",
+				Options:   storage.Options{Validity: 10, Exposure: "upload"},
+				Downloads: map[string]int64{},
 			},
 		},
 		{
@@ -58,10 +60,11 @@ func TestCreateShare(t *testing.T) {
 				return f.CreateShare(context.Background(), "test", "admin", storage.Options{Validity: 10, Exposure: "both"})
 			},
 			storage.Share{
-				Version: 1,
-				Name:    "test",
-				Owner:   "admin",
-				Options: storage.Options{Validity: 10, Exposure: "both"},
+				Version:   1,
+				Name:      "test",
+				Owner:     "admin",
+				Options:   storage.Options{Validity: 10, Exposure: "both"},
+				Downloads: map[string]int64{},
 			},
 		},
 		{
@@ -69,10 +72,11 @@ func TestCreateShare(t *testing.T) {
 				return f.CreateShare(context.Background(), "test", "admin", storage.Options{Validity: 10, Exposure: "download"})
 			},
 			storage.Share{
-				Version: 1,
-				Name:    "test",
-				Owner:   "admin",
-				Options: storage.Options{Validity: 10, Exposure: "download"},
+				Version:   1,
+				Name:      "test",
+				Owner:     "admin",
+				Options:   storage.Options{Validity: 10, Exposure: "download"},
+				Downloads: map[string]int64{},
 			},
 		},
 	}
@@ -118,7 +122,12 @@ func TestUpdateShare(t *testing.T) {
 
 	f := createFileBackend(t)
 
-	share, _ := f.CreateShare(context.Background(), "test", "admin", storage.Options{Validity: 10, Exposure: "upload", Description: "description", Message: "message"})
+	share, _ := f.CreateShare(
+		context.Background(),
+		"test",
+		"admin",
+		storage.Options{Validity: 10, Exposure: "upload", Description: "description", Message: "message"},
+	)
 
 	newOptions := &storage.Options{
 		Validity:    20,
@@ -127,7 +136,9 @@ func TestUpdateShare(t *testing.T) {
 		Message:     "new message",
 	}
 
-	o, err := f.UpdateShare(context.Background(), share.Name, newOptions)
+	newDownloads := &map[string]int64{"test.txt": 1}
+
+	o, err := f.UpdateShare(context.Background(), share.Name, newOptions, newDownloads)
 
 	if err != nil {
 		t.Errorf("Expected no error, got %v", err)
@@ -138,6 +149,8 @@ func TestUpdateShare(t *testing.T) {
 	}
 
 	share.Options = *newOptions
+	share.Downloads = *newDownloads
+
 	share2, _ := f.GetShare(context.Background(), share.Name)
 
 	if !share.DateCreated.Equal(share2.DateCreated) {
@@ -158,45 +171,74 @@ func TestCreateItem(t *testing.T) {
 
 	f := createFileBackend(t)
 
-	share, err := f.CreateShare(context.Background(), "test", "admin", storage.Options{Validity: 10, Exposure: "upload"})
+	share, err := f.CreateShare(context.Background(), "Test", "admin", storage.Options{Validity: 10, Exposure: "upload"})
 	if err != nil {
 		t.Errorf("Expected no error, got %v", err)
 	}
 
 	tests := []struct {
-		FileName string
-		Bytes    []byte
+		FileName  string
+		Bytes     []byte
+		Downloads int64
 	}{
 		{
-			FileName: "test.txt",
-			Bytes:    []byte("test"),
+			FileName:  "test.txt",
+			Bytes:     []byte("test"),
+			Downloads: 5,
 		},
 		{
-			FileName: "test2.txt",
-			Bytes:    []byte(""),
+			FileName:  "test2.txt",
+			Bytes:     []byte(""),
+			Downloads: 0,
 		},
 	}
 
 	for _, test := range tests {
-		reader := bufio.NewReader(bytes.NewReader(test.Bytes))
-		item, err := f.CreateItem(context.Background(), share.Name, test.FileName, 0, reader)
+		b := bufio.NewReader(bytes.NewBuffer(test.Bytes))
 
+		// Test create item
+		_, err = f.CreateItem(context.Background(), "Test", test.FileName, int64(len(test.Bytes)), b)
 		if err != nil {
 			t.Errorf("Expected no error, got %v", err)
-			return
 		}
+		time.Sleep(1 * time.Second)
+	}
 
-		// Test item result
-		if item.ItemInfo.Size != int64(len(test.Bytes)) {
-			t.Errorf("Expected 4, got %v", item.ItemInfo.Size)
-			return
+	// Reverse tests to have the latest uploaded first
+	slices.Reverse(tests)
+
+	share.Downloads = map[string]int64{
+		"test.txt":  5,
+		"test2.txt": 0,
+	}
+
+	_, err = f.UpdateShare(context.Background(), share.Name, &share.Options, &share.Downloads)
+	if err != nil {
+		t.Errorf("Expected no error, got %v", err)
+		return
+	}
+
+	// Check items are in share
+	items, err := f.ListShare(context.Background(), share.Name)
+	if err != nil {
+		t.Errorf("Expected no error, got %v", err)
+		return
+	}
+
+	if len(items) != len(tests) {
+		t.Errorf("Expected %d items, got %d", len(tests), len(items))
+		return
+	}
+
+	for i, item := range items {
+		if item.Path != path.Join(share.Name, tests[i].FileName) {
+			t.Errorf("Expected item name to be %s, got %s", path.Join(share.Name, tests[i].FileName), item.Path)
 		}
-
-		// Test file on disk
-		content, _ := os.ReadFile("data/test/test.txt")
-		if !bytes.Equal(content, []byte("test")) {
-			t.Errorf("Expected test, got %v", string(content))
-			return
+		if item.ItemInfo.Size != int64(len(tests[i].Bytes)) {
+			t.Errorf("Expected item size to be %d, got %d", len(tests[i].Bytes), item.ItemInfo.Size)
+		}
+		if item.Downloads != tests[i].Downloads {
+			t.Errorf("Expected item downloads to be %d, got %d", tests[i].Downloads, item.Downloads)
 		}
 	}
 }
@@ -344,6 +386,7 @@ func TestGetShare(t *testing.T) {
 		Size:        4,
 		Count:       2,
 		DateCreated: parsedTime,
+		Downloads:   map[string]int64{},
 	}
 
 	if !reflect.DeepEqual(*share, want) {
@@ -417,6 +460,7 @@ func TestListShares(t *testing.T) {
 			Size:        4,
 			Count:       2,
 			DateCreated: parsedTime,
+			Downloads:   map[string]int64{},
 		},
 		{
 			Name:        "test2",
@@ -425,6 +469,7 @@ func TestListShares(t *testing.T) {
 			Size:        4,
 			Count:       1,
 			DateCreated: parsedTime,
+			Downloads:   map[string]int64{},
 		},
 	}
 
@@ -474,6 +519,7 @@ func TestMigrate(t *testing.T) {
 				Size:        4,
 				Count:       1,
 				DateCreated: parsedTime,
+				Downloads:   map[string]int64{},
 			},
 		},
 
@@ -488,6 +534,7 @@ func TestMigrate(t *testing.T) {
 				Size:        4,
 				Count:       1,
 				DateCreated: parsedTime,
+				Downloads:   map[string]int64{},
 			},
 		},
 
@@ -507,6 +554,7 @@ func TestMigrate(t *testing.T) {
 				Size:        4,
 				Count:       1,
 				DateCreated: parsedTime,
+				Downloads:   map[string]int64{},
 			},
 		},
 	}

@@ -116,26 +116,15 @@ func (b *FileBackend) Migrate() error {
 			}
 		}
 
-		nm := Share{
-			Version:     1,
-			Name:        m.Name,
-			DateCreated: m.DateCreated,
-			Owner:       m.Owner,
-			Options:     o,
-			Size:        m.Size,
-			Count:       m.Count,
-		}
+		nm := NewShare().
+			WithName(m.Name).
+			WithDateCreated(m.DateCreated).
+			WithOwner(m.Owner).
+			WithOptions(o)
+		nm.Size = m.Size
+		nm.Count = m.Count
 
-		fm, err = os.Create(path.Join(b.Options.Path, d.Name(), ".metadata"))
-		if err != nil {
-			continue
-		}
-
-		err = json.NewEncoder(fm).Encode(nm)
-		if err != nil {
-			continue
-		}
-		fm.Close()
+		SaveShareAtPath(nm, path.Join(b.Options.Path, d.Name()))
 	}
 	return nil
 }
@@ -165,32 +154,21 @@ func (b *FileBackend) CreateShare(ctx context.Context, name, owner string, optio
 		options.Exposure = "upload"
 	}
 
-	m := Share{
-		Version:     1,
-		Name:        name,
-		Owner:       owner,
-		DateCreated: time.Now(),
-		Options:     options,
-	}
+	m := NewShare().
+		WithName(name).
+		WithOwner(owner).
+		WithOptions(options).
+		WithDateCreated(time.Now())
 
-	f, err := os.Create(path.Join(b.Options.Path, name, ".metadata"))
-	if err != nil {
-		return nil, err
-	}
-	defer f.Close()
+	SaveShareAtPath(m, path.Join(b.Options.Path, name))
 
-	err = json.NewEncoder(f).Encode(m)
-	if err != nil {
-		return nil, err
-	}
-
-	return &m, nil
+	return m, nil
 }
 
 // UpdateShare updates the metadata of a share with the provided name. It returns
 // an error if the share does not exist or if the name is invalid.
 
-func (b *FileBackend) UpdateShare(ctx context.Context, name string, options *Options) (*Options, error) {
+func (b *FileBackend) UpdateShare(ctx context.Context, name string, options *Options, downloads *map[string]int64) (*Options, error) {
 	if !IsShareNameSafe(name) {
 		return nil, ErrInvalidShareName
 	}
@@ -200,7 +178,13 @@ func (b *FileBackend) UpdateShare(ctx context.Context, name string, options *Opt
 		return nil, err
 	}
 
-	m.Options = *options
+	if options != nil {
+		m.Options = *options
+	}
+
+	if downloads != nil {
+		m.Downloads = *downloads
+	}
 
 	f, err := os.Create(path.Join(b.Options.Path, name, ".metadata"))
 	if err != nil {
@@ -357,6 +341,10 @@ func (b *FileBackend) GetShare(ctx context.Context, s string) (*Share, error) {
 		return nil, err
 	}
 
+	if m.Downloads == nil {
+		m.Downloads = map[string]int64{}
+	}
+
 	return &m, nil
 }
 
@@ -370,7 +358,7 @@ func (b *FileBackend) ListShares(ctx context.Context) ([]Share, error) {
 	if err != nil {
 		return nil, err
 	}
-	r := []Share{}
+	r := make([]Share, 0, len(d))
 
 	// Shares loop
 	for _, f := range d {
@@ -477,9 +465,15 @@ func (b *FileBackend) GetItem(ctx context.Context, s string, i string) (*Item, e
 		return nil, err
 	}
 
+	share, err := b.GetShare(ctx, s)
+	if err != nil {
+		return nil, err
+	}
+
 	return &Item{
-		Path:     path.Join(s, i),
-		ItemInfo: ItemInfo{Size: stat.Size(), DateModified: stat.ModTime()},
+		Path:      path.Join(s, i),
+		Downloads: share.Downloads[i],
+		ItemInfo:  ItemInfo{Size: stat.Size(), DateModified: stat.ModTime()},
 	}, nil
 }
 
@@ -516,14 +510,7 @@ func (b *FileBackend) updateMetadata(s string) error {
 		return err
 	}
 
-	fm, err := os.OpenFile(path.Join(b.Options.Path, s, ".metadata"), os.O_RDWR, 0644)
-	if err != nil {
-		return err
-	}
-	defer fm.Close()
-
-	m := Share{}
-	err = json.NewDecoder(fm).Decode(&m)
+	m, err := NewShareAtPath(path.Join(b.Options.Path, s))
 	if err != nil {
 		return err
 	}
@@ -545,12 +532,7 @@ func (b *FileBackend) updateMetadata(s string) error {
 		m.Count += 1
 	}
 
-	_, err = fm.Seek(0, 0)
-	if err != nil {
-		return err
-	}
-
-	err = json.NewEncoder(fm).Encode(m)
+	err = SaveShareAtPath(m, path.Join(b.Options.Path, s))
 	if err != nil {
 		return err
 	}
