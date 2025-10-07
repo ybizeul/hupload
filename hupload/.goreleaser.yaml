@@ -45,6 +45,7 @@ changelog:
   filters:
     include:
       - '^new:'
+      - '^feat:'
       - '^fix:'
 
 # The lines beneath this are called `modelines`. See `:help modeline`
