@@ -124,7 +124,10 @@ func (b *FileBackend) Migrate() error {
 		nm.Size = m.Size
 		nm.Count = m.Count
 
-		SaveShareAtPath(nm, path.Join(b.Options.Path, d.Name()))
+		err = SaveShareAtPath(nm, path.Join(b.Options.Path, d.Name()))
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -160,7 +163,10 @@ func (b *FileBackend) CreateShare(ctx context.Context, name, owner string, optio
 		WithOptions(options).
 		WithDateCreated(time.Now())
 
-	SaveShareAtPath(m, path.Join(b.Options.Path, name))
+	err = SaveShareAtPath(m, path.Join(b.Options.Path, name))
+	if err != nil {
+		return nil, err
+	}
 
 	return m, nil
 }
