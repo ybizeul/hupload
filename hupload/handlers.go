@@ -440,21 +440,32 @@ func (h *Hupload) downloadShare(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
+
+	// Update downloads count
+	for _, item := range items {
+		share.Downloads[path.Base(item.Path)]++
+	}
+
+	_, err = h.Config.Storage.UpdateShare(context.Background(), shareName, nil, &share.Downloads)
+	if err != nil {
+		slog.Error("getItem", slog.String("error", err.Error()))
+		return
+	}
 }
 
-// postLogin returns the user name for the current session
-func (h *Hupload) postLogin(w http.ResponseWriter, r *http.Request) {
-	user, _ := auth.UserForRequest(r)
-	//	_, loginURL := h.Config.Authentication.LoginURL(nil)
-	u := struct {
-		User string `json:"user"`
-		//		LoginPage string `json:"loginPage"`
-	}{
-		User: user,
-		//		LoginPage: loginURL,
-	}
-	writeSuccessJSON(w, u)
-}
+// // postLogin returns the user name for the current session
+// func (h *Hupload) postLogin(w http.ResponseWriter, r *http.Request) {
+// 	user, _ := auth.UserForRequest(r)
+// 	//	_, loginURL := h.Config.Authentication.LoginURL(nil)
+// 	u := struct {
+// 		User string `json:"user"`
+// 		//		LoginPage string `json:"loginPage"`
+// 	}{
+// 		User: user,
+// 		//		LoginPage: loginURL,
+// 	}
+// 	writeSuccessJSON(w, u)
+// }
 
 func (h *Hupload) getMessages(w http.ResponseWriter, r *http.Request) {
 	titles := []string{}

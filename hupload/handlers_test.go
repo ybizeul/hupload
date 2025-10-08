@@ -740,18 +740,20 @@ func TestDownloadShare(t *testing.T) {
 		}
 
 		shareName := "downloadshare"
+
 		h := getHupload(t, cfg.Config)
 
 		makeShare(t, h, shareName, "admin", storage.Options{Exposure: "download"})
+
 		t.Cleanup(func() {
 			_ = h.Config.Storage.DeleteShare(context.Background(), shareName)
+			cfg.Cleanup(h)
 		})
 
 		makeItem(t, h, shareName, "newfile1.txt", 1*1024*1024)
 		makeItem(t, h, shareName, "newfile2.txt", 1*1024*1024)
 
 		t.Run(name, func(t *testing.T) {
-			t.Cleanup(func() { cfg.Cleanup(h) })
 			api := h.API
 
 			req := httptest.NewRequest("GET", path.Join("/d/", shareName), nil)
@@ -765,8 +767,23 @@ func TestDownloadShare(t *testing.T) {
 				return
 			}
 		})
+
+		t.Run(name+" mass download counter updated", func(t *testing.T) {
+			storage := h.Config.Storage
+			items, err := storage.ListShare(context.Background(), shareName)
+			if err != nil {
+				t.Fatal(err)
+			}
+			for _, item := range items {
+				// Check if the mass download counter was updated
+				if item.Downloads != 1 {
+					t.Errorf("Expected mass download counter to be updated, got %d", item.Downloads)
+				}
+			}
+		})
 	}
 }
+
 func TestDeleteShare(t *testing.T) {
 	for name, cfg := range cfgs {
 		if !cfg.Enabled {
