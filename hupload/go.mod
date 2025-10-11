@@ -18,7 +18,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.88.3
 	github.com/aws/smithy-go v1.23.0
 	github.com/minio/minio-go/v7 v7.0.95
-	github.com/ybizeul/apiws v0.9.8
+	github.com/ybizeul/apiws v1.0.0-beta.1
 )
 
 require (
