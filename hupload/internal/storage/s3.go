@@ -372,9 +372,10 @@ func (b *S3Backend) ListShare(ctx context.Context, name string) ([]Item, error) 
 	if !IsShareNameSafe(name) {
 		return nil, ErrInvalidShareName
 	}
+	prefix := name + "/"
 	output, err := b.Client.ListObjectsV2(ctx, &s3.ListObjectsV2Input{
 		Bucket: &b.Options.Bucket,
-		Prefix: &name,
+		Prefix: &prefix,
 	})
 	if err != nil {
 		var bne *types.NoSuchKey
