@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"net/http"
 	"path"
@@ -110,7 +111,7 @@ func (b *S3Backend) CreateShare(ctx context.Context, name, owner string, options
 
 	_, err := b.GetShare(ctx, name)
 	if err == nil {
-		return nil, ErrShareAlreadyExists
+		return nil, fmt.Errorf("%w : %s", ErrShareAlreadyExists, name)
 	}
 
 	if options.Exposure == "" {

@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"path"
 	"sort"
@@ -94,7 +95,7 @@ func (b *MinioBackend) CreateShare(ctx context.Context, name, owner string, opti
 
 	_, err := b.GetShare(ctx, name)
 	if err == nil {
-		return nil, ErrShareAlreadyExists
+		return nil, fmt.Errorf("%w : %s", ErrShareAlreadyExists, name)
 	}
 
 	if options.Exposure == "" {

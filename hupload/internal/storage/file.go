@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"log/slog"
 	"os"
@@ -143,7 +144,7 @@ func (b *FileBackend) CreateShare(ctx context.Context, name, owner string, optio
 
 	_, err := os.Stat(path.Join(b.Options.Path, name))
 	if err == nil {
-		return nil, ErrShareAlreadyExists
+		return nil, fmt.Errorf("%w : %s", ErrShareAlreadyExists, name)
 	}
 
 	p := path.Join(b.Options.Path, name)
