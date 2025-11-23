@@ -33,7 +33,7 @@ type Share struct {
 	Size  int64 `json:"size,omitempty"`
 	Count int64 `json:"count,omitempty"`
 
-	Downloads map[string]int64 `json:"downloads"`
+	Downloads map[string]int64 `json:"downloads,omitempty"`
 }
 
 func NewShare() *Share {
@@ -128,7 +128,7 @@ func PublicShares(shares []Share) []PublicShare {
 
 type Item struct {
 	Path      string
-	Downloads int64
+	Downloads int64 `json:"Downloads,omitempty"`
 	ItemInfo  ItemInfo
 }
 

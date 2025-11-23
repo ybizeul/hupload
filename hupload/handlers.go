@@ -56,7 +56,7 @@ func (h *Hupload) postShare(w http.ResponseWriter, r *http.Request) {
 		slog.Error("postShare", slog.String("error", err.Error()))
 		switch {
 		case errors.Is(err, storage.ErrShareAlreadyExists):
-			writeError(w, http.StatusConflict, "share already exists")
+			writeError(w, http.StatusConflict, err.Error())
 			return
 		}
 
@@ -255,12 +255,15 @@ func (h *Hupload) getShare(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
+
 	user, _ := auth.UserForRequest(r)
 
 	if user == "" && !share.IsValid() {
 		writeError(w, http.StatusGone, "Share expired")
 		return
 	}
+
+	share.Downloads = map[string]int64{}
 
 	if user == "" {
 		writeSuccessJSON(w, share.PublicShare())
@@ -295,6 +298,13 @@ func (h *Hupload) getShareItems(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
+
+	if user == "" {
+		for i := range content {
+			content[i].Downloads = 0
+		}
+	}
+
 	writeSuccessJSON(w, content)
 }
 

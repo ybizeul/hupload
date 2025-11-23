@@ -68,6 +68,7 @@ func makeShare(t *testing.T, h *Hupload, name string, owner string, params stora
 	share, err := h.Config.Storage.CreateShare(context.Background(), name, owner, params)
 	if err != nil {
 		t.Error(err)
+		return nil
 	}
 	return share
 }
@@ -78,6 +79,16 @@ func makeItem(t *testing.T, h *Hupload, shareName, fileName string, size int) {
 	if err != nil {
 		t.Fatal(err)
 	}
+}
+
+func mustUnmarshalJSON(t *testing.T, s string) map[string]any {
+	t.Helper()
+	var m map[string]any
+	err := json.Unmarshal([]byte(s), &m)
+	if err != nil {
+		t.Fatalf("Failed to unmarshal JSON: %v", err)
+	}
+	return m
 }
 
 func TestCreateShare(t *testing.T) {
@@ -108,11 +119,15 @@ func TestCreateShare(t *testing.T) {
 					t.Errorf("Expected status %d, got %d", http.StatusUnauthorized, w.Code)
 					return
 				}
+				var got map[string]any
+				if err := json.NewDecoder(w.Body).Decode(&got); err != nil {
+					t.Errorf("Failed to decode JSON: %v", err)
+					return
+				}
 
-				got := string(w.Body.String())
-				want := `{"errors":["JWTAuthMiddleware: no Authorization header"]}`
+				want := mustUnmarshalJSON(t, `{"errors":["JWTAuthMiddleware: no Authorization header"]}`)
 
-				if want != got {
+				if !reflect.DeepEqual(want, got) {
 					t.Errorf("Want %s, got %s", want, got)
 				}
 			})
@@ -137,7 +152,7 @@ func TestCreateShare(t *testing.T) {
 					return
 				}
 
-				var share *storage.Share
+				var share map[string]any
 
 				err := json.NewDecoder(w.Body).Decode(&share)
 				if err != nil {
@@ -146,7 +161,7 @@ func TestCreateShare(t *testing.T) {
 				}
 
 				t.Cleanup(func() {
-					_ = h.Config.Storage.DeleteShare(context.Background(), share.Name)
+					_ = h.Config.Storage.DeleteShare(context.Background(), share["name"].(string))
 				})
 
 				token = &w.Result().Cookies()[0].Value
@@ -181,7 +196,7 @@ func TestCreateShare(t *testing.T) {
 					return
 				}
 
-				var share storage.Share
+				var share map[string]any
 
 				err := json.NewDecoder(w.Body).Decode(&share)
 
@@ -191,14 +206,8 @@ func TestCreateShare(t *testing.T) {
 				}
 
 				t.Cleanup(func() {
-					_ = h.Config.Storage.DeleteShare(context.Background(), share.Name)
+					_ = h.Config.Storage.DeleteShare(context.Background(), share["name"].(string))
 				})
-
-				// _, err := os.Stat(path.Join("tmptest/data/", share.Name))
-				// if err != nil {
-				// 	t.Errorf("Expected share directory to be created")
-				// 	return
-				// }
 			})
 
 			t.Run("Create a share with same name should fail", func(t *testing.T) {
@@ -412,12 +421,18 @@ func TestGetShare(t *testing.T) {
 				username = "admin2"
 			}
 
-			t.Run(name, func(t *testing.T) {
+			t.Run(name+" "+username, func(t *testing.T) {
 				h := getHupload(t, cfg.Config)
 				h.Config.Values.HideOtherShares = (altUser == 1)
 
 				t.Cleanup(func() { cfg.Cleanup(h) })
 				api := h.API
+
+				t.Cleanup(func() {
+					_ = h.Config.Storage.DeleteShare(context.Background(), "test")
+					_ = h.Config.Storage.DeleteShare(context.Background(), "test2")
+					_ = h.Config.Storage.DeleteShare(context.Background(), "test3")
+				})
 
 				makeShare(t, h, "test", "admin", storage.Options{
 					Exposure:    "upload",
@@ -425,6 +440,8 @@ func TestGetShare(t *testing.T) {
 					Description: "description",
 					Message:     "message",
 				})
+
+				makeItem(t, h, "test", "file1", 1024)
 
 				makeShare(t, h, "test2", "admin", storage.Options{
 					Exposure:    "upload",
@@ -434,19 +451,15 @@ func TestGetShare(t *testing.T) {
 				})
 
 				makeShare(t, h, "test3", "admin2", storage.Options{
-					Exposure:    "upload",
+					Exposure:    "download",
 					Validity:    7,
 					Description: "description",
 					Message:     "message",
 				})
 
-				t.Cleanup(func() {
-					_ = h.Config.Storage.DeleteShare(context.Background(), "test")
-					_ = h.Config.Storage.DeleteShare(context.Background(), "test2")
-					_ = h.Config.Storage.DeleteShare(context.Background(), "test3")
-				})
+				makeItem(t, h, "test3", "file1", 1024)
 
-				t.Run("Get shares should succeed", func(t *testing.T) {
+				t.Run("Get shares should succeed ("+name+")", func(t *testing.T) {
 					var (
 						req *http.Request
 						w   *httptest.ResponseRecorder
@@ -462,7 +475,7 @@ func TestGetShare(t *testing.T) {
 						return
 					}
 
-					var shares []*storage.Share
+					var shares []map[string]any
 
 					_ = json.NewDecoder(w.Body).Decode(&shares)
 
@@ -495,9 +508,13 @@ func TestGetShare(t *testing.T) {
 						return
 					}
 
-					got := string(w.Body.String())
-					want := `{"errors":["JWTAuthMiddleware: no Authorization header"]}`
-					if want != got {
+					var got map[string]any
+					if err := json.NewDecoder(w.Body).Decode(&got); err != nil {
+						t.Errorf("Failed to decode JSON: %v", err)
+						return
+					}
+					want := mustUnmarshalJSON(t, `{"errors":["JWTAuthMiddleware: no Authorization header"]}`)
+					if !reflect.DeepEqual(want, got) {
 						t.Errorf("Want %s, got %s", want, got)
 					}
 				})
@@ -507,44 +524,79 @@ func TestGetShare(t *testing.T) {
 						req *http.Request
 						w   *httptest.ResponseRecorder
 					)
-					req = httptest.NewRequest("GET", path.Join("/api/v1/shares/", "test"), nil)
-					req.SetBasicAuth(username, "hupload")
+
+					// Do download on the item
+					req = httptest.NewRequest("GET", path.Join("/d/", "test3", "file1"), nil)
 					w = httptest.NewRecorder()
-
 					api.ServeHTTP(w, req)
+					_, _ = io.Copy(io.Discard, w.Body)
 
-					if w.Code != http.StatusOK {
-						t.Errorf("Expected status %d, got %d", http.StatusOK, w.Code)
-						return
+					// fileReader, err := h.Config.Storage.GetItemData(context.Background(), "test", "file1")
+					// if err != nil {
+					// 	t.Errorf("Failed to get item data: %v", err)
+					// 	return
+					// }
+					// _, _ = io.Copy(io.Discard, fileReader)
+					// _ = fileReader.Close()
+
+					tests := []struct {
+						ShareName string
+						Want      string
+					}{
+						{
+							ShareName: "test",
+							Want: `{
+								"version":1,
+								"name":"test",
+								"owner":"admin",
+								"options":{
+									"validity":7,
+									"exposure":"upload",
+									"description":"description",
+									"message":"message"
+								},
+								"count":1,
+								"size":1024
+							}`},
+						{
+							ShareName: "test3",
+							Want: `{
+								"version":1,
+								"name":"test3",
+								"owner":"admin2",
+								"options":{
+									"validity":7,
+									"exposure":"download",
+									"description":"description",
+									"message":"message"
+								},
+								"count":1,
+								"size":1024
+							}`},
 					}
+					for _, tt := range tests {
+						req = httptest.NewRequest("GET", path.Join("/api/v1/shares/", tt.ShareName), nil)
+						req.SetBasicAuth(username, "hupload")
+						w = httptest.NewRecorder()
 
-					var share *storage.Share
+						api.ServeHTTP(w, req)
 
-					_ = json.NewDecoder(w.Body).Decode(&share)
-					share.DateCreated = time.Time{}
+						if w.Code != http.StatusOK {
+							t.Errorf("Expected status %d, got %d", http.StatusOK, w.Code)
+							return
+						}
 
-					want := &storage.Share{
-						Version: 1,
-						Name:    "test",
-						Owner:   "admin",
-						Options: storage.Options{
-							Validity:    7,
-							Exposure:    "upload",
-							Description: "description",
-							Message:     "message",
-						},
-						Count:     0,
-						Size:      0,
-						Downloads: map[string]int64{},
-					}
+						var share map[string]any
 
-					if !reflect.DeepEqual(share, want) {
-						t.Errorf("Want %v, got %v", want, share)
-					}
+						_ = json.NewDecoder(w.Body).Decode(&share)
 
-					if share.Options.Description != "description" {
-						t.Errorf("Expected description to be 'description', got %s", share.Options.Description)
-						return
+						delete(share, "created")
+
+						want := mustUnmarshalJSON(t, tt.Want)
+
+						if !reflect.DeepEqual(share, want) {
+							t.Errorf("Want %v, got %v", want, share)
+						}
 					}
 				})
 
@@ -564,18 +616,21 @@ func TestGetShare(t *testing.T) {
 						return
 					}
 
-					var share *storage.Share
+					var share map[string]any
 
 					_ = json.NewDecoder(w.Body).Decode(&share)
 
-					share.DateCreated = time.Time{}
+					want := mustUnmarshalJSON(t, `
+					{
+						"name":"test",
+						"options":{
+							"exposure":"upload",
+							"message":"message"
+						}
+					}`)
 
-					want := &storage.Share{
-						Name: "test",
-						Options: storage.Options{
-							Exposure: "upload",
-							Message:  "message",
-						},
+					if !reflect.DeepEqual(share, want) {
+						t.Errorf("Want %v, got %v", want, share)
 					}
 
 					if !reflect.DeepEqual(share, want) {
@@ -641,7 +696,7 @@ func TestGetShare(t *testing.T) {
 
 					shareName := "itemstest"
 
-					makeShare(t, h, shareName, "admin", storage.Options{})
+					makeShare(t, h, shareName, "admin", storage.Options{Exposure: "download"})
 					t.Cleanup(func() {
 						_ = h.Config.Storage.DeleteShare(context.Background(), shareName)
 					})
@@ -650,6 +705,17 @@ func TestGetShare(t *testing.T) {
 					time.Sleep(1 * time.Second)
 					makeItem(t, h, shareName, "newfile2.txt", 2*1024*1024)
 
+					// Download first item
+
+					req = httptest.NewRequest("GET", path.Join("/d/", shareName, "newfile.txt"), nil)
+
+					w = httptest.NewRecorder()
+
+					api.ServeHTTP(w, req)
+
+					_, _ = io.Copy(io.Discard, w.Body)
+
+					// Without authentication
 					req = httptest.NewRequest("GET", path.Join("/api/v1/shares/", shareName, "items"), nil)
 
 					w = httptest.NewRecorder()
@@ -661,7 +727,7 @@ func TestGetShare(t *testing.T) {
 						return
 					}
 
-					var result []storage.Item
+					var result []map[string]any
 
 					_ = json.NewDecoder(w.Body).Decode(&result)
 
@@ -670,22 +736,75 @@ func TestGetShare(t *testing.T) {
 						return
 					}
 
-					if result[0].Path != path.Join(shareName, "newfile2.txt") {
-						t.Errorf("Expected %s, got %s", path.Join(shareName, "newfile2.txt"), result[0].Path)
-						return
+					for _, item := range result {
+						delete(item["ItemInfo"].(map[string]any), "created")
+						delete(item["ItemInfo"].(map[string]any), "DateModified")
 					}
-					if result[1].Path != path.Join(shareName, "newfile.txt") {
-						t.Errorf("Expected newfile.txt, got %s", result[0].Path)
+
+					want := []map[string]any{
+						mustUnmarshalJSON(t, `
+							{
+								"Path":"itemstest/newfile2.txt",
+								"ItemInfo":{
+									"Size":2097152
+								}
+							}`),
+						mustUnmarshalJSON(t, `
+							{
+								"Path":"itemstest/newfile.txt",
+								"ItemInfo":{
+									"Size":1048576
+								}
+							}`),
+					}
+
+					if !reflect.DeepEqual(result, want) {
+						t.Errorf("Want %v, got %v", want, result)
+					}
+
+					// With authentication
+					req = httptest.NewRequest("GET", path.Join("/api/v1/shares/", shareName, "items"), nil)
+					req.SetBasicAuth("admin", "hupload")
+					w = httptest.NewRecorder()
+
+					api.ServeHTTP(w, req)
+
+					if w.Code != http.StatusOK {
+						t.Errorf("Expected status %d, got %d", http.StatusOK, w.Code)
 						return
 					}
 
-					if result[0].ItemInfo.Size != 2*1024*1024 {
-						t.Errorf("Expected size 2*1024*1024, got %d", result[0].ItemInfo.Size)
+					_ = json.NewDecoder(w.Body).Decode(&result)
+
+					if len(result) != 2 {
+						t.Errorf("Expected 2 items, got %d", len(result))
 						return
 					}
-					if result[1].ItemInfo.Size != 1*1024*1024 {
-						t.Errorf("Expected size 1*1024*1024, got %d", result[0].ItemInfo.Size)
-						return
+
+					for _, item := range result {
+						delete(item["ItemInfo"].(map[string]any), "DateModified")
+					}
+
+					want = []map[string]any{
+						mustUnmarshalJSON(t, `
+							{
+								"Path":"itemstest/newfile2.txt",
+								"ItemInfo":{
+									"Size":2097152
+								}
+							}`),
+						mustUnmarshalJSON(t, `
+							{
+								"Path":"itemstest/newfile.txt",
+								"Downloads":1,
+								"ItemInfo":{
+									"Size":1048576
+								}
+							}`),
+					}
+
+					if !reflect.DeepEqual(result, want) {
+						t.Errorf("Want %v, got %v", want, result)
 					}
 				})
 
@@ -1032,24 +1151,6 @@ func TestGetItems(t *testing.T) {
 		})
 	}
 }
-
-// func readerForCapacity(capacity int) io.ReadCloser {
-// 	pr, pw := io.Pipe()
-// 	go func() {
-// 		defer pw.Close()
-// 		b := 1024
-// 		w := 0
-// 		for w < capacity {
-// 			if w+b > capacity {
-// 				b = capacity - w
-// 			}
-// 			_, _ = pw.Write(make([]byte, b))
-// 			w += b
-// 		}
-// 	}()
-
-// 	return pr
-// }
 
 // multipartWriter returns a reader and a multipart.Writer for a body with one
 // attachment of size size.
