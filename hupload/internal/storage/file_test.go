@@ -52,7 +52,7 @@ func TestCreateShare(t *testing.T) {
 				Name:      "test",
 				Owner:     "admin",
 				Options:   storage.Options{Validity: 10, Exposure: "upload"},
-				Downloads: map[string]int64{},
+				Downloads: nil,
 			},
 		},
 		{
@@ -64,7 +64,7 @@ func TestCreateShare(t *testing.T) {
 				Name:      "test",
 				Owner:     "admin",
 				Options:   storage.Options{Validity: 10, Exposure: "both"},
-				Downloads: map[string]int64{},
+				Downloads: nil,
 			},
 		},
 		{
@@ -76,7 +76,7 @@ func TestCreateShare(t *testing.T) {
 				Name:      "test",
 				Owner:     "admin",
 				Options:   storage.Options{Validity: 10, Exposure: "download"},
-				Downloads: map[string]int64{},
+				Downloads: nil,
 			},
 		},
 	}
