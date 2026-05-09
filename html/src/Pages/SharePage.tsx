@@ -1,7 +1,7 @@
-import { Anchor, Box, Button, Center, CopyButton, Group, Paper, rem, Stack, Text, Tooltip } from "@mantine/core";
+import { ActionIcon, Anchor, Box, Button, Center, CopyButton, Group, Paper, rem, SegmentedControl, Stack, Text, Tooltip } from "@mantine/core";
 import { Dropzone } from "@mantine/dropzone";
-import { IconClock, IconDownload, IconFileZip, IconHelpHexagon, IconLink, IconMoodSad, IconUpload, IconX } from "@tabler/icons-react";
-import { useCallback, useEffect, useState } from "react";
+import { IconClock, IconDownload, IconFileZip, IconHelpHexagon, IconLink, IconMoodSad, IconSortAscending, IconSortDescending, IconUpload, IconX } from "@tabler/icons-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { H } from "../APIClient";
 import { UploadQueue, QueueItem } from "../UploadQueue";
 import {ItemComponent} from "@/Components";
@@ -16,8 +16,13 @@ import { ErrorPage } from "./ErrorPage";
 export function SharePage() {
     const { t } = useTranslation();
 
+    type SortField = "name" | "size" | "date";
+    type SortDirection = "asc" | "desc";
+
     const [items, setItems] = useState<UploadableItem[]>([])
     const [error, setError] = useState<undefined|AxiosError>(undefined)
+    const [sortField, setSortField] = useState<SortField>("name")
+    const [sortDirection, setSortDirection] = useState<SortDirection>("asc")
 
     // Initialize hooks
     const { authInfo } = useAuthContext()
@@ -52,6 +57,42 @@ export function SharePage() {
     },[])
 
     const queue = new UploadQueue(H,"/shares/"+share?.name, updateProgress)
+
+    const getFileName = (item: UploadableItem) => {
+        return item.Path.split("/")[1] || item.ItemInfo.Name || ""
+    }
+
+    const getUploadDate = (item: UploadableItem) => {
+        const value = item.ItemInfo.DateModified || item.ItemInfo.created
+        if (!value) {
+            return 0
+        }
+        const date = new Date(value)
+        if (Number.isNaN(date.getTime())) {
+            return 0
+        }
+        return date.getTime()
+    }
+
+    const sortedItems = useMemo(() => {
+        const sorted = [...items].sort((a, b) => {
+            if (sortField === "name") {
+                return getFileName(a).localeCompare(getFileName(b), undefined, { sensitivity: "base" })
+            }
+
+            if (sortField === "size") {
+                return a.ItemInfo.Size - b.ItemInfo.Size
+            }
+
+            return getUploadDate(a) - getUploadDate(b)
+        })
+
+        if (sortDirection === "desc") {
+            sorted.reverse()
+        }
+
+        return sorted
+    }, [items, sortDirection, sortField])
 
     // useEffects
 
@@ -208,6 +249,7 @@ export function SharePage() {
                             ItemInfo: {
                                 Name: f.name,
                                 Size: f.size,
+                                DateModified: new Date().toISOString(),
                             },
                             QueueItem: {},
                         } as UploadableItem
@@ -260,9 +302,41 @@ export function SharePage() {
                 </Dropzone>
             </>}
 
+            {items.length > 0 &&
+                <Group mt="md" mb="xs" justify="space-between" wrap="wrap">
+                    <Text size="sm" fw={500}>{t("sort_by")}</Text>
+                    <Group gap="xs">
+                        <SegmentedControl
+                            size="xs"
+                            value={sortField}
+                            onChange={(value) => {
+                                setSortField(value as SortField)
+                            }}
+                            data={[
+                                { label: t("sort_file_name"), value: "name" },
+                                { label: t("sort_file_size"), value: "size" },
+                                { label: t("sort_upload_date"), value: "date" },
+                            ]}
+                        />
+                        <Tooltip withArrow arrowOffset={10} arrowSize={4} label={sortDirection === "asc" ? t("ascending") : t("descending")}>
+                            <ActionIcon
+                                size="md"
+                                variant="light"
+                                onClick={() => {
+                                    setSortDirection((current) => (current === "asc" ? "desc" : "asc"))
+                                }}
+                                aria-label={sortDirection === "asc" ? t("ascending") : t("descending")}
+                            >
+                                {sortDirection === "asc" ? <IconSortAscending size={18} /> : <IconSortDescending size={18} />}
+                            </ActionIcon>
+                        </Tooltip>
+                    </Group>
+                </Group>
+            }
+
             {
                 // Display share items
-                items.map((item) => (
+                sortedItems.map((item) => (
                 <ItemComponent download={canDownload()} canDelete={canDelete()} onDelete={deleteItem} key={item.Path} item={item} />
                 ))
             }

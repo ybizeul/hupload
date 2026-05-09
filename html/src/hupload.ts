@@ -31,7 +31,9 @@ export interface UploadableItem extends Item {
 
 export interface ItemInfo {
     Size: number;
-    Name: string
+  Name: string;
+  DateModified?: string | Date;
+  created?: string | Date;
 }
 
 export interface Message {
