@@ -499,6 +499,15 @@ func (h *Hupload) getDefaults(w http.ResponseWriter, r *http.Request) {
 	writeSuccessJSON(w, defaults)
 }
 
+// getHealth returns a lightweight readiness/liveness response.
+func (h *Hupload) getHealth(w http.ResponseWriter, r *http.Request) {
+	writeSuccessJSON(w, struct {
+		Status string `json:"status"`
+	}{
+		Status: "ok",
+	})
+}
+
 var ErrMessageInvalidIndex = errors.New("invalid index")
 var ErrMessageIndexOutOfBounds = errors.New("index out of bounds")
 

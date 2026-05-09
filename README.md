@@ -198,6 +198,32 @@ and password is `hupload` as defined in `hupload/config/users.yml.sample`
 ```
 docker compose up
 ```
+
+For Kubernetes liveness/readiness probes, use the public health endpoint:
+
+```
+GET /health
+```
+
+It returns HTTP 200 with:
+
+```
+{"status":"ok"}
+```
+
+Example probe configuration:
+
+```yaml
+livenessProbe:
+  httpGet:
+    path: /health
+    port: 8080
+readinessProbe:
+  httpGet:
+    path: /health
+    port: 8080
+```
+
 ## API
 
 The following endpoints are available under `/api/v1`
@@ -218,6 +244,7 @@ The following endpoints are available under `/api/v1`
 
 | Type     | URL                            | Description                          |
 |----------|--------------------------------|--------------------------------------|
+| `GET`    | `/health`                      | Health endpoint for readiness/liveness probes
 | `POST`   | `/shares/{share}/items/{item}` | Post a new file `{item}` in `{share}` (multipart form encoded)
 | `GET`    | `/shares/{share}`              | Get a `{share}` content
 
