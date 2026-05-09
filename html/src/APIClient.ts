@@ -55,6 +55,10 @@ export class APIClient {
                 url: this.baseURL + path,
                 method: 'GET',
                 auth,
+                headers: {
+                    'Cache-Control': 'no-cache',
+                    'Pragma': 'no-cache',
+                },
             })
             .then((result) => {
                 resolve(result)

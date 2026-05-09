@@ -26,7 +26,7 @@ export function SharePage() {
 
     // Initialize hooks
     const { authInfo } = useAuthContext()
-    const [share, shareError] = useShare();
+    const [share, shareError] = useShare(authInfo?.user);
 
     // Check if share is expired
     const expired = (shareError?.response?.status === 410)
