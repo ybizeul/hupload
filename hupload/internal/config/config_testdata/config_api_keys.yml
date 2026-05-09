@@ -1,0 +1,9 @@
+auth:
+  type: default
+  apiKeys:
+    - first-key
+    - second-key
+storage:
+  type: file
+  options:
+    path: data

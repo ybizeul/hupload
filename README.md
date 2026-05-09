@@ -89,6 +89,9 @@ hide_other_shares: false
 
 auth:
   type: file
+  apiKeys:
+    - <api_key_1>
+    - <api_key_2>
   options:
     path: config/users.yml
 storage:
@@ -148,12 +151,27 @@ following :
 ```
 auth:
   type: oidc
+  apiKeys:
+    - <api_key_1>
   options:
     provider_url: https://auth.company.com/application/o/hupload/
     client_id: <client_id>
     client_secret: <client_secret>
     redirect_url: https://hupload.company.com/oidc
 ```
+
+### API keys
+
+You can define static API keys in `auth.apiKeys` for API clients.
+
+Keys are sent using the standard Bearer token format:
+
+```
+Authorization: Bearer <api_key>
+```
+
+If a valid API key is provided, protected API endpoints are accessible without
+interactive login.
 
 ### Canned messages
 
@@ -228,7 +246,13 @@ readinessProbe:
 
 The following endpoints are available under `/api/v1`
 
-**Basic Authentication Required**
+**Authentication Required**
+
+Protected endpoints accept either:
+
+- Basic authentication (for file/default authentication backends),
+- `Authorization: Bearer <api_key>` with a key defined in `auth.apiKeys`,
+- OIDC session authentication when OIDC is configured.
 
 | Type     | URL                            | Description                          |
 |----------|--------------------------------|--------------------------------------|
