@@ -89,6 +89,9 @@ hide_other_shares: false
 
 auth:
   type: file
+  apiKeys:
+    - <api_key_1>
+    - <api_key_2>
   options:
     path: config/users.yml
 storage:
@@ -148,12 +151,27 @@ following :
 ```
 auth:
   type: oidc
+  apiKeys:
+    - <api_key_1>
   options:
     provider_url: https://auth.company.com/application/o/hupload/
     client_id: <client_id>
     client_secret: <client_secret>
     redirect_url: https://hupload.company.com/oidc
 ```
+
+### API keys
+
+You can define static API keys in `auth.apiKeys` for API clients.
+
+Keys are sent using the standard Bearer token format:
+
+```
+Authorization: Bearer <api_key>
+```
+
+If a valid API key is provided, protected API endpoints are accessible without
+interactive login.
 
 ### Canned messages
 
@@ -198,11 +216,43 @@ and password is `hupload` as defined in `hupload/config/users.yml.sample`
 ```
 docker compose up
 ```
+
+For Kubernetes liveness/readiness probes, use the public health endpoint:
+
+```
+GET /health
+```
+
+It returns HTTP 200 with:
+
+```
+{"status":"ok"}
+```
+
+Example probe configuration:
+
+```yaml
+livenessProbe:
+  httpGet:
+    path: /health
+    port: 8080
+readinessProbe:
+  httpGet:
+    path: /health
+    port: 8080
+```
+
 ## API
 
 The following endpoints are available under `/api/v1`
 
-**Basic Authentication Required**
+**Authentication Required**
+
+Protected endpoints accept either:
+
+- Basic authentication (for file/default authentication backends),
+- `Authorization: Bearer <api_key>` with a key defined in `auth.apiKeys`,
+- OIDC session authentication when OIDC is configured.
 
 | Type     | URL                            | Description                          |
 |----------|--------------------------------|--------------------------------------|
@@ -218,6 +268,7 @@ The following endpoints are available under `/api/v1`
 
 | Type     | URL                            | Description                          |
 |----------|--------------------------------|--------------------------------------|
+| `GET`    | `/health`                      | Health endpoint for readiness/liveness probes
 | `POST`   | `/shares/{share}/items/{item}` | Post a new file `{item}` in `{share}` (multipart form encoded)
 | `GET`    | `/shares/{share}`              | Get a `{share}` content
 

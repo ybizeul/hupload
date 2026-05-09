@@ -1914,3 +1914,33 @@ func TestDefaults(t *testing.T) {
 		}
 	})
 }
+
+func TestHealth(t *testing.T) {
+	h := getHupload(t, cfgs["file"].Config)
+	api := h.API
+
+	t.Run("Get health without authentication should succeed", func(t *testing.T) {
+		req := httptest.NewRequest("GET", "/health", nil)
+		w := httptest.NewRecorder()
+
+		api.ServeHTTP(w, req)
+
+		if w.Code != http.StatusOK {
+			t.Errorf("Expected status %d, got %d", http.StatusOK, w.Code)
+			return
+		}
+
+		got := struct {
+			Status string `json:"status"`
+		}{}
+
+		err := json.NewDecoder(w.Body).Decode(&got)
+		if err != nil {
+			t.Fatalf("Failed to decode health response: %v", err)
+		}
+
+		if got.Status != "ok" {
+			t.Errorf("Expected status \"ok\", got %q", got.Status)
+		}
+	})
+}

@@ -67,6 +67,8 @@ func (h *Hupload) setup() {
 	// That's Hupload principle, the security is based on the share name
 	// which is usually a random string.
 
+	api.AddPublicRoute("GET    /health", http.HandlerFunc(h.getHealth))
+
 	api.AddPublicRoute("GET    /api/v1/shares/{share}", shareCheck(http.HandlerFunc(h.getShare)))
 	api.AddPublicRoute("GET    /api/v1/shares/{share}/items", shareCheck(http.HandlerFunc(h.getShareItems)))
 	api.AddPublicRoute("GET    /api/v1/shares/{share}/items/{item}", shareAndItemCheck(http.HandlerFunc(h.getItem)))

@@ -21,8 +21,9 @@ import (
 // the corresponding backend is created. Options are then marshalled and
 // unmarshalled to the configuration struct of the corresponding backend.
 type TypeOptions struct {
-	Type    string
-	Options map[string]any
+	Type    string         `yaml:"type"`
+	Options map[string]any `yaml:"options"`
+	APIKeys []string       `yaml:"apiKeys"`
 }
 
 // ConfigValues is the struct that will be populated by the yaml configuration
@@ -236,6 +237,22 @@ func (c *Config) storage() (storage.Storage, error) {
 func (c *Config) authentication() (auth.Authentication, error) {
 	a := c.Values.Authentication
 
+	withAPIKeys := func(base auth.Authentication, err error) (auth.Authentication, error) {
+		if err != nil {
+			return nil, err
+		}
+		if len(a.APIKeys) == 0 {
+			return base, nil
+		}
+
+		switch b := base.(type) {
+		case *oidc.OIDC:
+			return newOIDCAPIKeyAuth(b, a.APIKeys), nil
+		default:
+			return newAPIKeyAuth(base, a.APIKeys), nil
+		}
+	}
+
 	switch a.Type {
 	case "file":
 		filePath, ok := a.Options["path"].(string)
@@ -243,7 +260,7 @@ func (c *Config) authentication() (auth.Authentication, error) {
 			return nil, errors.New("missing path: parameter for file authentication backend")
 		}
 
-		return apiws.NewFile(filePath)
+		return withAPIKeys(apiws.NewFile(filePath))
 	case "oidc":
 		var options oidc.OIDCConfig
 
@@ -256,9 +273,9 @@ func (c *Config) authentication() (auth.Authentication, error) {
 		if err != nil {
 			return nil, err
 		}
-		return apiws.NewOIDC(options)
+		return withAPIKeys(apiws.NewOIDC(options))
 	case "default":
-		return apiws.NewBasic("admin", nil), nil
+		return withAPIKeys(apiws.NewBasic("admin", nil), nil)
 	}
 
 	return nil, ErrUnknownAuthenticationBackend

@@ -1,17 +1,21 @@
 package config
 
 import (
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"reflect"
+	"strings"
 	"testing"
 
+	"github.com/ybizeul/apiws/auth"
 	"github.com/ybizeul/apiws/auth/file"
 	"github.com/ybizeul/hupload/internal/storage"
 )
 
 func TestLoadEmptyConfig(t *testing.T) {
 	t.Cleanup(func() {
-		os.Remove("data")
+		_ = os.Remove("data")
 	})
 
 	c := Config{}
@@ -50,7 +54,7 @@ func TestLoadEmptyConfig(t *testing.T) {
 
 func TestLoadGoodConfig(t *testing.T) {
 	t.Cleanup(func() {
-		os.Remove("data")
+		_ = os.Remove("data")
 	})
 
 	c := Config{
@@ -138,7 +142,7 @@ func TestLoadBadConfig(t *testing.T) {
 
 func TestMissingUsersFile(t *testing.T) {
 	t.Cleanup(func() {
-		os.Remove("data")
+		_ = os.Remove("data")
 	})
 
 	c := Config{
@@ -152,5 +156,94 @@ func TestMissingUsersFile(t *testing.T) {
 
 	if !b {
 		t.Errorf("Expected config file to be found")
+	}
+}
+
+func TestLoadConfigWithAPIKeys(t *testing.T) {
+	t.Cleanup(func() {
+		_ = os.Remove("data")
+	})
+
+	c := Config{
+		Path: "config_testdata/config_api_keys.yml",
+	}
+	b, err := c.Load()
+	if !b {
+		t.Errorf("Expected config file to be found")
+	}
+	if err != nil {
+		t.Fatalf("Expected no error, got %v", err)
+	}
+
+	if len(c.Values.Authentication.APIKeys) != 2 {
+		t.Fatalf("Expected 2 api keys, got %d", len(c.Values.Authentication.APIKeys))
+	}
+
+	h := c.Authentication.AuthMiddleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		s, ok := auth.AuthForRequest(r)
+		if !ok {
+			t.Fatalf("Expected auth status to be present")
+		}
+		if !s.Authenticated {
+			t.Fatalf("Expected request to be authenticated")
+		}
+		if s.User != "api-key" {
+			t.Fatalf("Expected user to be api-key, got %q", s.User)
+		}
+		w.WriteHeader(http.StatusNoContent)
+	}))
+
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/shares", nil)
+	req.Header.Set("Authorization", "Bearer first-key")
+	w := httptest.NewRecorder()
+
+	h.ServeHTTP(w, req)
+
+	if w.Code != http.StatusNoContent {
+		t.Fatalf("Expected status %d, got %d", http.StatusNoContent, w.Code)
+	}
+}
+
+func TestInvalidAPIKeyAddsAuthenticationError(t *testing.T) {
+	t.Cleanup(func() {
+		_ = os.Remove("data")
+	})
+
+	c := Config{
+		Path: "config_testdata/config_api_keys.yml",
+	}
+	b, err := c.Load()
+	if !b {
+		t.Errorf("Expected config file to be found")
+	}
+	if err != nil {
+		t.Fatalf("Expected no error, got %v", err)
+	}
+
+	h := c.Authentication.AuthMiddleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		s, ok := auth.AuthForRequest(r)
+		if !ok {
+			t.Fatalf("Expected auth status to be present")
+		}
+		if s.Error == nil {
+			t.Fatalf("Expected authentication error for invalid API key")
+		}
+		if !strings.Contains(s.Error.Error(), ErrInvalidAPIKey.Error()) {
+			t.Fatalf("Expected invalid API key error, got %v", s.Error)
+		}
+		if s.Authenticated {
+			t.Fatalf("Expected request to be unauthenticated")
+		}
+		w.WriteHeader(http.StatusUnauthorized)
+	}))
+
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/shares", nil)
+	req.Header.Set("Authorization", "Bearer wrong-key")
+	w := httptest.NewRecorder()
+
+	h.ServeHTTP(w, req)
+
+	if w.Code != http.StatusUnauthorized {
+		t.Fatalf("Expected status %d, got %d", http.StatusUnauthorized, w.Code)
 	}
 }

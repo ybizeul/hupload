@@ -47,6 +47,12 @@ i18n
 
           // Share page
           drag_area: "Drag files here or click to select files",
+          sort_by: "Sort by",
+          sort_file_name: "File name",
+          sort_file_size: "File size",
+          sort_upload_date: "Upload date",
+          ascending: "Ascending",
+          descending: "Descending",
 
           sorry_share_expired: "Sorry, this share has expired.",
           share_does_not_exists: "Share does not exists.",
@@ -114,6 +120,12 @@ i18n
 
             // Share page
             drag_area: "Glissez des fichiers ou cliquez pour sélectionner",
+            sort_by: "Trier par",
+            sort_file_name: "Nom du fichier",
+            sort_file_size: "Taille du fichier",
+            sort_upload_date: "Date d'envoi",
+            ascending: "Croissant",
+            descending: "Décroissant",
 
             sorry_share_expired: "Désolé, ce partage a expiré.",
             share_does_not_exists: "Ce partage n'existe pas.",
@@ -183,6 +195,12 @@ i18n
 
           // Share page
           drag_area: "Dateien hierhin ziehen oder auswählen",
+          sort_by: "Sortieren nach",
+          sort_file_name: "Dateiname",
+          sort_file_size: "Dateigröße",
+          sort_upload_date: "Upload-Datum",
+          ascending: "Aufsteigend",
+          descending: "Absteigend",
 
           sorry_share_expired: "Entschuldigung, diese Freigabe ist abgelaufen.",
           share_does_not_exists: "Freigabe existiert nicht.",
